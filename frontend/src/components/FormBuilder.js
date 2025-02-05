@@ -17,11 +17,19 @@ const FormBuilder = () => {
   const generateLink = () => {
     if (formTitle.trim() && questions.length > 0) {
       const formId = Math.random().toString(36).substr(2, 9); // Génère un ID unique
-      localStorage.setItem(
-        `form-${formId}`,
-        JSON.stringify({ title: formTitle, questions })
-      ); // Stocke le formulaire dans localStorage
-      navigate(`/form/${formId}`); // Redirige vers la page de visualisation du formulaire
+      const formURL = `http://localhost:3000/form/${formId}`;
+
+      // Stocker les données dans le localStorage
+      const storedForms = JSON.parse(localStorage.getItem("forms")) || [];
+      storedForms.push({
+        id: formId,
+        title: formTitle,
+        questions: questions,
+        url: formURL,
+      });
+      localStorage.setItem("forms", JSON.stringify(storedForms));
+
+      navigate(`/form/${formId}`);
     } else {
       alert("Veuillez ajouter un titre et au moins une question !");
     }

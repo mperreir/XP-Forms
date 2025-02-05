@@ -6,10 +6,14 @@ const FormViewer = () => {
   const [form, setForm] = useState(null);
 
   useEffect(() => {
-    // Charge le formulaire depuis localStorage
-    const storedForm = localStorage.getItem(`form-${formId}`);
-    if (storedForm) {
-      setForm(JSON.parse(storedForm));
+    // Vérifier si des formulaires existent
+    const storedForms = JSON.parse(localStorage.getItem("forms")) || [];
+    
+    // Rechercher le formulaire correspondant à l'ID dans la liste
+    const foundForm = storedForms.find((form) => form.id === formId);
+
+    if (foundForm) {
+      setForm(foundForm);
     }
   }, [formId]);
 
