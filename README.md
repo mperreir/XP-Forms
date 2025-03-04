@@ -8,7 +8,7 @@ __Table forms__ :
 CREATE TABLE forms (
     id VARCHAR(50) PRIMARY KEY,  -- Form ID
     title VARCHAR(255) NOT NULL,
-    json_data JSON,  -- Stocker le JSON complet pour référence
+    json_data JSON,  -- Stocker le JSON complet pour référence,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -36,6 +36,7 @@ CREATE TABLE components (
     form_id VARCHAR(50),
     label VARCHAR(255) NOT NULL,
     type VARCHAR(50) NOT NULL,  -- textfield, textarea, radio, etc.
+    action VARCHAR(10),
     key_name VARCHAR(255), -- Clé unique du champ dans le JSON
     layout JSON,  -- Stocke l'organisation dans le formulaire
     FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE

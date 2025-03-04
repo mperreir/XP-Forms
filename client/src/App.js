@@ -14,6 +14,7 @@ function App() {
           <Route path="/accueil" element={<Accueil/>}></Route>
           <Route path="/form-editor2" element={<FormEditor2 />} />
           <Route path="/form-viewer/:id" element={<FormViewer />} />
+          <Route path="/form-viewer/:id/:id_participant" element={<FormViewer />} />
         </Routes>
       </BrowserRouter>
     </div>
