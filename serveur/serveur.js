@@ -12,34 +12,27 @@ app.use(bodyParser.json());
 // Enregistrer un formulaire et ses composantes
 app.post('/api/save-form', async (req, res) => {
   try {
+    console.log("Données reçues pour enregistrement :", req.body); // <-- Debugging
+
     const { id, title, json_data } = req.body;
-    const components = json_data.components || [];
 
-    await db.query('BEGIN'); // Début de la transaction
+    if (!id || !title || !json_data) {
+      return res.status(400).json({ error: "Tous les champs sont requis (id, title, json_data)" });
+    }
 
-    // Insérer le formulaire
     await db.query(
-      'INSERT INTO forms (id, title, json_data) VALUES ($1, $2, $3)',
+      'INSERT INTO forms (id, title, json_data) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, json_data = EXCLUDED.json_data, updated_at = NOW()',
       [id, title, JSON.stringify(json_data)]
     );
 
-    // Insérer les composants
-    for (const component of components) {
-      await db.query(
-        'INSERT INTO components (id, form_id, label, type, key_name, layout) VALUES ($1, $2, $3, $4, $5, $6)',
-        [component.id, id, component.label || '', component.type, component.key || '', JSON.stringify(component.layout)]
-      );
-    }
-
-    await db.query('COMMIT'); // Valider la transaction
-
-    res.status(201).json({ message: 'Formulaire et composants enregistrés !' });
+    res.status(201).json({ message: "Formulaire enregistré avec succès !" });
   } catch (err) {
-    await db.query('ROLLBACK'); // Annuler la transaction en cas d'erreur
-    console.error(err);
-    res.status(500).send('Erreur lors de l\'enregistrement du formulaire');
+    console.error("Erreur SQL :", err);
+    res.status(500).json({ error: "Erreur lors de l'enregistrement du formulaire" });
   }
 });
+
+
 
 
 // Récupérer tous les formulaires
@@ -57,16 +50,47 @@ app.get('/api/forms', async (req, res) => {
 app.get('/api/forms/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await db.query('SELECT json_data FROM forms WHERE id = $1', [id]);
+    const result = await db.query('SELECT json_data, title FROM forms WHERE id = $1', [id]);
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Formulaire non trouvé" });
     }
-    res.json(result.rows[0].json_data); // Renvoyer directement le contenu JSON
+
+    const formData = result.rows[0].json_data;
+    if (!formData || Object.keys(formData).length === 0) {
+      return res.status(500).json({ error: "Le schéma du formulaire est vide ou invalide !" });
+    }
+
+    res.json({ json_data: formData, title: result.rows[0].title });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Erreur lors de la récupération du formulaire");
+    res.status(500).json({ error: "Erreur lors de la récupération du formulaire" });
   }
 });
+
+
+
+app.put('/api/forms/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, json_data } = req.body;
+
+  try {
+    const result = await db.query(
+      'UPDATE forms SET title = $1, json_data = $2, updated_at = NOW() WHERE id = $3 RETURNING *',
+      [title, JSON.stringify(json_data), id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Formulaire non trouvé" });
+    }
+
+    res.json({ message: "Formulaire mis à jour avec succès !" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Erreur lors de la mise à jour du formulaire");
+  }
+});
+
 
 
 app.listen(5000, () => {
