@@ -88,6 +88,48 @@ app.put('/api/forms/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Erreur lors de la mise à jour du formulaire");
+    app.get("/api/forms/:id", async (req, res) => {
+      const { id } = req.params;
+      try {
+        const result = await db.query("SELECT id, json_data, created_at FROM forms WHERE id = $1", [id]);
+        if (result.rows.length === 0) {
+          return res.status(404).json({ error: "Formulaire non trouvé" });
+        }
+        res.json(result.rows[0]);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send("Erreur lors de la récupération du formulaire");
+      }
+    });
+  }
+});
+
+
+// Enregistrer les reponses d'un participant
+app.post("/api/responses", async (req, res) => {
+  try {
+    const { form_id, user_id, responses } = req.body;
+
+    // Insérer la réponse dans la table `responses`
+    const result = await db.query(
+      "INSERT INTO responses (form_id, user_id) VALUES ($1, $2) RETURNING id",
+      [form_id, user_id]
+    );
+
+    const response_id = result.rows[0].id;
+
+    // Insérer chaque valeur de réponse dans `response_values`
+    for (const [key, value] of Object.entries(responses)) {
+      await db.query(
+        "INSERT INTO response_values (response_id, component_id, value) VALUES ($1, $2, $3)",
+        [response_id, key, value]
+      );
+    }
+
+    res.status(201).json({ message: "Réponses enregistrées !" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erreur serveur" });
   }
 });
 

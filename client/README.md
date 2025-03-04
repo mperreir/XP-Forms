@@ -1,70 +1,88 @@
-# Getting Started with Create React App
+# Guide d'utilisation de l'application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 1. Préparation de la base de données : 
+Il faut tout d'abord commencer par créer une nouvelle base de données sur Postgresql que vous appelez `PTrans` (de preference utilisez pgAdmin). Dans cette base de données créez les tables necessaires au fonctionnement de l'application en effectuant les requetes sql çi-après :
 
-## Available Scripts
+__Table forms__ :
+```bash
+CREATE TABLE forms (
+    id VARCHAR(50) PRIMARY KEY,  -- Form ID
+    title VARCHAR(255) NOT NULL,
+    json_data JSON,  -- Stocker le JSON complet pour référence,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-In the project directory, you can run:
+-- Création d'une fonction qui met à jour le champ updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-### `npm start`
+-- Création du trigger pour exécuter la fonction lors de la mise à jour
+CREATE TRIGGER trigger_update_forms_updated_at
+BEFORE UPDATE ON forms
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+```
+__Table components__ :
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```bash
+CREATE TABLE components (
+    id VARCHAR(50) PRIMARY KEY,  -- Component ID
+    form_id VARCHAR(50),
+    label VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL,  -- textfield, textarea, radio, etc.
+    action VARCHAR(10),
+    key_name VARCHAR(255), -- Clé unique du champ dans le JSON
+    layout JSON,  -- Stocke l'organisation dans le formulaire
+    FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE
+);
+```
+__Table responses__ :
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```bash
+CREATE TABLE responses (
+    id SERIAL PRIMARY KEY,
+    form_id VARCHAR(50),
+    user_id VARCHAR(50),  -- ID de l'utilisateur qui répond
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE
+);
+```
+__Table response_values__ :
 
-### `npm test`
+```bash
+CREATE TABLE response_values (
+    id SERIAL PRIMARY KEY,
+    response_id INT,
+    component_id VARCHAR(50),
+    value TEXT,  -- Stocke la réponse à la question
+    FOREIGN KEY (response_id) REFERENCES responses(id) ON DELETE CASCADE,
+    FOREIGN KEY (component_id) REFERENCES components(id) ON DELETE CASCADE
+);
+```
+__Remarque 1__ : À chaque insertion d'un formulaire dans la table forms, il est nécessaire d'insérer ses composants dans la table components, comme implémenté dans la route `app.post('/api/save-form')` dans `serveur.js`.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+__Remarque 2__ : Dans le répertoire `serveur`, veuillez modifier le fichier `db.js` en mettant les valeurs de `user`, `password` propres à vous (ceux que vous utilisez sur pgAdmin).
 
-### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 2. Installation et Execution :
+L'application est composée de deux parties :
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 2.1. Backend : 
+Vous trouverez le code correspondant dans le répertoire `serveur`. Nous avons utilisé `Express.js` pour cette partie.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+__npm :__ Dans le répertoire `serveur`, exécutez la commande `npm install` pour installer les modules nécessaires à son fonctionnement.
 
-### `npm run eject`
+__Execution :__ Dans le répertoire `serveur`, exécutez la commande `npm run dev` pour lancer cette partie de l'application.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 2.2. Frontend : 
+Vous trouverez le code correspondant dans le répertoire `client`. Nous avons utilisé `React` et la bibliothèque `formjs` pour cette partie.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+__npm :__ Dans le répertoire `client`, exécutez la commande `npm install` pour installer les modules nécessaires à son fonctionnement.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+__Execution :__ Dans le répertoire `client`, exécutez la commande `npm start` pour lancer cette partie de l'application.
