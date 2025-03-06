@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { FormEditor } from "@bpmn-io/form-js-editor";
 import "./form_editorr.css";
+import './form-js-editor.css';
+
 
 const FormEditor2 = () => {
   const editorContainerRef = useRef(null);
@@ -13,14 +15,7 @@ const FormEditor2 = () => {
     const schema = {
       type: "default",
       components: [
-        {
-          key: "creditor",
-          label: "Creditor",
-          type: "textfield",
-          validate: {
-            required: true,
-          },
-        },
+        
       ],
     };
 
