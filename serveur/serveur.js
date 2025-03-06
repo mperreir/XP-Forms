@@ -133,6 +133,63 @@ app.post("/api/responses", async (req, res) => {
   }
 });
 
+// Récupérer les réponses d'un formulaire
+app.get("/api/forms/:id/responses", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await db.query(
+      `SELECT r.id AS response_id, r.user_id, rv.component_id, rv.value 
+       FROM responses r 
+       JOIN response_values rv ON r.id = rv.response_id 
+       WHERE r.form_id = $1 
+       ORDER BY r.created_at DESC`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Aucune réponse trouvée pour ce formulaire" });
+    }
+
+    // Organiser les réponses par participant
+    const groupedResponses = {};
+    result.rows.forEach(row => {
+      if (!groupedResponses[row.response_id]) {
+        groupedResponses[row.response_id] = { user_id: row.user_id, responses: {} };
+      }
+      groupedResponses[row.response_id].responses[row.component_id] = row.value;
+    });
+
+    res.json(Object.values(groupedResponses));
+
+  } catch (error) {
+    console.error("Erreur lors de la récupération des réponses :", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// modifer un formulaire
+app.put('/api/forms/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, json_data } = req.body;
+
+  try {
+    const result = await db.query(
+      'UPDATE forms SET title = $1, json_data = $2, updated_at = NOW() WHERE id = $3 RETURNING *',
+      [title, JSON.stringify(json_data), id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Formulaire non trouvé" });
+    }
+
+    res.json({ message: "Formulaire mis à jour avec succès !" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur lors de la mise à jour du formulaire" });
+  }
+});
+
+
 
 
 app.listen(5000, () => {

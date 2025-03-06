@@ -49,6 +49,18 @@ const Accueil = () => {
                                         <button>Voir</button>
                                     </Link>
                                 </td>
+                                <td>
+                                    <Link to={`/form-editor2/${form.id}`}>
+                                        <button>Modifier</button>
+                                    </Link>
+                                </td>
+
+                                <td>
+                                    <Link to={`/form-responses/${form.id}`}>
+                                        <button>Voir Réponses</button>
+                                    </Link>
+                                </td>
+
                             </tr>
                         ))
                     ) : (
