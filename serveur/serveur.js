@@ -191,6 +191,34 @@ app.put('/api/forms/:id', async (req, res) => {
 
 
 
+//supprimer un formulaire
+
+app.delete('/api/forms/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Vérifier si des réponses existent pour ce formulaire
+    const responseCheck = await db.query("SELECT COUNT(*) FROM responses WHERE form_id = $1", [id]);
+
+    if (parseInt(responseCheck.rows[0].count) > 0) {
+      return res.status(400).json({ error: "Impossible de supprimer ce formulaire car des réponses existent !" });
+    }
+
+    // Supprimer le formulaire si aucune réponse n'est associée
+    const result = await db.query("DELETE FROM forms WHERE id = $1", [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Formulaire non trouvé" });
+    }
+
+    res.json({ message: "Formulaire supprimé avec succès !" });
+
+  } catch (err) {
+    console.error("Erreur lors de la suppression :", err);
+    res.status(500).json({ error: "Erreur lors de la suppression du formulaire" });
+  }
+});
+
 
 app.listen(5000, () => {
   console.log("Server is running on port 5000");

@@ -20,6 +20,31 @@ const Accueil = () => {
         fetchForms();
     }, []);
 
+
+    const handleDeleteForm = async (formId) => {
+        if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce formulaire ? Les réponses associées seront conservées.")) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:5000/api/forms/${formId}`, {
+                method: "DELETE",
+            });
+
+            if (response.ok) {
+                alert("Formulaire supprimé !");
+                setForms(forms.filter((form) => form.id !== formId)); // Mettre à jour la liste localement
+            } else {
+                const errorData = await response.json();
+                alert("Erreur : " + errorData.error);
+            }
+        } catch (error) {
+            console.error("Erreur :", error);
+            alert("Impossible de contacter le serveur.");
+        }
+    };
+
+
     return (
         <div>
             <h1>Accueil</h1>
@@ -59,6 +84,11 @@ const Accueil = () => {
                                     <Link to={`/form-responses/${form.id}`}>
                                         <button>Voir Réponses</button>
                                     </Link>
+                                </td>
+                                <td>
+                                    <button onClick={() => handleDeleteForm(form.id)} style={{ color: "red" }}>
+                                        Supprimer
+                                    </button>
                                 </td>
 
                             </tr>
