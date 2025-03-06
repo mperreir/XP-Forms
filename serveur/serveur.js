@@ -69,29 +69,30 @@ app.get("/api/forms/:id", async (req, res) => {
 });
 
 // Enregistrer les reponses d'un participant
-app.post("/api/responses", async (req, res) => {
-  try {
-    const { form_id, user_id, responses } = req.body;
+app.post("/api/submit-form", async (req, res) => {
+  const { form_id, user_id, responses } = req.body;
 
-    // Insérer la réponse dans la table `responses`
-    const result = await db.query(
+  try {
+    // Étape 1 : Insérer la réponse dans `responses` et récupérer son ID
+    const response = await db.query(
       "INSERT INTO responses (form_id, user_id) VALUES ($1, $2) RETURNING id",
       [form_id, user_id]
     );
+    const response_id = response.rows[0].id; // `pg` stocke les résultats dans `rows`
 
-    const response_id = result.rows[0].id;
-
-    // Insérer chaque valeur de réponse dans `response_values`
-    for (const [key, value] of Object.entries(responses)) {
-      await db.query(
+    // Étape 2 : Insérer chaque réponse avec le `component_id` correct
+    const queries = responses.map(({ component_id, value }) =>
+      db.query(
         "INSERT INTO response_values (response_id, component_id, value) VALUES ($1, $2, $3)",
-        [response_id, key, value]
-      );
-    }
+        [response_id, component_id, value]
+      )
+    );
 
-    res.status(201).json({ message: "Réponses enregistrées !" });
+    await Promise.all(queries); // Exécuter toutes les requêtes en parallèle
+
+    res.status(200).json({ message: "Réponses enregistrées avec succès." });
   } catch (error) {
-    console.error(error);
+    console.error("Erreur lors de l'enregistrement des réponses:", error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
