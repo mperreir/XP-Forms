@@ -137,17 +137,23 @@ app.post("/api/submit-form", async (req, res) => {
 // Récupérer les réponses d'un formulaire
 app.get("/api/forms/:id/responses", async (req, res) => {
   const { id } = req.params;
+  console.log("📩 Récupération des réponses pour le formulaire ID:", id); // Debugging
+
   try {
     const result = await db.query(
       `SELECT r.id AS response_id, r.user_id, rv.component_id, rv.value 
        FROM responses r 
        JOIN response_values rv ON r.id = rv.response_id 
        WHERE r.form_id = $1 
-       ORDER BY r.created_at DESC`,
+       ORDER BY r.submitted_at DESC`,  // Utilisation de submitted_at à la place de created_at
       [id]
     );
+    
+
+    console.log("📊 Résultats SQL:", result.rows); // Debugging
 
     if (result.rows.length === 0) {
+      console.log("⚠️ Aucune réponse trouvée pour ce formulaire.");
       return res.status(404).json({ error: "Aucune réponse trouvée pour ce formulaire" });
     }
 
@@ -163,10 +169,11 @@ app.get("/api/forms/:id/responses", async (req, res) => {
     res.json(Object.values(groupedResponses));
 
   } catch (error) {
-    console.error("Erreur lors de la récupération des réponses :", error);
-    res.status(500).json({ error: "Erreur serveur" });
+    console.error("❌ Erreur SQL :", error);
+    res.status(500).json({ error: "Erreur serveur lors de la récupération des réponses" });
   }
 });
+
 
 // modifer un formulaire
 app.put('/api/forms/:id', async (req, res) => {
