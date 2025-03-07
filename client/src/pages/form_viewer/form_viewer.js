@@ -8,7 +8,7 @@ const FormViewer = () => {
   const containerRef = useRef(null);
   const [schema, setSchema] = useState(null);
   const [formDetails, setFormDetails] = useState(null);
-  const [formInstance, setFormInstance] = useState(null);
+  const [componentMapping, setComponentMapping] = useState({}); // Mapping key → id
 
   useEffect(() => {
     const fetchFormSchema = async () => {
@@ -17,8 +17,16 @@ const FormViewer = () => {
         if (!response.ok) throw new Error("Erreur lors du chargement du formulaire");
         const data = await response.json();
         
-        setSchema(data.json_data); // Charger uniquement le schéma du formulaire
+        setSchema(data.json_data); // Charger le schéma du formulaire
         setFormDetails(data); // Stocker toutes les infos du formulaire
+
+        // Construire le mapping entre key et id
+        const mapping = {};
+        data.json_data.components.forEach((component) => {
+          mapping[component.key] = component.id;
+        });
+        setComponentMapping(mapping);
+
       } catch (error) {
         console.error(error);
       }
@@ -43,48 +51,58 @@ const FormViewer = () => {
         console.error("Error importing form schema:", error);
       });
 
-    form.on("submit", async (event) => {
-      console.log("Form <submit>", event);
-      const responseData = event.data; // Les réponses soumises par le participant
+    // Écoute de l'événement submit
+    form.on("submit", (event) => {
+      /* Si l'utilisateur est un participant les reponses seront enregistrées si c'est un experimentateur les reponses ne seront pas enregistrées */
+      if(typeof id_participant !== 'undefined'){
+        const rawData = event.data;
+        console.log("Raw Data:", rawData);
 
-      try {
-        const response = await fetch("http://localhost:5000/api/responses", {
+        // Transformer le JSON pour utiliser component_id au lieu de key
+        const transformedData = Object.entries(rawData).map(([key, value]) => ({
+          component_id: componentMapping[key], // Récupération de l'id
+          value: value
+        }));
+
+        console.log("Transformed Data:", transformedData);
+
+        // Envoyer au backend
+        fetch("http://localhost:5000/api/submit-form", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             form_id: id,
             user_id: id_participant,
-            responses: responseData,
-          }),
+            responses: transformedData
+          })
+        })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Réponse du serveur:", data);
+          alert("Formulaire soumis avec succès !");
+        })
+        .catch((error) => {
+          console.error("Erreur lors de la soumission:", error);
+          alert("Une erreur est survenue !");
         });
-
-        if (!response.ok) throw new Error("Erreur lors de l'enregistrement des réponses");
-        
-        alert("Réponses enregistrées avec succès !");
-      } catch (error) {
-        console.error("Erreur :", error);
       }
     });
-
-    setFormInstance(form);
 
     return () => {
       form.destroy();
     };
-  }, [schema]);
+  }, [schema, componentMapping]);
 
   return (
     <div>
       <h2>Form Viewer</h2>
 
-      {/* Afficher les détails du formulaire seulement si id_participant est absent */}
+      {/* Afficher les détails du formulaire seulement si id_participant est absent de l'url (donc experimentateur) */}
       {!id_participant && formDetails && (
         <div>
           <p><strong>ID du Formulaire :</strong> {formDetails.id}</p>
           <p><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
-          <p><strong>URL :</strong> http://localhost:3000/form-viewer/{id}/id_participant</p>
+          <p><strong>URL :</strong> http://localhost:3000/form-viewer/{id}/id_participant </p>
         </div>
       )}
 
@@ -101,19 +119,6 @@ const FormViewer = () => {
       ) : (
         <p>Chargement du formulaire...</p>
       )}
-
-      {/* Bouton de soumission affiché uniquement si un participant remplit le formulaire */}
-      {/*id_participant && (
-        <div id="submit">
-          <button 
-            type="button" 
-            className="btn btn-primary" 
-            onClick={() => formInstance && formInstance.submit()}
-          >
-            Soumettre
-          </button>
-        </div>
-      )*/}
     </div>
   );
 };

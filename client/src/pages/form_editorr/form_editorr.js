@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FormEditor } from "@bpmn-io/form-js-editor";
 import "./form_editorr.css";
+import './form-js-editor.css';
+
 
 const FormEditor2 = () => {
   const { id } = useParams(); // Récupérer l'ID du formulaire s'il est en modification
@@ -13,6 +15,13 @@ const FormEditor2 = () => {
 
   useEffect(() => {
     if (!editorContainerRef.current) return;
+
+    const schema = {
+      type: "default",
+      components: [
+        
+      ],
+    };
 
     const editor = new FormEditor({
       container: editorContainerRef.current,
