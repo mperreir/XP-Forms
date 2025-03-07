@@ -68,34 +68,98 @@ app.get("/api/forms/:id", async (req, res) => {
   }
 });
 
-// Enregistrer les reponses d'un participant
+
+// Enregistrer une fois pour toute les réponses d'un participant lorsqu'il clique sur submit
 app.post("/api/submit-form", async (req, res) => {
   const { form_id, user_id, responses } = req.body;
 
   try {
-    // Étape 1 : Insérer la réponse dans `responses` et récupérer son ID
-    const response = await db.query(
-      "INSERT INTO responses (form_id, user_id) VALUES ($1, $2) RETURNING id",
+    // Vérifier que `responses` n'est pas vide
+    if (!responses || responses.length === 0) {
+      return res.status(400).json({ error: "Aucune réponse à mettre à jour." });
+    }
+
+    // Récupérer l'ID de la réponse existante dans `responses`
+    const responseCheck = await db.query(
+      "SELECT id FROM responses WHERE form_id = $1 AND user_id = $2",
       [form_id, user_id]
     );
-    const response_id = response.rows[0].id; // `pg` stocke les résultats dans `rows`
 
-    // Étape 2 : Insérer chaque réponse avec le `component_id` correct
-    const queries = responses.map(({ component_id, value }) =>
+    if (responseCheck.rows.length === 0) {
+      return res.status(400).json({ error: "Aucune réponse existante trouvée pour ce formulaire." });
+    }
+
+    const response_id = responseCheck.rows[0].id;
+
+    // Mise à jour de chaque valeur dans `response_values`
+    const updateQueries = responses.map(({ component_id, value }) =>
       db.query(
-        "INSERT INTO response_values (response_id, component_id, value) VALUES ($1, $2, $3)",
-        [response_id, component_id, value]
+        "UPDATE response_values SET value = $1 WHERE response_id = $2 AND component_id = $3",
+        [value, response_id, component_id]
       )
     );
 
-    await Promise.all(queries); // Exécuter toutes les requêtes en parallèle
+    await Promise.all(updateQueries); // Exécuter toutes les requêtes en parallèle
 
-    res.status(200).json({ message: "Réponses enregistrées avec succès." });
+    res.status(200).json({ message: "Réponses mises à jour avec succès." });
   } catch (error) {
-    console.error("Erreur lors de l'enregistrement des réponses:", error);
+    console.error("Erreur lors de la mise à jour des réponses:", error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+
+
+// Appelé dans le cas de l'auto-sauvegarde des réponses du participant au formulaire
+app.post("/api/save-response", async (req, res) => {
+  const { form_id, user_id, component_id, value } = req.body;
+
+  try {
+    // Vérifier si une réponse existe déjà pour ce participant et ce champ
+    const existingResponse = await db.query(
+      "SELECT id FROM response_values WHERE response_id IN (SELECT id FROM responses WHERE form_id = $1 AND user_id = $2) AND component_id = $3",
+      [form_id, user_id, component_id]
+    );
+
+    if (existingResponse.rows.length > 0) {
+      // Mise à jour de la réponse existante
+      await db.query(
+        "UPDATE response_values SET value = $1 WHERE id = $2",
+        [value, existingResponse.rows[0].id]
+      );
+      return res.json({ message: "Réponse mise à jour." });
+    } else {
+      // Vérifier si une entrée existe déjà dans la table `responses`
+      const responseCheck = await db.query(
+        "SELECT id FROM responses WHERE form_id = $1 AND user_id = $2",
+        [form_id, user_id]
+      );
+
+      let response_id;
+      if (responseCheck.rows.length > 0) {
+        response_id = responseCheck.rows[0].id;
+      } else {
+        // Insérer une nouvelle réponse
+        const responseInsert = await db.query(
+          "INSERT INTO responses (form_id, user_id) VALUES ($1, $2) RETURNING id",
+          [form_id, user_id]
+        );
+        response_id = responseInsert.rows[0].id;
+      }
+
+      // Insérer la nouvelle valeur
+      await db.query(
+        "INSERT INTO response_values (response_id, component_id, value) VALUES ($1, $2, $3)",
+        [response_id, component_id, value]
+      );
+      return res.json({ message: "Réponse enregistrée." });
+    }
+  } catch (error) {
+    console.error("Erreur lors de l'enregistrement de la réponse :", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 
 
 
