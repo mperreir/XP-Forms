@@ -26,7 +26,7 @@ const Accueil = () => {
 
 
     const handleDeleteForm = async (formId) => {
-        if (!window.confirm("❗Êtes-vous sûr de vouloir supprimer ce formulaire ? Toutes les réponses associées seront perdues. Cette action est irréversible.")) {
+        if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce formulaire ? Toutes les réponses associées seront perdues. Cette action est irréversible.")) {
             return;
         }
 
@@ -52,7 +52,7 @@ const Accueil = () => {
             const data = await response.json();
 
             if (data.hasResponses) {
-                alert("❌ Ce formulaire contient déjà des réponses et ne peut pas être modifié.");
+                alert("Ce formulaire contient déjà des réponses et ne peut pas être modifié.");
             } else {
                 navigate(`/form-editor2/${formId}`);
             }

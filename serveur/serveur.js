@@ -91,7 +91,7 @@ app.get("/api/forms/:id/has-responses", async (req, res) => {
     res.json({ hasResponses });
 
   } catch (error) {
-    console.error("❌ Erreur SQL :", error);
+    console.error("Erreur SQL :", error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -151,7 +151,7 @@ app.post("/api/submit-form", async (req, res) => {
     let response_id;
 
     if (responseCheck.rows.length > 0) {
-      // 🔁 Mise à jour
+      // Mise à jour
       response_id = responseCheck.rows[0].id;
 
       const updateQueries = responses.map(({ component_id, value }) =>
@@ -166,7 +166,7 @@ app.post("/api/submit-form", async (req, res) => {
       return res.status(200).json({ message: "Réponses mises à jour avec succès." });
 
     } else {
-      // 🆕 Insertion
+      // Insertion
       const insertResponse = await db.query(
         "INSERT INTO responses (form_id, user_id, submitted_at) VALUES ($1, $2, NOW()) RETURNING id",
         [form_id, user_id]
@@ -187,7 +187,7 @@ app.post("/api/submit-form", async (req, res) => {
     }
 
   } catch (error) {
-    console.error("❌ Erreur dans /api/submit-form :", error.stack);
+    console.error("Erreur dans /api/submit-form :", error.stack);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -197,7 +197,7 @@ app.post("/api/submit-form", async (req, res) => {
 
 app.get("/api/forms/:id/responses", async (req, res) => {
   const { id } = req.params;
-  console.log("📩 Récupération des réponses pour le formulaire ID:", id);
+  console.log("Récupération des réponses pour le formulaire ID:", id);
 
   try {
     const result = await db.query(
@@ -210,10 +210,10 @@ app.get("/api/forms/:id/responses", async (req, res) => {
       [id]
     );
 
-    console.log("📊 Résultats SQL :", result.rows);
+    console.log("Résultats SQL :", result.rows);
 
     if (result.rows.length === 0) {
-      console.log("⚠️ Aucune réponse trouvée.");
+      console.log("Aucune réponse trouvée.");
       return res.json([]); // Retourner un tableau vide
     }
 
@@ -229,7 +229,7 @@ app.get("/api/forms/:id/responses", async (req, res) => {
     res.json(Object.values(groupedResponses));
 
   } catch (error) {
-    console.error("❌ Erreur SQL :", error);
+    console.error("Erreur SQL :", error);
     res.status(500).json({ error: "Erreur serveur lors de la récupération des réponses" });
   }
 });
@@ -296,7 +296,7 @@ app.delete('/api/forms/:id', async (req, res) => {
 
   } catch (err) {
     await db.query("ROLLBACK"); // Annuler en cas d’erreur
-    console.error("❌ Erreur lors de la suppression :", err);
+    console.error(" Erreur lors de la suppression :", err);
     res.status(500).json({ error: "Erreur lors de la suppression du formulaire" });
   }
 });
