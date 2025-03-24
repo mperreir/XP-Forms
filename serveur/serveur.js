@@ -60,7 +60,7 @@ app.get('/api/forms', async (req, res) => {
 app.get('/api/forms/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await db.query('SELECT json_data, title FROM forms WHERE id = $1', [id]);
+    const result = await db.query('SELECT id, json_data, created_at FROM forms WHERE id = $1', [id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Formulaire non trouvé" });
@@ -71,12 +71,13 @@ app.get('/api/forms/:id', async (req, res) => {
       return res.status(500).json({ error: "Le schéma du formulaire est vide ou invalide !" });
     }
 
-    res.json({ json_data: formData, title: result.rows[0].title });
+    res.json({ id: result.rows[0].id, json_data: result.rows[0].json_data, created_at: result.rows[0].created_at, title: result.rows[0].title });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Erreur lors de la récupération du formulaire" });
   }
 });
+
 
 app.get("/api/forms/:id/has-responses", async (req, res) => {
   const { id } = req.params;
@@ -193,6 +194,55 @@ app.post("/api/submit-form", async (req, res) => {
 });
 
 
+// Appelé dans le cas de l'auto-sauvegarde des réponses du participant au formulaire
+app.post("/api/save-response", async (req, res) => {
+  const { form_id, user_id, component_id, value } = req.body;
+
+  try {
+    // Vérifier si une réponse existe déjà pour ce participant et ce champ
+    const existingResponse = await db.query(
+      "SELECT id FROM response_values WHERE response_id IN (SELECT id FROM responses WHERE form_id = $1 AND user_id = $2) AND component_id = $3",
+      [form_id, user_id, component_id]
+    );
+
+    if (existingResponse.rows.length > 0) {
+      // Mise à jour de la réponse existante
+      await db.query(
+        "UPDATE response_values SET value = $1 WHERE id = $2",
+        [value, existingResponse.rows[0].id]
+      );
+      return res.json({ message: "Réponse mise à jour." });
+    } else {
+      // Vérifier si une entrée existe déjà dans la table `responses`
+      const responseCheck = await db.query(
+        "SELECT id FROM responses WHERE form_id = $1 AND user_id = $2",
+        [form_id, user_id]
+      );
+
+      let response_id;
+      if (responseCheck.rows.length > 0) {
+        response_id = responseCheck.rows[0].id;
+      } else {
+        // Insérer une nouvelle réponse
+        const responseInsert = await db.query(
+          "INSERT INTO responses (form_id, user_id) VALUES ($1, $2) RETURNING id",
+          [form_id, user_id]
+        );
+        response_id = responseInsert.rows[0].id;
+      }
+
+      // Insérer la nouvelle valeur
+      await db.query(
+        "INSERT INTO response_values (response_id, component_id, value) VALUES ($1, $2, $3)",
+        [response_id, component_id, value]
+      );
+      return res.json({ message: "Réponse enregistrée." });
+    }
+  } catch (error) {
+    console.error("Erreur lors de l'enregistrement de la réponse :", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
 
 
 app.get("/api/forms/:id/responses", async (req, res) => {

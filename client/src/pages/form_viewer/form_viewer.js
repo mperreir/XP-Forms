@@ -27,6 +27,7 @@ const FormViewer = () => {
           mapping[component.key] = component.id;
         });
         setComponentMapping(mapping);
+        
       } catch (error) {
         console.error(error);
       }
