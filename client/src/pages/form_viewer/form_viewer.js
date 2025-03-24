@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"; 
+import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Form } from "@bpmn-io/form-js-viewer";
 import './form_viewer.css';
@@ -9,6 +9,7 @@ const FormViewer = () => {
   const [schema, setSchema] = useState(null);
   const [formDetails, setFormDetails] = useState(null);
   const [componentMapping, setComponentMapping] = useState({}); // Mapping key → id
+  const [formData, setFormData] = useState({});
 
   useEffect(() => {
     const fetchFormSchema = async () => {
@@ -26,18 +27,15 @@ const FormViewer = () => {
           mapping[component.key] = component.id;
         });
         setComponentMapping(mapping);
-
       } catch (error) {
         console.error(error);
       }
     };
-
     fetchFormSchema();
   }, [id]);
 
   useEffect(() => {
     if (!schema) return;
-
     const form = new Form({
       container: containerRef.current,
     });
@@ -53,20 +51,18 @@ const FormViewer = () => {
 
     // Écoute de l'événement submit
     form.on("submit", (event) => {
-      /* Si l'utilisateur est un participant les reponses seront enregistrées si c'est un experimentateur les reponses ne seront pas enregistrées */
-      if(typeof id_participant !== 'undefined'){
+      if (typeof id_participant !== 'undefined') {
         const rawData = event.data;
         console.log("Raw Data:", rawData);
 
         // Transformer le JSON pour utiliser component_id au lieu de key
         const transformedData = Object.entries(rawData).map(([key, value]) => ({
-          component_id: componentMapping[key], // Récupération de l'id
+          component_id: componentMapping[key],
           value: value
         }));
 
         console.log("Transformed Data:", transformedData);
 
-        // Envoyer au backend
         fetch("http://localhost:5000/api/submit-form", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -88,6 +84,47 @@ const FormViewer = () => {
       }
     });
 
+    // Auto-save lors des modifications
+    form.on("changed", (event) => {
+      if (!id_participant) return;
+
+      const newData = event.data; // Contient toutes les réponses actuelles
+
+      // Trouver quel champ a changé
+      Object.entries(newData).forEach(([key, value]) => {
+        if (formData[key] !== value) {
+          setFormData((prevData) => ({
+            ...prevData,
+            [key]: value,
+          }));
+
+          const component_id = componentMapping[key]; // Récupérer l'id du composant
+          if (!component_id) return; // Sécurité si key non mappé
+
+          console.log(`Envoi auto-save: component_id=${component_id}, value=${value}`);
+
+          fetch("http://localhost:5000/api/save-response", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              form_id: id,
+              user_id: id_participant,
+              component_id,
+              value,
+            }),
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Réponse sauvegardée :", data);
+          })
+          .catch((error) => {
+            console.error("Erreur lors de la sauvegarde :", error);
+          });
+        }
+      });
+    });
+
+
     return () => {
       form.destroy();
     };
@@ -97,7 +134,6 @@ const FormViewer = () => {
     <div>
       <h2>Form Viewer</h2>
 
-      {/* Afficher les détails du formulaire seulement si id_participant est absent de l'url (donc experimentateur) */}
       {!id_participant && formDetails && (
         <div>
           <p><strong>ID du Formulaire :</strong> {formDetails.id}</p>
@@ -106,14 +142,12 @@ const FormViewer = () => {
         </div>
       )}
 
-      {/* Affichage de l'ID du participant */}
       {id_participant && (
         <div>
           <p><strong>ID du Participant :</strong> {id_participant}</p>
         </div>
       )}
 
-      {/* Affichage du formulaire */}
       {schema ? (
         <div ref={containerRef} id="form" style={{ width: "100%" }}></div>
       ) : (
