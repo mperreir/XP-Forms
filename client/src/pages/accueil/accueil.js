@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
 import './accueil.css';
+import { useNavigate } from "react-router-dom";
+
 
 const Accueil = () => {
     const [forms, setForms] = useState([]);
+    const navigate = useNavigate(); // Permet de gérer la navigation
+
 
     useEffect(() => {
         const fetchForms = async () => {
@@ -22,17 +26,15 @@ const Accueil = () => {
 
 
     const handleDeleteForm = async (formId) => {
-        if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce formulaire ? Les réponses associées seront conservées.")) {
+        if (!window.confirm("❗Êtes-vous sûr de vouloir supprimer ce formulaire ? Toutes les réponses associées seront perdues. Cette action est irréversible.")) {
             return;
         }
 
         try {
-            const response = await fetch(`http://localhost:5000/api/forms/${formId}`, {
-                method: "DELETE",
-            });
+            const response = await fetch(`http://localhost:5000/api/forms/${formId}`, { method: "DELETE" });
 
             if (response.ok) {
-                alert("Formulaire supprimé !");
+                alert("Formulaire et réponses supprimés !");
                 setForms(forms.filter((form) => form.id !== formId)); // Mettre à jour la liste localement
             } else {
                 const errorData = await response.json();
@@ -43,6 +45,24 @@ const Accueil = () => {
             alert("Impossible de contacter le serveur.");
         }
     };
+
+    const handleEditForm = async (formId) => {
+        try {
+            const response = await fetch(`http://localhost:5000/api/forms/${formId}/has-responses`);
+            const data = await response.json();
+
+            if (data.hasResponses) {
+                alert("❌ Ce formulaire contient déjà des réponses et ne peut pas être modifié.");
+            } else {
+                navigate(`/form-editor2/${formId}`);
+            }
+        } catch (error) {
+            console.error("Erreur lors de la vérification des réponses :", error);
+            alert("Erreur lors de la vérification des réponses.");
+        }
+    };
+
+
 
 
     return (
@@ -75,9 +95,7 @@ const Accueil = () => {
                                     </Link>
                                 </td>
                                 <td>
-                                    <Link to={`/form-editor2/${form.id}`}>
-                                        <button>Modifier</button>
-                                    </Link>
+                                    <button onClick={() => handleEditForm(form.id)}>Modifier</button>
                                 </td>
 
                                 <td>
@@ -85,6 +103,7 @@ const Accueil = () => {
                                         <button>Voir Réponses</button>
                                     </Link>
                                 </td>
+
                                 <td>
                                     <button onClick={() => handleDeleteForm(form.id)} style={{ color: "red" }}>
                                         Supprimer

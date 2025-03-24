@@ -12,25 +12,35 @@ app.use(bodyParser.json());
 // Enregistrer un formulaire et ses composantes
 app.post('/api/save-form', async (req, res) => {
   try {
-    console.log("Données reçues pour enregistrement :", req.body); // <-- Debugging
-
     const { id, title, json_data } = req.body;
+    const components = json_data.components || [];
 
-    if (!id || !title || !json_data) {
-      return res.status(400).json({ error: "Tous les champs sont requis (id, title, json_data)" });
-    }
+    await db.query('BEGIN'); // Début de la transaction
 
+    // Insérer le formulaire
     await db.query(
-      'INSERT INTO forms (id, title, json_data) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, json_data = EXCLUDED.json_data, updated_at = NOW()',
+      'INSERT INTO forms (id, title, json_data) VALUES ($1, $2, $3)',
       [id, title, JSON.stringify(json_data)]
     );
 
-    res.status(201).json({ message: "Formulaire enregistré avec succès !" });
+    // Insérer les composants
+    for (const component of components) {
+      await db.query(
+        'INSERT INTO components (id, form_id, label, type, key_name, layout) VALUES ($1, $2, $3, $4, $5, $6)',
+        [component.id, id, component.label || '', component.type, component.key || '', JSON.stringify(component.layout)]
+      );
+    }
+
+    await db.query('COMMIT'); // Valider la transaction
+
+    res.status(201).json({ message: 'Formulaire et composants enregistrés !' });
   } catch (err) {
-    console.error("Erreur SQL :", err);
-    res.status(500).json({ error: "Erreur lors de l'enregistrement du formulaire" });
+    await db.query('ROLLBACK'); // Annuler la transaction en cas d'erreur
+    console.error(err);
+    res.status(500).send('Erreur lors de l\'enregistrement du formulaire');
   }
 });
+
 
 
 
@@ -68,6 +78,23 @@ app.get('/api/forms/:id', async (req, res) => {
   }
 });
 
+app.get("/api/forms/:id/has-responses", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await db.query(
+      "SELECT COUNT(*) AS total FROM responses WHERE form_id = $1",
+      [id]
+    );
+
+    const hasResponses = parseInt(result.rows[0].total) > 0;
+    res.json({ hasResponses });
+
+  } catch (error) {
+    console.error("❌ Erreur SQL :", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
 
 
 app.put('/api/forms/:id', async (req, res) => {
@@ -105,65 +132,98 @@ app.put('/api/forms/:id', async (req, res) => {
 });
 
 
-// Enregistrer les reponses d'un participant
+
+// Enregistrer une fois pour toute les réponses d'un participant lorsqu'il clique sur submit
 app.post("/api/submit-form", async (req, res) => {
   const { form_id, user_id, responses } = req.body;
 
   try {
-    // Étape 1 : Insérer la réponse dans `responses` et récupérer son ID
-    const response = await db.query(
-      "INSERT INTO responses (form_id, user_id) VALUES ($1, $2) RETURNING id",
+    if (!responses || responses.length === 0) {
+      return res.status(400).json({ error: "Aucune réponse à enregistrer." });
+    }
+
+    // Vérifie si une réponse existe déjà
+    const responseCheck = await db.query(
+      "SELECT id FROM responses WHERE form_id = $1 AND user_id = $2",
       [form_id, user_id]
     );
-    const response_id = response.rows[0].id; // `pg` stocke les résultats dans `rows`
 
-    // Étape 2 : Insérer chaque réponse avec le `component_id` correct
-    const queries = responses.map(({ component_id, value }) =>
-      db.query(
-        "INSERT INTO response_values (response_id, component_id, value) VALUES ($1, $2, $3)",
-        [response_id, component_id, value]
-      )
-    );
+    let response_id;
 
-    await Promise.all(queries); // Exécuter toutes les requêtes en parallèle
+    if (responseCheck.rows.length > 0) {
+      // 🔁 Mise à jour
+      response_id = responseCheck.rows[0].id;
 
-    res.status(200).json({ message: "Réponses enregistrées avec succès." });
+      const updateQueries = responses.map(({ component_id, value }) =>
+        db.query(
+          "UPDATE response_values SET value = $1 WHERE response_id = $2 AND component_id = $3",
+          [value, response_id, component_id]
+        )
+      );
+
+      await Promise.all(updateQueries);
+
+      return res.status(200).json({ message: "Réponses mises à jour avec succès." });
+
+    } else {
+      // 🆕 Insertion
+      const insertResponse = await db.query(
+        "INSERT INTO responses (form_id, user_id, submitted_at) VALUES ($1, $2, NOW()) RETURNING id",
+        [form_id, user_id]
+      );
+
+      response_id = insertResponse.rows[0].id;
+
+      const insertQueries = responses.map(({ component_id, value }) =>
+        db.query(
+          "INSERT INTO response_values (response_id, component_id, value) VALUES ($1, $2, $3)",
+          [response_id, component_id, value]
+        )
+      );
+
+      await Promise.all(insertQueries);
+
+      return res.status(201).json({ message: "Réponses enregistrées avec succès." });
+    }
+
   } catch (error) {
-    console.error("Erreur lors de l'enregistrement des réponses:", error);
+    console.error("❌ Erreur dans /api/submit-form :", error.stack);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
-// Récupérer les réponses d'un formulaire
+
+
+
 app.get("/api/forms/:id/responses", async (req, res) => {
   const { id } = req.params;
-  console.log("📩 Récupération des réponses pour le formulaire ID:", id); // Debugging
+  console.log("📩 Récupération des réponses pour le formulaire ID:", id);
 
   try {
     const result = await db.query(
-      `SELECT r.id AS response_id, r.user_id, rv.component_id, rv.value 
-       FROM responses r 
-       JOIN response_values rv ON r.id = rv.response_id 
-       WHERE r.form_id = $1 
-       ORDER BY r.submitted_at DESC`,  // Utilisation de submitted_at à la place de created_at
+      `SELECT r.id AS response_id, r.user_id, c.label AS question, rv.value AS answer
+       FROM responses r
+       JOIN response_values rv ON r.id = rv.response_id
+       JOIN components c ON rv.component_id = c.id
+       WHERE r.form_id = $1
+       ORDER BY r.submitted_at DESC`,
       [id]
     );
-    
 
-    console.log("📊 Résultats SQL:", result.rows); // Debugging
+    console.log("📊 Résultats SQL :", result.rows);
 
     if (result.rows.length === 0) {
-      console.log("⚠️ Aucune réponse trouvée pour ce formulaire.");
-      return res.status(404).json({ error: "Aucune réponse trouvée pour ce formulaire" });
+      console.log("⚠️ Aucune réponse trouvée.");
+      return res.json([]); // Retourner un tableau vide
     }
 
-    // Organiser les réponses par participant
+    // Regrouper les réponses par utilisateur
     const groupedResponses = {};
     result.rows.forEach(row => {
-      if (!groupedResponses[row.response_id]) {
-        groupedResponses[row.response_id] = { user_id: row.user_id, responses: {} };
+      if (!groupedResponses[row.user_id]) {
+        groupedResponses[row.user_id] = { user_id: row.user_id, responses: [] };
       }
-      groupedResponses[row.response_id].responses[row.component_id] = row.value;
+      groupedResponses[row.user_id].responses.push({ question: row.question, answer: row.answer });
     });
 
     res.json(Object.values(groupedResponses));
@@ -173,6 +233,8 @@ app.get("/api/forms/:id/responses", async (req, res) => {
     res.status(500).json({ error: "Erreur serveur lors de la récupération des réponses" });
   }
 });
+
+
 
 
 // modifer un formulaire
@@ -209,20 +271,32 @@ app.delete('/api/forms/:id', async (req, res) => {
     const responseCheck = await db.query("SELECT COUNT(*) FROM responses WHERE form_id = $1", [id]);
 
     if (parseInt(responseCheck.rows[0].count) > 0) {
-      return res.status(400).json({ error: "Impossible de supprimer ce formulaire car des réponses existent !" });
+      const confirmDelete = true; // Ici, on doit gérer la confirmation côté frontend
+      if (!confirmDelete) {
+        return res.status(400).json({ error: "Annulation de la suppression." });
+      }
+
+      await db.query("BEGIN"); // Démarrer une transaction
+
+      // Supprimer les réponses associées
+      await db.query("DELETE FROM response_values WHERE response_id IN (SELECT id FROM responses WHERE form_id = $1)", [id]);
+      await db.query("DELETE FROM responses WHERE form_id = $1", [id]);
+
+      await db.query("COMMIT"); // Valider la transaction
     }
 
-    // Supprimer le formulaire si aucune réponse n'est associée
-    const result = await db.query("DELETE FROM forms WHERE id = $1", [id]);
+    // Supprimer le formulaire
+    const result = await db.query("DELETE FROM forms WHERE id = $1 RETURNING *", [id]);
 
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Formulaire non trouvé" });
     }
 
-    res.json({ message: "Formulaire supprimé avec succès !" });
+    res.json({ message: "Formulaire et réponses supprimés avec succès !" });
 
   } catch (err) {
-    console.error("Erreur lors de la suppression :", err);
+    await db.query("ROLLBACK"); // Annuler en cas d’erreur
+    console.error("❌ Erreur lors de la suppression :", err);
     res.status(500).json({ error: "Erreur lors de la suppression du formulaire" });
   }
 });

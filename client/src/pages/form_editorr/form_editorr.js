@@ -23,6 +23,8 @@ const FormEditor2 = () => {
       ],
     };
 
+    
+
     const editor = new FormEditor({
       container: editorContainerRef.current,
     });
