@@ -4,26 +4,16 @@ import { FormEditor } from "@bpmn-io/form-js-editor";
 import "./form_editorr.css";
 import './form-js-editor.css';
 
-
 const FormEditor2 = () => {
   const { id } = useParams(); // Récupérer l'ID du formulaire s'il est en modification
   const navigate = useNavigate();
   const editorContainerRef = useRef(null);
   const [formEditor, setFormEditor] = useState(null);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(""); // Initialize title as empty string
   const [isEditing, setIsEditing] = useState(false); // Mode édition
 
   useEffect(() => {
     if (!editorContainerRef.current) return;
-
-    const schema = {
-      type: "default",
-      components: [
-        
-      ],
-    };
-
-    
 
     const editor = new FormEditor({
       container: editorContainerRef.current,
@@ -38,7 +28,7 @@ const FormEditor2 = () => {
         .then((data) => {
           if (!data.json_data) throw new Error("Le schéma du formulaire est vide !");
           editor.importSchema(data.json_data); // Charger le schéma
-          setTitle(data.title || "");
+          setTitle(data.title || ""); // Set title if exists or keep empty
           setIsEditing(true); // Activer le mode édition
         })
         .catch((err) => console.error("Erreur de chargement :", err));
@@ -62,12 +52,7 @@ const FormEditor2 = () => {
 
     const schema = await formEditor.getSchema();
     const formId = id || `Form_${Date.now()}`;
-    const formTitle = title.trim();
-
-    if (!formTitle) {
-      alert("Veuillez entrer un titre !");
-      return;
-    }
+    const formTitle = title.trim() || "Formulaire sans titre"; // Use existing title if not provided
 
     const formData = { id: formId, title: formTitle, json_data: schema };
 
@@ -102,7 +87,7 @@ const FormEditor2 = () => {
         type="text"
         id="titre"
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={(e) => setTitle(e.target.value)} // Update title based on user input
       />
       <button onClick={handleSaveForm}>{isEditing ? "Mettre à jour" : "Enregistrer"}</button>
       <div ref={editorContainerRef} id="form-editor" style={{ width: "100%", height: "500px", border: "1px solid #ccc" }} />

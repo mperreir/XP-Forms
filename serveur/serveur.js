@@ -1,17 +1,21 @@
-require('./base_de_donnee/initDb.js'); // Assurez-vous que le chemin est correct
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./base_de_donnee/bd.db'); // Assurez-vous que le fichier bd.db se trouve dans le dossier base_de_donnee
-
-const express = require("express");
-const cors = require("cors"); // Permet d'accepter les requêtes de React
-const bodyParser = require('body-parser');
-
+const express = require('express');
 const app = express();
+const bodyParser = require('body-parser');
+const formRoutes = require('./routes/formRoutes');
+const responseRoutes = require("./routes/responseRoutes");
+
+const cors = require("cors");
 app.use(cors());
-app.use(express.json()); // Middleware pour traiter les JSON
+
+
+
+app.use(express.json()); // Middleware for JSON
 app.use(bodyParser.json());
 
-
+// Use form routes
+app.use('/api', formRoutes);
+app.use("/api", responseRoutes);
+/*
 app.post('/api/save-form', async (req, res) => {
   try {
     const { id, title, json_data } = req.body;
@@ -64,12 +68,13 @@ app.post('/api/save-form', async (req, res) => {
     res.status(500).send("Erreur lors de l'enregistrement du formulaire");
   }
 });
-
+*/
 
 
 
 
 // Récupérer tous les formulaires
+/*
 app.get('/api/forms', async (req, res) => {
   try {
     db.all('SELECT id, title, created_at, updated_at FROM forms ORDER BY created_at DESC', (err, rows) => {
@@ -83,30 +88,48 @@ app.get('/api/forms', async (req, res) => {
     console.error(err);
     res.status(500).send("Erreur lors de la récupération des formulaires");
   }
-});
-
+});*/
+/*
 // Recuperer le schema du formulaire correspondant à l'id fournis
-app.get('/api/forms/:id', async (req, res) => {
+app.get("/api/forms/:id", async (req, res) => {
   const { id } = req.params;
+
   try {
-    db.get('SELECT id, json_data, created_at FROM forms WHERE id = ?', [id], (err, row) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).send("Erreur lors de la récupération du formulaire");
+    db.get(
+      "SELECT id, json_data, created_at FROM forms WHERE id = ?",
+      [id],
+      (err, row) => {
+        if (err) {
+          console.error("Error fetching form:", err);
+          return res.status(500).send("Erreur lors de la récupération du formulaire");
+        }
+
+        if (!row) {
+          return res.status(404).json({ error: "Formulaire non trouvé" });
+        }
+
+        // Ensure json_data is parsed and check if components exist
+        try {
+          const jsonData = JSON.parse(row.json_data);
+          if (!jsonData || !jsonData.components) {
+            return res.status(500).json({ error: "Le formulaire ne contient pas de composants valides." });
+          }
+          res.json({ id: row.id, json_data: jsonData, created_at: row.created_at });
+        } catch (err) {
+          console.error("Error parsing json_data:", err);
+          return res.status(500).json({ error: "Erreur lors du traitement du schéma du formulaire" });
+        }
       }
-      if (!row) {
-        return res.status(404).json({ error: 'Formulaire non trouvé' });
-      }
-      res.json({ id: row.id, json_data: row.json_data, created_at: row.created_at });
-    });
+    );
   } catch (err) {
-    console.error(err);
+    console.error("Error handling the request:", err);
     res.status(500).send("Erreur lors de la récupération du formulaire");
   }
 });
+*/
 
 
-
+/*
 app.get("/api/forms/:id/has-responses", async (req, res) => {
   const { id } = req.params;
 
@@ -128,9 +151,9 @@ app.get("/api/forms/:id/has-responses", async (req, res) => {
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
+*/
 
-
-
+/*
 app.put('/api/forms/:id', async (req, res) => {
   const { id } = req.params;
   const { title, json_data } = req.body;
@@ -156,7 +179,9 @@ app.put('/api/forms/:id', async (req, res) => {
   }
 });
 
+*/
 
+/*
 
 // Enregistrer une fois pour toute les réponses d'un participant lorsqu'il clique sur submit
 app.post("/api/submit-form", async (req, res) => {
@@ -341,9 +366,9 @@ app.get("/api/forms/:id/responses", async (req, res) => {
     console.error("Erreur SQL :", error);
     res.status(500).json({ error: "Erreur serveur lors de la récupération des réponses" });
   }
-});
+});*/
 
-
+/*
 //
 // modifer un formulaire
 app.put('/api/forms/:id', async (req, res) => {
@@ -373,62 +398,70 @@ app.put('/api/forms/:id', async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "Erreur serveur" });
   }
-});
+});*/
 
 
 
 
 //supprimer un formulaire
-
+/*
 app.delete('/api/forms/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    db.get("SELECT COUNT(*) FROM responses WHERE form_id = ?", [id], (err, row) => {
+    // Check if the form has any responses
+    db.get("SELECT COUNT(*) AS total FROM responses WHERE form_id = ?", [id], (err, row) => {
       if (err) {
         console.error("Erreur SQL :", err);
         return res.status(500).json({ error: "Erreur serveur" });
       }
 
-      if (parseInt(row['COUNT(*)']) > 0) {
-        const confirmDelete = true; // À gérer côté frontend pour confirmer
-        if (!confirmDelete) {
-          return res.status(400).json({ error: "Annulation de la suppression." });
-        }
-
+      // If there are responses, delete them first in a transaction
+      if (parseInt(row.total) > 0) {
         db.run("BEGIN TRANSACTION", (err) => {
           if (err) {
             console.error("Erreur début de transaction", err.message);
             return res.status(500).send("Erreur serveur");
           }
 
-          // Supprimer les réponses
+          // Delete responses related to the form
           db.run("DELETE FROM response_values WHERE response_id IN (SELECT id FROM responses WHERE form_id = ?)", [id]);
           db.run("DELETE FROM responses WHERE form_id = ?", [id]);
 
-          db.run("COMMIT", (err) => {
+          // Delete the form itself
+          db.run("DELETE FROM forms WHERE id = ?", [id], (err) => {
             if (err) {
-              console.error("Erreur lors de la validation de la transaction", err.message);
-              return res.status(500).send("Erreur serveur");
+              console.error("Erreur lors de la suppression du formulaire", err);
+              return res.status(500).json({ error: "Erreur lors de la suppression du formulaire" });
             }
-            // Supprimer le formulaire
-            db.run("DELETE FROM forms WHERE id = ?", [id], (err) => {
+            db.run("COMMIT", (err) => {
               if (err) {
-                console.error("Erreur lors de la suppression du formulaire", err);
-                return res.status(500).json({ error: "Erreur lors de la suppression du formulaire" });
+                console.error("Erreur lors de la validation de la transaction", err.message);
+                return res.status(500).send("Erreur serveur");
               }
               res.json({ message: "Formulaire et réponses supprimés avec succès !" });
             });
           });
         });
+      } else {
+        // If there are no responses, simply delete the form
+        db.run("DELETE FROM forms WHERE id = ?", [id], (err) => {
+          if (err) {
+            console.error("Erreur lors de la suppression du formulaire", err);
+            return res.status(500).json({ error: "Erreur lors de la suppression du formulaire" });
+          }
+          res.json({ message: "Formulaire supprimé avec succès !" });
+        });
       }
     });
   } catch (err) {
-    console.error(" Erreur lors de la suppression :", err);
+    console.error("Erreur lors de la suppression :", err);
     res.status(500).json({ error: "Erreur lors de la suppression du formulaire" });
   }
 });
+*/
 
-app.listen(5000, () => {
-  console.log("Server is running on port 5000");
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });

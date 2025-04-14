@@ -17,23 +17,29 @@ const FormViewer = () => {
         const response = await fetch(`http://localhost:5000/api/forms/${id}`);
         if (!response.ok) throw new Error("Erreur lors du chargement du formulaire");
         const data = await response.json();
-        
+  
+        if (!data || !data.json_data || !Array.isArray(data.json_data.components)) {
+          throw new Error("Le schéma du formulaire est invalide ou vide.");
+        }
+  
         setSchema(data.json_data); // Charger le schéma du formulaire
         setFormDetails(data); // Stocker toutes les infos du formulaire
-
+  
         // Construire le mapping entre key et id
         const mapping = {};
         data.json_data.components.forEach((component) => {
           mapping[component.key] = component.id;
         });
         setComponentMapping(mapping);
-        
+  
       } catch (error) {
-        console.error(error);
+        console.error("Erreur lors du chargement du schéma du formulaire:", error);
+        alert("Erreur lors du chargement du formulaire");
       }
     };
     fetchFormSchema();
   }, [id]);
+  
 
   useEffect(() => {
     if (!schema) return;
