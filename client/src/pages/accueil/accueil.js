@@ -86,13 +86,6 @@ const Accueil = () => {
                                 <td>
                                     <Link to={`/form-viewer/${form.id}/1?navigation=True`}>
                                         <button>Voir</button>
-                                <td className={styles.td}>{form.id}</td>
-                                <td className={styles.td}>{form.title}</td>
-                                <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
-                                <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
-                                <td className={styles.td}>
-                                    <Link to={`/form-viewer/${form.id}`}>
-                                        <button className={`${styles.button} ${styles.viewButton}`}>Voir</button>
                                     </Link>
                                     <button className={`${styles.button} ${styles.editButton}`} onClick={() => handleEditForm(form.id)}>Modifier</button>
                                     <Link to={`/form-responses/${form.id}`}>

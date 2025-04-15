@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Form } from "@bpmn-io/form-js-viewer";
 import styles from './form_viewer.module.css'; // Import the CSS Module
+import { useLocation } from "react-router-dom"; // Import useLocation to access query parameters
 
 const FormViewer = () => {
   const { id, page, id_participant } = useParams();
