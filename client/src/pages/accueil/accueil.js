@@ -3,11 +3,9 @@ import { Link } from "react-router-dom";
 import './accueil.css';
 import { useNavigate } from "react-router-dom";
 
-
 const Accueil = () => {
     const [forms, setForms] = useState([]);
     const navigate = useNavigate(); // Permet de gérer la navigation
-
 
     useEffect(() => {
         const fetchForms = async () => {
@@ -23,7 +21,6 @@ const Accueil = () => {
 
         fetchForms();
     }, []);
-
 
     const handleDeleteForm = async (formId) => {
         if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce formulaire ? Toutes les réponses associées seront perdues. Cette action est irréversible.")) {
@@ -62,9 +59,6 @@ const Accueil = () => {
         }
     };
 
-
-
-
     return (
         <div>
             <h1>Accueil</h1>
@@ -90,26 +84,19 @@ const Accueil = () => {
                                 <td>{new Date(form.created_at).toLocaleString()}</td>
                                 <td>{new Date(form.updated_at).toLocaleString()}</td>
                                 <td>
-                                    <Link to={`/form-viewer/${form.id}`}>
-                                        <button>Voir</button>
-                                    </Link>
+                                    <div className="actions-container">
+                                        <Link to={`/form-viewer/${form.id}`}>
+                                            <button>Voir</button>
+                                        </Link>
+                                        <button onClick={() => handleEditForm(form.id)}>Modifier</button>
+                                        <Link to={`/form-responses/${form.id}`}>
+                                            <button>Voir Réponses</button>
+                                        </Link>
+                                        <button onClick={() => handleDeleteForm(form.id)} style={{ color: "red" }}>
+                                            Supprimer
+                                        </button>
+                                    </div>
                                 </td>
-                                <td>
-                                    <button onClick={() => handleEditForm(form.id)}>Modifier</button>
-                                </td>
-
-                                <td>
-                                    <Link to={`/form-responses/${form.id}`}>
-                                        <button>Voir Réponses</button>
-                                    </Link>
-                                </td>
-
-                                <td>
-                                    <button onClick={() => handleDeleteForm(form.id)} style={{ color: "red" }}>
-                                        Supprimer
-                                    </button>
-                                </td>
-
                             </tr>
                         ))
                     ) : (
