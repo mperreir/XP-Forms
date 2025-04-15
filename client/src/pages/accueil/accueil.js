@@ -85,13 +85,21 @@ const Accueil = () => {
                                 <td>{new Date(form.updated_at).toLocaleString()}</td>
                                 <td>
                                     <Link to={`/form-viewer/${form.id}`}>
-                                        <button className="view">Voir</button>
+                                        <button>Voir</button>
                                     </Link>
-                                    <button className="edit" onClick={() => handleEditForm(form.id)}>Modifier</button>
+                                </td>
+                                <td>
+                                    <button onClick={() => handleEditForm(form.id)}>Modifier</button>
+                                </td>
+
+                                <td>
                                     <Link to={`/form-responses/${form.id}`}>
-                                        <button className="responses">Voir Réponses</button>
+                                        <button>Voir Réponses</button>
                                     </Link>
-                                    <button className="delete" onClick={() => handleDeleteForm(form.id)}>
+                                </td>
+
+                                <td>
+                                    <button onClick={() => handleDeleteForm(form.id)} style={{ color: "red" }}>
                                         Supprimer
                                     </button>
                                 </td>
