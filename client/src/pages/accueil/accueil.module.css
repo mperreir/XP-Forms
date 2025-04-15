@@ -1,5 +1,5 @@
 /* Styling for the "Créer un nouveau formulaire" link */
-#create-form-link {
+.createFormLink {
     display: inline-block;
     text-decoration: none;
     background-color: #007bff;
@@ -11,12 +11,12 @@
     text-align: center;
 }
 
-#create-form-link:hover {
+.createFormLink:hover {
     background-color: #0056b3;
 }
 
 /* General styles for table */
-table {
+.table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
@@ -24,22 +24,22 @@ table {
     overflow: hidden;
 }
 
-th, td {
+.th, .td {
     text-align: left;
     padding: 12px;
 }
 
-th {
+.th {
     background-color: #007bff;
     color: white;
 }
 
-td {
+.td {
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
 }
 
-td:hover {
+.td:hover {
     background-color: #f1f3f5;
 }
 
@@ -48,7 +48,7 @@ tbody tr:hover {
 }
 
 /* Styling for the action buttons */
-button {
+.button {
     padding: 8px 16px;
     border-radius: 8px;
     font-size: 14px;
@@ -59,53 +59,53 @@ button {
 }
 
 /* Color scheme for action buttons */
-button.view {
+.viewButton {
     background-color: #28a745; /* Green */
     color: white;
 }
 
-button.view:hover {
+.viewButton:hover {
     background-color: #218838;
 }
 
-button.edit {
+.editButton {
     background-color: #17a2b8; /* Blue */
     color: white;
 }
 
-button.edit:hover {
+.editButton:hover {
     background-color: #138496;
 }
 
-button.delete {
+.deleteButton {
     background-color: #dc3545; /* Red */
     color: white;
 }
 
-button.delete:hover {
+.deleteButton:hover {
     background-color: #c82333;
 }
 
-button.responses {
+.responsesButton {
     background-color: #ffc107; /* Yellow */
     color: white;
 }
 
-button.responses:hover {
+.responsesButton:hover {
     background-color: #e0a800;
 }
 
 /* Ensure the layout is responsive */
 @media (max-width: 768px) {
-    table {
+    .table {
         font-size: 14px;
     }
 
-    th, td {
+    .th, .td {
         padding: 8px;
     }
 
-    #create-form-link {
+    .createFormLink {
         font-size: 14px;
         padding: 10px 20px;
     }

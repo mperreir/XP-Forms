@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Form } from "@bpmn-io/form-js-viewer";
-import './form_viewer.css';
+import styles from './form_viewer.module.css'; // Import the CSS Module
 
 const FormViewer = () => {
   const { id, id_participant } = useParams(); // Récupération des paramètres de l'URL
@@ -39,7 +39,6 @@ const FormViewer = () => {
     };
     fetchFormSchema();
   }, [id]);
-  
 
   useEffect(() => {
     if (!schema) return;
@@ -131,18 +130,17 @@ const FormViewer = () => {
       });
     });
 
-
     return () => {
       form.destroy();
     };
   }, [schema, componentMapping]);
 
   return (
-    <div>
+    <div className={styles.formViewerContainer}>
       <h2>Form Viewer</h2>
 
       {!id_participant && formDetails && (
-        <div>
+        <div className={styles.formDetails}>
           <p><strong>ID du Formulaire :</strong> {formDetails.id}</p>
           <p><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
           <p><strong>URL :</strong> http://localhost:3000/form-viewer/{id}/id_participant </p>

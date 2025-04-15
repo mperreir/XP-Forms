@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import "./FormResponsesList.css"; // Import the CSS file
+import styles from "./FormResponsesList.module.css"; // Import the CSS Module
 
 const FormResponsesList = () => {
   const { id } = useParams(); // Récupération de l'ID du formulaire
@@ -65,7 +65,7 @@ const FormResponsesList = () => {
   };
 
   return (
-    <div className="container">
+    <div className={styles.container}>
       <h2>Réponses du formulaire</h2>
       <button onClick={exportToCSV} style={{ marginBottom: "10px" }}>
         Exporter en CSV
@@ -93,7 +93,7 @@ const FormResponsesList = () => {
           </tbody>
         </table>
       ) : (
-        <p className="message">Chargement des données ou aucune réponse trouvée.</p>
+        <p className={styles.message}>Chargement des données ou aucune réponse trouvée.</p>
       )}
     </div>
   );

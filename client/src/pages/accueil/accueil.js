@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
-import './accueil.css';
+import styles from './accueil.module.css'; // Import CSS Module
 import { useNavigate } from "react-router-dom";
 
 const Accueil = () => {
@@ -62,36 +62,36 @@ const Accueil = () => {
     return (
         <div>
             <h1>XP-LAB</h1>
-            <Link id="create-form-link" to="/form-editor2">Créer un nouveau formulaire</Link>
+            <Link id={styles.createFormLink} to="/form-editor2">Créer un nouveau formulaire</Link>
 
             <h2>Liste des formulaires enregistrés</h2>
-            <table>
+            <table className={styles.table}>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Titre</th>
-                        <th>Date de création</th>
-                        <th>Dernière mise à jour</th>
-                        <th>Actions</th>
+                        <th className={styles.th}>ID</th>
+                        <th className={styles.th}>Titre</th>
+                        <th className={styles.th}>Date de création</th>
+                        <th className={styles.th}>Dernière mise à jour</th>
+                        <th className={styles.th}>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {forms.length > 0 ? (
                         forms.map(form => (
                             <tr key={form.id}>
-                                <td>{form.id}</td>
-                                <td>{form.title}</td>
-                                <td>{new Date(form.created_at).toLocaleString()}</td>
-                                <td>{new Date(form.updated_at).toLocaleString()}</td>
-                                <td>
+                                <td className={styles.td}>{form.id}</td>
+                                <td className={styles.td}>{form.title}</td>
+                                <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
+                                <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
+                                <td className={styles.td}>
                                     <Link to={`/form-viewer/${form.id}`}>
-                                        <button className="view">Voir</button>
+                                        <button className={`${styles.button} ${styles.viewButton}`}>Voir</button>
                                     </Link>
-                                    <button className="edit" onClick={() => handleEditForm(form.id)}>Modifier</button>
+                                    <button className={`${styles.button} ${styles.editButton}`} onClick={() => handleEditForm(form.id)}>Modifier</button>
                                     <Link to={`/form-responses/${form.id}`}>
-                                        <button className="responses">Voir Réponses</button>
+                                        <button className={`${styles.button} ${styles.responsesButton}`}>Voir Réponses</button>
                                     </Link>
-                                    <button className="delete" onClick={() => handleDeleteForm(form.id)}>
+                                    <button className={`${styles.button} ${styles.deleteButton}`} onClick={() => handleDeleteForm(form.id)}>
                                         Supprimer
                                     </button>
                                 </td>
