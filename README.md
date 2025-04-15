@@ -1,88 +1,37 @@
-# Guide d'utilisation de l'application
+## Getting Started
 
-## 1. Préparation de la base de données : 
-Il faut tout d'abord commencer par créer une nouvelle base de données sur Postgresql que vous appelez `PTrans` (de preference utilisez pgAdmin). Dans cette base de données créez les tables necessaires au fonctionnement de l'application en effectuant les requetes sql çi-après :
+These instructions will help you set up the project on your local machine for development and testing.
 
-__Table forms__ :
-```bash
-CREATE TABLE forms (
-    id VARCHAR(50) PRIMARY KEY,  -- Form ID
-    title VARCHAR(255) NOT NULL,
-    json_data JSON,  -- Stocker le JSON complet pour référence,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+### Prerequisites
 
--- Création d'une fonction qui met à jour le champ updated_at
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+You need **Node.js** and **npm** installed on your computer. If you don't have them yet, download and install from [nodejs.org](https://nodejs.org/).
 
--- Création du trigger pour exécuter la fonction lors de la mise à jour
-CREATE TRIGGER trigger_update_forms_updated_at
-BEFORE UPDATE ON forms
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
-```
-__Table components__ :
+### Installation
 
-```bash
-CREATE TABLE components (
-    id VARCHAR(50) PRIMARY KEY,  -- Component ID
-    form_id VARCHAR(50),
-    label VARCHAR(255) NOT NULL,
-    type VARCHAR(50) NOT NULL,  -- textfield, textarea, radio, etc.
-    action VARCHAR(10),
-    key_name VARCHAR(255), -- Clé unique du champ dans le JSON
-    layout JSON,  -- Stocke l'organisation dans le formulaire
-    FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE
-);
-```
-__Table responses__ :
+1. **Clone the repository:**
 
-```bash
-CREATE TABLE responses (
-    id SERIAL PRIMARY KEY,
-    form_id VARCHAR(50),
-    user_id VARCHAR(50),  -- ID de l'utilisateur qui répond
-    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE
-);
-```
-__Table response_values__ :
+   First, clone the project repository to your local machine:
+   ```bash
+   git clone https://github.com/ghassenjrad/Ptrans.git
+   cd Ptrans
 
-```bash
-CREATE TABLE response_values (
-    id SERIAL PRIMARY KEY,
-    response_id INT,
-    component_id VARCHAR(50),
-    value TEXT,  -- Stocke la réponse à la question
-    FOREIGN KEY (response_id) REFERENCES responses(id) ON DELETE CASCADE,
-    FOREIGN KEY (component_id) REFERENCES components(id) ON DELETE CASCADE
-);
-```
-__Remarque 1__ : À chaque insertion d'un formulaire dans la table forms, il est nécessaire d'insérer ses composants dans la table components, comme implémenté dans la route `app.post('/api/save-form')` dans `serveur.js`.
+2. **Install Dependencies:**
+    Run the following command to install all dependencies for both the client and the server:
+   ```bash
+   npm run install-all
 
-__Remarque 2__ : Dans le répertoire `serveur`, veuillez modifier le fichier `db.js` en mettant les valeurs de `user`, `password` propres à vous (ceux que vous utilisez sur pgAdmin).
+This will:
+
+-Install dependencies for the root project.
+
+-Install dependencies for the client.
+
+-Install dependencies for the server.
 
 
-## 2. Installation et Execution :
-L'application est composée de deux parties :
+3. **Start the development server:**
+    After the installation is complete, start both the client and server by running:
+    ```bash
+    npm run dev
 
-### 2.1. Backend : 
-Vous trouverez le code correspondant dans le répertoire `serveur`. Nous avons utilisé `Express.js` pour cette partie.
-
-__npm :__ Dans le répertoire `serveur`, exécutez la commande `npm install` pour installer les modules nécessaires à son fonctionnement.
-
-__Execution :__ Dans le répertoire `serveur`, exécutez la commande `npm run dev` pour lancer cette partie de l'application.
-
-### 2.2. Frontend : 
-Vous trouverez le code correspondant dans le répertoire `client`. Nous avons utilisé `React` et la bibliothèque `formjs` pour cette partie.
-
-__npm :__ Dans le répertoire `client`, exécutez la commande `npm install` pour installer les modules nécessaires à son fonctionnement.
-
-__Execution :__ Dans le répertoire `client`, exécutez la commande `npm start` pour lancer cette partie de l'application.
+This command will use concurrently to run the client and server at the same time. The client will be accessible at http://localhost:3000 and the server will run on http://localhost:5000.
