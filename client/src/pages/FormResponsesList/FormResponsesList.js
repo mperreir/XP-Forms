@@ -29,7 +29,7 @@ const FormResponsesList = () => {
         setQuestions(extractedQuestions); // Stocker les questions uniques
         setResponses(data); // Stocker les réponses
       } catch (error) {
-        console.error("❌ Erreur lors du chargement des réponses :", error);
+        console.error("Erreur lors du chargement des réponses :", error);
       }
     };
 
