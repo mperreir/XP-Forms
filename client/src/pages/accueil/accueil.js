@@ -90,7 +90,7 @@ const Accueil = () => {
                                 <td>{new Date(form.created_at).toLocaleString()}</td>
                                 <td>{new Date(form.updated_at).toLocaleString()}</td>
                                 <td>
-                                    <Link to={`/form-viewer/${form.id}`}>
+                                    <Link to={`/form-viewer/${form.id}/1?navigation=True`}>
                                         <button>Voir</button>
                                     </Link>
                                 </td>

@@ -1,15 +1,55 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Form } from "@bpmn-io/form-js-viewer";
+import { useLocation } from "react-router-dom";
 import './form_viewer.css';
 
 const FormViewer = () => {
-  const { id, id_participant } = useParams(); // Récupération des paramètres de l'URL
+  const { id, page, id_participant } = useParams();
+  const navigate = useNavigate();
+  const currentPage = parseInt(page) || 1;
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const showNavigation = queryParams.get("navigation") === "True";
+
   const containerRef = useRef(null);
   const [schema, setSchema] = useState(null);
+  const [pages, setPages] = useState([]);
   const [formDetails, setFormDetails] = useState(null);
-  const [componentMapping, setComponentMapping] = useState({}); // Mapping key → id
+  const [componentMapping, setComponentMapping] = useState({});
   const [formData, setFormData] = useState({});
+
+  const dataInitialized = useRef(false);
+
+  const splitSchemaBySeparator = (components) => {
+    const pages = [[]];
+    components.forEach((comp) => {
+      if (comp.type === "separator") {
+        pages.push([]);
+      } else {
+        pages[pages.length - 1].push(comp);
+      }
+    });
+    return pages;
+  };
+
+  const fetchSavedData = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/form-responses-participant/${id}/${id_participant}`);
+      if (!response.ok) throw new Error("Erreur lors du chargement des réponses sauvegardées");
+      const data = await response.json();
+
+      const loadedData = {};
+      data.responses.forEach((item) => {
+        loadedData[item.component_key] = item.value;
+      });
+
+      return loadedData;
+    } catch (error) {
+      console.error("Erreur de récupération des données:", error);
+      return {};
+    }
+  };
 
   useEffect(() => {
     const fetchFormSchema = async () => {
@@ -17,21 +57,23 @@ const FormViewer = () => {
         const response = await fetch(`http://localhost:5000/api/forms/${id}`);
         if (!response.ok) throw new Error("Erreur lors du chargement du formulaire");
         const data = await response.json();
-  
+
         if (!data || !data.json_data || !Array.isArray(data.json_data.components)) {
           throw new Error("Le schéma du formulaire est invalide ou vide.");
         }
-  
-        setSchema(data.json_data); // Charger le schéma du formulaire
-        setFormDetails(data); // Stocker toutes les infos du formulaire
-  
-        // Construire le mapping entre key et id
+
+        setSchema(data.json_data);
+        setFormDetails(data);
+
+        const paginated = splitSchemaBySeparator(data.json_data.components);
+        setPages(paginated);
+
         const mapping = {};
         data.json_data.components.forEach((component) => {
           mapping[component.key] = component.id;
         });
         setComponentMapping(mapping);
-  
+
       } catch (error) {
         console.error("Erreur lors du chargement du schéma du formulaire:", error);
         alert("Erreur lors du chargement du formulaire");
@@ -39,103 +81,119 @@ const FormViewer = () => {
     };
     fetchFormSchema();
   }, [id]);
-  
 
   useEffect(() => {
-    if (!schema) return;
+    if (!schema || pages.length === 0) return;
+    if (!pages[currentPage - 1]) {
+      console.error("Page invalide");
+      return;
+    }
+
     const form = new Form({
       container: containerRef.current,
     });
 
-    form
-      .importSchema(schema)
-      .then(() => {
-        console.log("Form imported successfully!");
-      })
-      .catch((error) => {
-        console.error("Error importing form schema:", error);
-      });
-
-    // Écoute de l'événement submit
-    form.on("submit", (event) => {
-      if (typeof id_participant !== 'undefined') {
-        const rawData = event.data;
-        console.log("Raw Data:", rawData);
-
-        // Transformer le JSON pour utiliser component_id au lieu de key
-        const transformedData = Object.entries(rawData).map(([key, value]) => ({
-          component_id: componentMapping[key],
-          value: value
-        }));
-
-        console.log("Transformed Data:", transformedData);
-
-        fetch("http://localhost:5000/api/submit-form", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            form_id: id,
-            user_id: id_participant,
-            responses: transformedData
-          })
-        })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("Réponse du serveur:", data);
-          alert("Formulaire soumis avec succès !");
-        })
-        .catch((error) => {
-          console.error("Erreur lors de la soumission:", error);
-          alert("Une erreur est survenue !");
-        });
+    const loadAndRender = async () => {
+      let loadedData = {};
+      if (id_participant) {
+        loadedData = await fetchSavedData();
+        setFormData(loadedData);
       }
-    });
 
-    // Auto-save lors des modifications
-    form.on("changed", (event) => {
-      if (!id_participant) return;
+      const pageSchema = {
+        ...schema,
+        components: pages[currentPage - 1] || [],
+      };
 
-      const newData = event.data; // Contient toutes les réponses actuelles
+      await form.importSchema(pageSchema,loadedData);
 
-      // Trouver quel champ a changé
-      Object.entries(newData).forEach(([key, value]) => {
-        if (formData[key] !== value) {
-          setFormData((prevData) => ({
-            ...prevData,
-            [key]: value,
+      dataInitialized.current = true;
+
+      form.on("submit", (event) => {
+        /*if (typeof id_participant !== 'undefined') {
+          const rawData = event.data;
+          const transformedData = Object.entries(rawData).map(([key, value]) => ({
+            component_id: componentMapping[key],
+            value: value
           }));
 
-          const component_id = componentMapping[key]; // Récupérer l'id du composant
-          if (!component_id) return; // Sécurité si key non mappé
-
-          console.log(`Envoi auto-save: component_id=${component_id}, value=${value}`);
-
-          fetch("http://localhost:5000/api/save-response", {
+          fetch("http://localhost:5000/api/submit-form", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               form_id: id,
               user_id: id_participant,
-              component_id,
-              value,
-            }),
+              responses: transformedData
+            })
           })
           .then((response) => response.json())
           .then((data) => {
-            console.log("Réponse sauvegardée :", data);
+            console.log("Réponse du serveur:", data);
+            alert("Formulaire soumis avec succès !");
           })
           .catch((error) => {
-            console.error("Erreur lors de la sauvegarde :", error);
+            console.error("Erreur lors de la soumission:", error);
+            alert("Une erreur est survenue !");
           });
-        }
-      });
-    });
+        }*/
+       if(id_participant){
+                fetch('http://localhost:3000/api/shutdown', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                      console.log(data.message); // "Server shutting down..."
+                      // Optionally, redirect or handle the UI logic after shutdown
+                    })
+                    .catch(error => {
+                      console.error('Error shutting down:', error);
+                    });
+       }
 
+      });
+
+      form.on("changed", (event) => {
+        if (!id_participant || !dataInitialized.current) return;
+
+        const newData = event.data;
+        Object.entries(newData).forEach(([key, value]) => {
+          if (formData[key] !== value) {
+            setFormData((prevData) => ({
+              ...prevData,
+              [key]: value,
+            }));
+
+            const component_id = componentMapping[key];
+            if (!component_id) return;
+
+            console.log(`Auto-save: component_id=${component_id}, value=${value}`);
+
+            fetch("http://localhost:5000/api/save-response", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                form_id: id,
+                user_id: id_participant,
+                component_id,
+                value,
+              }),
+            })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("Réponse sauvegardée :", data);
+            })
+            .catch((error) => {
+              console.error("Erreur lors de la sauvegarde :", error);
+            });
+          }
+        });
+      });
+    };
+
+    loadAndRender();
 
     return () => {
       form.destroy();
     };
-  }, [schema, componentMapping]);
+  }, [schema, pages, currentPage, componentMapping]);
 
   return (
     <div>
@@ -145,13 +203,54 @@ const FormViewer = () => {
         <div>
           <p><strong>ID du Formulaire :</strong> {formDetails.id}</p>
           <p><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
-          <p><strong>URL :</strong> http://localhost:3000/form-viewer/{id}/id_participant </p>
+          <p><strong>Pour integrer dans un scénario Tobii veuillez utiliser cet URL en remplaçant 'id_participant' par l'id du participant :</strong> http://localhost:3000/form-viewer/{id}/{page}/id_participant</p>
+          <p>Si vous voulez que le participant puisse naviguer entre les pages du form veuillez ajouter <strong> ?navigation=True </strong> à la fin de l'URL</p>
         </div>
       )}
 
       {id_participant && (
         <div>
           <p><strong>ID du Participant :</strong> {id_participant}</p>
+        </div>
+      )}
+
+      {showNavigation && (
+        <div style={{ marginBottom: "1em", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          {currentPage > 1 ? (
+            <button
+              onClick={() =>
+                navigate(
+                  !id_participant
+                    ? `/form-viewer/${id}/${currentPage - 1}?navigation=True`
+                    : `/form-viewer/${id}/${currentPage - 1}/${id_participant}?navigation=True`
+                )
+              }
+            >
+              Page précédente
+            </button>
+          ) : (
+            <div style={{ width: "150px" }} />
+          )}
+
+          <div style={{ textAlign: "center", fontWeight: "bold" }}>
+            Page : {currentPage} / {pages.length}
+          </div>
+
+          {currentPage < pages.length ? (
+            <button
+              onClick={() =>
+                navigate(
+                  !id_participant
+                    ? `/form-viewer/${id}/${currentPage + 1}?navigation=True`
+                    : `/form-viewer/${id}/${currentPage + 1}/${id_participant}?navigation=True`
+                )
+              }
+            >
+              Page suivante
+            </button>
+          ) : (
+            <div style={{ width: "150px" }} />
+          )}
         </div>
       )}
 
@@ -165,3 +264,4 @@ const FormViewer = () => {
 };
 
 export default FormViewer;
+
