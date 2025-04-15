@@ -1,19 +1,129 @@
+/* Style général de la page */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+}
+
+h1, h2 {
+    text-align: center;
+    color: #333;
+}
+
+h1 {
+    margin-top: 20px;
+}
+
+/* Styling for the "Créer un nouveau formulaire" link */
+#create-form-link {
+    display: inline-block;
+    text-decoration: none;
+    background-color: #007bff;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#create-form-link:hover {
+    background-color: #0056b3;
+}
+
+/* General styles for table */
 table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 th, td {
-    border: 1px solid #ddd;
-    padding: 10px;
     text-align: left;
+    padding: 12px;
 }
 
 th {
-    background-color: #f4f4f4;
+    background-color: #007bff;
+    color: white;
 }
 
-tr:hover {
-    background-color: #f1f1f1;
+td {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+td:hover {
+    background-color: #f1f3f5;
+}
+
+tbody tr:hover {
+    background-color: #e9ecef;
+}
+
+/* Styling for the action buttons */
+button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    margin: 5px;
+    transition: all 0.3s ease;
+}
+
+/* Color scheme for action buttons */
+button.view {
+    background-color: #28a745; /* Green */
+    color: white;
+}
+
+button.view:hover {
+    background-color: #218838;
+}
+
+button.edit {
+    background-color: #17a2b8; /* Blue */
+    color: white;
+}
+
+button.edit:hover {
+    background-color: #138496;
+}
+
+button.delete {
+    background-color: #dc3545; /* Red */
+    color: white;
+}
+
+button.delete:hover {
+    background-color: #c82333;
+}
+
+button.responses {
+    background-color: #ffc107; /* Yellow */
+    color: white;
+}
+
+button.responses:hover {
+    background-color: #e0a800;
+}
+
+/* Ensure the layout is responsive */
+@media (max-width: 768px) {
+    table {
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+
+    #create-form-link {
+        font-size: 14px;
+        padding: 10px 20px;
+    }
 }

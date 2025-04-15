@@ -15,6 +15,12 @@ app.use(bodyParser.json());
 // Use form routes
 app.use('/api', formRoutes);
 app.use("/api", responseRoutes);
+
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 /*
 app.post('/api/save-form', async (req, res) => {
   try {
@@ -460,8 +466,3 @@ app.delete('/api/forms/:id', async (req, res) => {
   }
 });
 */
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
