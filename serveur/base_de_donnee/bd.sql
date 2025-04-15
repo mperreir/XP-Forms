@@ -31,17 +31,10 @@ CREATE TABLE components (
 CREATE TABLE responses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,  -- Id auto-incrémenté
     form_id TEXT,
-    user_id TEXT,
-    submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE
-);
-
--- Table response_values
-CREATE TABLE response_values (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,  -- Id auto-incrémenté
-    response_id INTEGER,
     component_id TEXT,
+    user_id TEXT,
     value TEXT,
-    FOREIGN KEY (response_id) REFERENCES responses(id) ON DELETE CASCADE,
-    FOREIGN KEY (component_id) REFERENCES components(id) ON DELETE CASCADE
+    submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE,
+    UNIQUE(form_id, component_id, user_id)
 );

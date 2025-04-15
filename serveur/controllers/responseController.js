@@ -1,5 +1,6 @@
 const responseService = require("../services/responseService");
 
+
 const submitForm = async (req, res) => {
   const { form_id, user_id, responses } = req.body;
 
@@ -36,8 +37,31 @@ const getResponses = async (req, res) => {
   }
 };
 
+const getParticipantResponses = async (req, res) => {
+  const { form_id, user_id } = req.params;
+
+  try {
+    const responses = await responseService.getParticipantResponses(form_id, user_id);
+    console.log(responses);
+    res.status(200).json({responses:responses});
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const shutdown = async (req, res) => {
+  try {
+    const message = await responseService.shutdownServer();
+    res.status(200).json({ message });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   submitForm,
   saveResponse,
   getResponses,
+  getParticipantResponses,
+  shutdown,
 };

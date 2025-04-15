@@ -79,6 +79,13 @@ const Accueil = () => {
                     {forms.length > 0 ? (
                         forms.map(form => (
                             <tr key={form.id}>
+                                <td>{form.id}</td>
+                                <td>{form.title}</td>
+                                <td>{new Date(form.created_at).toLocaleString()}</td>
+                                <td>{new Date(form.updated_at).toLocaleString()}</td>
+                                <td>
+                                    <Link to={`/form-viewer/${form.id}/1?navigation=True`}>
+                                        <button>Voir</button>
                                 <td className={styles.td}>{form.id}</td>
                                 <td className={styles.td}>{form.title}</td>
                                 <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
