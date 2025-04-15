@@ -62,7 +62,7 @@ const Accueil = () => {
     return (
         <div>
             <h1>XP-LAB</h1>
-            <Link to="/form-editor2" id="create-form-link">Créer un nouveau formulaire</Link>
+            <Link id="create-form-link" to="/form-editor2">Créer un nouveau formulaire</Link>
 
             <h2>Liste des formulaires enregistrés</h2>
             <table>
@@ -85,21 +85,13 @@ const Accueil = () => {
                                 <td>{new Date(form.updated_at).toLocaleString()}</td>
                                 <td>
                                     <Link to={`/form-viewer/${form.id}`}>
-                                        <button>Voir</button>
+                                        <button className="view">Voir</button>
                                     </Link>
-                                </td>
-                                <td>
-                                    <button onClick={() => handleEditForm(form.id)}>Modifier</button>
-                                </td>
-
-                                <td>
+                                    <button className="edit" onClick={() => handleEditForm(form.id)}>Modifier</button>
                                     <Link to={`/form-responses/${form.id}`}>
-                                        <button>Voir Réponses</button>
+                                        <button className="responses">Voir Réponses</button>
                                     </Link>
-                                </td>
-
-                                <td>
-                                    <button onClick={() => handleDeleteForm(form.id)} style={{ color: "red" }}>
+                                    <button className="delete" onClick={() => handleDeleteForm(form.id)}>
                                         Supprimer
                                     </button>
                                 </td>
