@@ -12,6 +12,20 @@
   text-align: center;
 }
 
+/* Container for navigation buttons */
+.navigationButtons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1em;
+}
+
+/* Text alignment for page indicator */
+.pageIndicator {
+  text-align: center;
+  font-weight: bold;
+}
+
 /* Titles */
 h2 {
   color: #007bff;
@@ -115,6 +129,26 @@ button:focus {
     width: 100%;
   }
 
+  .navigationButtons {
+    flex-direction: column;
+  }
+
+  .pageIndicator {
+    margin-top: 0.5em;
+  }
+
+  .navButtonWrapper {
+    width: 150px; 
+    display: flex;
+    justify-content: center;
+  }
+  
+  .placeholder {
+    width: 100%;
+    height: 42px;
+  }
+  
+
   h2 {
     font-size: 28px;
   }
@@ -137,4 +171,5 @@ button:focus {
     padding: 20px;
     width: 90%;
   }
+
 }
