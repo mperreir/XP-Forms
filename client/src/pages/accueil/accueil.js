@@ -59,6 +59,38 @@ const Accueil = () => {
         }
     };
 
+
+    const handleDuplicateForm = async (formId) => {
+        try {
+            const response = await fetch(`http://localhost:5000/api/forms/${formId}/duplicate`, { method: 'POST' });
+            const data = await response.json();
+
+            if (data.newFormId) {
+                alert(`Formulaire dupliqué avec succès ! Nouveau Formulaire ID: ${data.newFormId}`);
+                // Optionally, you can navigate to the new form's editor page
+                //navigate(`/form-editor2/${data.newFormId}`);
+                 // Refresh the forms list to include the new duplicated form
+                 const fetchForms = async () => {
+                    try {
+                        const response = await fetch('http://localhost:5000/api/forms');
+                        if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
+                        const data = await response.json();
+                        setForms(data); // Update the form list after duplication
+                    } catch (error) {
+                        console.error(error);
+                    }
+                };
+                fetchForms(); // Call the function to refresh the list
+            } else {
+                alert("Erreur lors de la duplication du formulaire.");
+            }
+        } catch (error) {
+            console.error("Erreur lors de la duplication du formulaire :", error);
+            alert("Impossible de contacter le serveur pour la duplication.");
+        }
+    };
+
+
     return (
         <div>
             <h1>XP-LAB</h1>
@@ -91,6 +123,9 @@ const Accueil = () => {
                                     <Link to={`/form-responses/${form.id}`}>
                                         <button className={`${styles.button} ${styles.responsesButton}`}>Voir Réponses</button>
                                     </Link>
+                                    <button className={`${styles.button} ${styles.duplicateButton}`} onClick={() => handleDuplicateForm(form.id)}>
+                                        Dupliquer
+                                    </button>
                                     <button className={`${styles.button} ${styles.deleteButton}`} onClick={() => handleDeleteForm(form.id)}>
                                         Supprimer
                                     </button>

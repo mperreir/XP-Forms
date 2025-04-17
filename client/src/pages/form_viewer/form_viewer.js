@@ -136,17 +136,16 @@ const FormViewer = () => {
             alert("Une erreur est survenue !");
           });
         }*/
-       if(id_participant){
+       /*if(id_participant){
                 fetch('http://localhost:3000/api/shutdown', { method: 'POST' })
                     .then(response => response.json())
                     .then(data => {
                       console.log(data.message); // "Server shutting down..."
-                      // Optionally, redirect or handle the UI logic after shutdown
                     })
                     .catch(error => {
                       console.error('Error shutting down:', error);
                     });
-       }
+       }*/
 
       });
 
@@ -215,44 +214,49 @@ const FormViewer = () => {
       )}
 
       {showNavigation && (
-        <div style={{ marginBottom: "1em", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          {currentPage > 1 ? (
-            <button
-              onClick={() =>
-                navigate(
-                  !id_participant
-                    ? `/form-viewer/${id}/${currentPage - 1}?navigation=True`
-                    : `/form-viewer/${id}/${currentPage - 1}/${id_participant}?navigation=True`
-                )
-              }
-            >
-              Page précédente
-            </button>
-          ) : (
-            <div style={{ width: "150px" }} />
-          )}
+        <div className={styles.navigationButtons}>
+          <div className={styles.navButtonWrapper}>
+            {currentPage > 1 ? (
+              <button
+                onClick={() =>
+                  navigate(
+                    !id_participant
+                      ? `/form-viewer/${id}/${currentPage - 1}?navigation=True`
+                      : `/form-viewer/${id}/${currentPage - 1}/${id_participant}?navigation=True`
+                  )
+                }
+              >
+                Page précédente
+              </button>
+            ) : (
+              <div className={styles.placeholder}></div>
+            )}
+          </div>
 
-          <div style={{ textAlign: "center", fontWeight: "bold" }}>
+          <div className={styles.pageIndicator}>
             Page : {currentPage} / {pages.length}
           </div>
 
-          {currentPage < pages.length ? (
-            <button
-              onClick={() =>
-                navigate(
-                  !id_participant
-                    ? `/form-viewer/${id}/${currentPage + 1}?navigation=True`
-                    : `/form-viewer/${id}/${currentPage + 1}/${id_participant}?navigation=True`
-                )
-              }
-            >
-              Page suivante
-            </button>
-          ) : (
-            <div style={{ width: "150px" }} />
-          )}
+          <div className={styles.navButtonWrapper}>
+            {currentPage < pages.length ? (
+              <button
+                onClick={() =>
+                  navigate(
+                    !id_participant
+                      ? `/form-viewer/${id}/${currentPage + 1}?navigation=True`
+                      : `/form-viewer/${id}/${currentPage + 1}/${id_participant}?navigation=True`
+                  )
+                }
+              >
+                Page suivante
+              </button>
+            ) : (
+              <div className={styles.placeholder}></div>
+            )}
+          </div>
         </div>
       )}
+
 
       {schema ? (
         <div ref={containerRef} id="form" style={{ width: "100%" }}></div>

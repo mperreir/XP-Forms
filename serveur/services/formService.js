@@ -122,6 +122,79 @@ const deleteForm = (id) => {
   });
 };
 
+
+// Service function to duplicate a form
+const duplicateForm = async (formId) => {
+  return new Promise((resolve, reject) => {
+    db.run("BEGIN TRANSACTION");
+
+    // Step 1: Duplicate the form
+    db.get("SELECT * FROM forms WHERE id = ?", [formId], (err, form) => {
+      if (err) {
+        db.run("ROLLBACK");
+        return reject({ success: false, error: err.message });
+      }
+
+      if (!form) {
+        db.run("ROLLBACK");
+        return reject({ success: false, error: "Formulaire introuvable" });
+      }
+
+      // Generate new form ID and title
+      const newFormId = `new_id_${Math.floor(Math.random() * 1000000)}`;
+      const newTitle = `${form.title} (copy)`;
+      const newJsonData = form.json_data;
+
+      // Step 2: Insert the new form with the generated ID
+      db.run(
+        "INSERT INTO forms (id, title, json_data, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+        [newFormId, newTitle, newJsonData],
+        (err) => {
+          if (err) {
+            db.run("ROLLBACK");
+            return reject({ success: false, error: err.message });
+          }
+
+          // Step 3: Duplicate the components
+          db.all("SELECT * FROM components WHERE form_id = ?", [formId], (err, components) => {
+            if (err) {
+              db.run("ROLLBACK");
+              return reject({ success: false, error: err.message });
+            }
+
+            // Insert each component with new IDs linked to the new form
+            components.forEach((component) => {
+              const newComponentId = `new_id_${Math.floor(Math.random() * 1000000)}`;
+              db.run(
+                "INSERT INTO components (id, form_id, label, type, action, key_name, layout) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                [
+                  newComponentId,
+                  newFormId,
+                  component.label,
+                  component.type,
+                  component.action,
+                  component.key_name,
+                  component.layout,
+                ],
+                (err) => {
+                  if (err) {
+                    db.run("ROLLBACK");
+                    return reject({ success: false, error: err.message });
+                  }
+                }
+              );
+            });
+
+            // Step 4: Commit the transaction
+            db.run("COMMIT");
+            resolve({ success: true, newFormId });
+          });
+        }
+      );
+    });
+  });
+};
+
 module.exports = {
   saveForm,
   getAllForms,
@@ -129,4 +202,5 @@ module.exports = {
   hasResponses,
   updateForm,
   deleteForm,
+  duplicateForm,
 };

@@ -42,31 +42,31 @@ const hasResponses = async (req, res) => {
 };
 
 const updateForm = async (req, res) => {
-    const { id } = req.params;
-    const { title, json_data } = req.body;
-    try {
-      const hasResp = await formService.hasResponses(id);
-      if (hasResp) {
-        return res.status(400).json({ error: "Impossible de modifier un formulaire avec des réponses existantes." });
-      }
-  
-      const cleanSchema = {
-        ...json_data,
-        components: (json_data.components || []).map(component => ({
-          ...component,
-          type: component.type || "text"
-        }))
-      };
-      const result = await formService.updateForm(id, title, cleanSchema);
-      if (result === 0) {
-        return res.status(404).json({ error: "Formulaire non trouvé" });
-      }
-      res.json({ message: "Formulaire mis à jour avec succès !" });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Erreur lors de la mise à jour du formulaire" });
+  const { id } = req.params;
+  const { title, json_data } = req.body;
+  try {
+    const hasResp = await formService.hasResponses(id);
+    if (hasResp) {
+      return res.status(400).json({ error: "Impossible de modifier un formulaire avec des réponses existantes." });
     }
-  };
+
+    const cleanSchema = {
+      ...json_data,
+      components: (json_data.components || []).map(component => ({
+        ...component,
+        type: component.type || "text"
+      }))
+    };
+    const result = await formService.updateForm(id, title, cleanSchema);
+    if (result === 0) {
+      return res.status(404).json({ error: "Formulaire non trouvé" });
+    }
+    res.json({ message: "Formulaire mis à jour avec succès !" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur lors de la mise à jour du formulaire" });
+  }
+};
 
 const deleteForm = async (req, res) => {
   const { id } = req.params;
@@ -78,6 +78,29 @@ const deleteForm = async (req, res) => {
   }
 };
 
+// Controller to duplicate a form
+const duplicateForm = async (req, res) => {
+  const { id } = req.params; // Get the form ID from request parameters
+
+  try {
+    // Call the service to duplicate the form
+    const result = await formService.duplicateForm(id);
+
+    // Send the response back with success or failure message
+    if (result.success) {
+      res.status(200).json({
+        message: `Formulaire dupliqué avec succès ! Nouveau Formulaire ID : ${result.newFormId}`,
+        newFormId: result.newFormId
+      });
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error("Erreur lors de la duplication du formulaire:", error);
+    res.status(500).json({ error: "Erreur lors de la duplication du formulaire" });
+  }
+};
+
 module.exports = {
   saveForm,
   getAllForms,
@@ -85,4 +108,5 @@ module.exports = {
   hasResponses,
   updateForm,
   deleteForm,
+  duplicateForm,
 };

@@ -8,5 +8,6 @@ router.get("/forms/:id", formController.getFormById);
 router.get("/forms/:id/has-responses", formController.hasResponses);
 router.put("/forms/:id", formController.updateForm);
 router.delete("/forms/:id", formController.deleteForm);
+router.post("/forms/:id/duplicate", formController.duplicateForm);
 
 module.exports = router;
