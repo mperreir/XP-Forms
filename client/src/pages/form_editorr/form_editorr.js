@@ -51,7 +51,7 @@ const FormEditor2 = () => {
     }
 
     const schema = await formEditor.getSchema();
-    const formId = id || `Form_${Date.now()}`;
+    const formId = id || schema.id || `Form_${Date.now()}`;
     const formTitle = title.trim() || "Formulaire sans titre"; // Use existing title if not provided
 
     const formData = { id: formId, title: formTitle, json_data: schema };
