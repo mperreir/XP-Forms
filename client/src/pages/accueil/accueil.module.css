@@ -110,3 +110,12 @@ tbody tr:hover {
         padding: 10px 20px;
     }
 }
+
+.duplicateButton {
+    background-color: #6f42c1; /* Purple */
+    color: white;
+}
+
+.duplicateButton:hover {
+    background-color: #5a32a3;
+}
