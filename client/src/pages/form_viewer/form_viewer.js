@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation  } from "react-router-dom";
 import { Form } from "@bpmn-io/form-js-viewer";
-import styles from './form_viewer.module.css'; // Import the CSS Module
-import { useLocation } from "react-router-dom"; // Import useLocation to access query parameters
+import styles from './form_viewer.module.css'; 
 
 const FormViewer = () => {
   const { id, page, id_participant } = useParams();
@@ -110,43 +109,6 @@ const FormViewer = () => {
       dataInitialized.current = true;
 
       form.on("submit", (event) => {
-        /*if (typeof id_participant !== 'undefined') {
-          const rawData = event.data;
-          const transformedData = Object.entries(rawData).map(([key, value]) => ({
-            component_id: componentMapping[key],
-            value: value
-          }));
-
-          fetch("http://localhost:5000/api/submit-form", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              form_id: id,
-              user_id: id_participant,
-              responses: transformedData
-            })
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            console.log("Réponse du serveur:", data);
-            alert("Formulaire soumis avec succès !");
-          })
-          .catch((error) => {
-            console.error("Erreur lors de la soumission:", error);
-            alert("Une erreur est survenue !");
-          });
-        }*/
-       /*if(id_participant){
-                fetch('http://localhost:3000/api/shutdown', { method: 'POST' })
-                    .then(response => response.json())
-                    .then(data => {
-                      console.log(data.message); // "Server shutting down..."
-                    })
-                    .catch(error => {
-                      console.error('Error shutting down:', error);
-                    });
-       }*/
-
       });
 
       form.on("changed", (event) => {

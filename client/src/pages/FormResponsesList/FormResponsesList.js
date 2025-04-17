@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import styles from "./FormResponsesList.module.css"; // Import the CSS Module
+import styles from "./FormResponsesList.module.css";
 
 const FormResponsesList = () => {
   const { id } = useParams(); // Récupération de l'ID du formulaire
@@ -14,7 +14,7 @@ const FormResponsesList = () => {
         if (!response.ok) throw new Error("Erreur lors du chargement des réponses");
 
         const data = await response.json();
-        console.log("📩 Réponses reçues :", data); // Debugging
+        console.log(" Réponses reçues :", data); // Debugging
 
         // Extraire les questions uniques
         const extractedQuestions = [];

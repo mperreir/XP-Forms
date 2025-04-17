@@ -1,4 +1,4 @@
-require("../base_de_donnee/initDb.js"); // facultatif si déjà appelé une fois ailleurs
+require("../base_de_donnee/initDb.js"); 
 const db = require("../base_de_donnee/db");
 
 

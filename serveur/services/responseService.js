@@ -100,18 +100,6 @@ const shutdownServer = (req, res) => {
   });
 };
 
-/*const shutdownServer = (req, res) => {
-  // First send response to client
-  res.status(200).json({ message: 'Server shutting down...' });
-  
-  // Then close all connections and exit
-  setTimeout(() => {
-    console.log('Shutting down server gracefully...');
-    process.exit(0); // 0 indicates successful exit
-  }, 100); // Small delay to ensure response is sent
-};*/
-
-
 module.exports = {
   submitForm,
   saveResponse,
