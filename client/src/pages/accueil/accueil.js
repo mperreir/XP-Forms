@@ -117,7 +117,7 @@ const Accueil = () => {
                                 <td>{new Date(form.updated_at).toLocaleString()}</td>
                                 <td>
                                     <Link to={`/form-viewer/${form.id}/1?navigation=True`}>
-                                        <button>Voir</button>
+                                        <button className={`${styles.button} ${styles.viewButton}`}>Voir</button>
                                     </Link>
                                     <button className={`${styles.button} ${styles.editButton}`} onClick={() => handleEditForm(form.id)}>Modifier</button>
                                     <Link to={`/form-responses/${form.id}`}>

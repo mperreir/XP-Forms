@@ -56,20 +56,24 @@ tbody tr:hover {
     border: none;
     margin: 5px;
     transition: all 0.3s ease;
+
+    min-width: 120px;
+    height: 40px;
+    text-align: center;
 }
 
 /* Color scheme for action buttons */
 .viewButton {
-    background-color: #28a745; /* Green */
+    background-color: #0057f9; /* blue */
     color: white;
 }
 
 .viewButton:hover {
-    background-color: #218838;
+    background-color: #0b3e5d;
 }
 
 .editButton {
-    background-color: #17a2b8; /* Blue */
+    background-color: #17b8a0; /* Blue */
     color: white;
 }
 
@@ -78,12 +82,12 @@ tbody tr:hover {
 }
 
 .deleteButton {
-    background-color: #dc3545; /* Red */
+    background-color: #da0505; /* Red */
     color: white;
 }
 
 .deleteButton:hover {
-    background-color: #c82333;
+    background-color: #810c17;
 }
 
 .responsesButton {
@@ -92,7 +96,7 @@ tbody tr:hover {
 }
 
 .responsesButton:hover {
-    background-color: #e0a800;
+    background-color: #a47f12;
 }
 
 /* Ensure the layout is responsive */
@@ -112,10 +116,10 @@ tbody tr:hover {
 }
 
 .duplicateButton {
-    background-color: #6f42c1; /* Purple */
+    background-color: #5911e0; /* Purple */
     color: white;
 }
 
 .duplicateButton:hover {
-    background-color: #5a32a3;
+    background-color: #341077;
 }

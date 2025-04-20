@@ -52,7 +52,7 @@ const getAllForms = () => {
 
 const getFormById = (id) => {
   return new Promise((resolve, reject) => {
-    db.get("SELECT id, json_data, created_at FROM forms WHERE id = ?", [id], (err, row) => {
+    db.get("SELECT id, json_data, created_at, title FROM forms WHERE id = ?", [id], (err, row) => {
       if (err) return reject(err);
       if (!row) return reject(new Error("Formulaire non trouvé"));
 
@@ -61,7 +61,7 @@ const getFormById = (id) => {
         if (!jsonData || !jsonData.components) {
           return reject(new Error("Le formulaire ne contient pas de composants valides."));
         }
-        resolve({ id: row.id, json_data: jsonData, created_at: row.created_at });
+        resolve({ id: row.id, json_data: jsonData, created_at: row.created_at, title: row.title });
       } catch (e) {
         reject(new Error("Erreur lors du traitement du schéma du formulaire"));
       }

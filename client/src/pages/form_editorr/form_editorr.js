@@ -30,6 +30,7 @@ const FormEditor2 = () => {
           editor.importSchema(data.json_data); // Charger le schéma
           setTitle(data.title || ""); // Set title if exists or keep empty
           setIsEditing(true); // Activer le mode édition
+          console.log(data);
         })
         .catch((err) => console.error("Erreur de chargement :", err));
     } else {
