@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Modal from "../../components/Modal";
+import Modal from "../../components/Modal"; // Assure-toi d'avoir ce composant
 import styles from "./FormResponsesList.module.css";
 
 const FormResponsesList = () => {
-  const { id } = useParams(); // Récupération de l'ID du formulaire
+  const { id } = useParams();
   const [responses, setResponses] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
@@ -25,13 +25,12 @@ const FormResponsesList = () => {
   useEffect(() => {
     const fetchResponses = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/forms/${id}/responses`);
+        const response = await fetch(`/api/forms/${id}/responses`);
         if (!response.ok) throw new Error("Erreur lors du chargement des réponses");
 
         const data = await response.json();
-        console.log("Réponses reçues :", data);
-
         const extractedQuestions = [];
+
         data.forEach((userResponse) => {
           userResponse.responses.forEach((resp) => {
             if (!extractedQuestions.includes(resp.question)) {
@@ -75,25 +74,25 @@ const FormResponsesList = () => {
     document.body.removeChild(link);
   };
 
-  const handleDeleteResponses = async () => {
+  const handleDeleteResponses = () => {
     showModal(
       "Confirmation",
       "Êtes-vous sûr de vouloir supprimer toutes les réponses de ce formulaire ?",
       async () => {
         try {
-          const response = await fetch(`http://localhost:5000/api/forms/${id}/responses`, {
+          const response = await fetch(`/api/forms/${id}/responses`, {
             method: "DELETE",
           });
 
           if (response.ok) {
             showModal("Succès", "Toutes les réponses ont été supprimées !");
-            setResponses([]); // Vider localement après suppression
+            setResponses([]); // Vider l'affichage local
           } else {
             const errorData = await response.json();
             showModal("Erreur", "Erreur : " + errorData.error);
           }
         } catch (error) {
-          console.error("Erreur lors de la suppression des réponses :", error);
+          console.error("Erreur lors de la suppression :", error);
           showModal("Erreur", "Impossible de contacter le serveur.");
         }
       }
@@ -103,12 +102,10 @@ const FormResponsesList = () => {
   return (
     <div className={styles.container}>
       <h2>Réponses du formulaire</h2>
-      <button className="btn" onClick={handleGoHome}>
-        Retour à l'accueil
-      </button>
-      <button onClick={exportToCSV} style={{ marginBottom: "10px" }}>
-        Exporter en CSV
-      </button>
+
+      <button className="btn" onClick={handleGoHome}>Retour à l'accueil</button>
+      <button onClick={exportToCSV} style={{ marginBottom: "10px" }}>Exporter en CSV</button>
+
       {responses.length > 0 && questions.length > 0 ? (
         <table>
           <thead>
@@ -134,6 +131,7 @@ const FormResponsesList = () => {
       ) : (
         <p className={styles.message}>Chargement des données ou aucune réponse trouvée.</p>
       )}
+
       <button
         onClick={handleDeleteResponses}
         style={{ backgroundColor: "#dc3545", color: "white", marginBottom: "10px", marginLeft: "10px" }}
@@ -141,6 +139,14 @@ const FormResponsesList = () => {
         Supprimer toutes les réponses
       </button>
 
+      {/* Modal pour confirmation */}
+      <Modal
+        isOpen={modal.isOpen}
+        title={modal.title}
+        message={modal.message}
+        onConfirm={modal.onConfirm}
+        onClose={closeModal}
+      />
     </div>
   );
 };

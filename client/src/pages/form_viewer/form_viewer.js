@@ -26,12 +26,7 @@ const FormViewer = () => {
     setModal({ isOpen: true, title, message, onClose });
   };
 
-  const closeModal = () => {
-    setModal({ isOpen: false, title: "", message: "", onClose: null });
-    if (modal.onClose) {
-      modal.onClose();
-    }
-  };
+
 
   // 👉 Vérification si @ est dans l'URL
   useEffect(() => {
@@ -122,27 +117,6 @@ const FormViewer = () => {
       container: containerRef.current,
     });
 
-    const handleResponseSave = async (component_id, value) => {
-      try {
-        const response = await fetch("http://localhost:5000/api/save-response", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            form_id: id,
-            user_id: id_participant,
-            component_id,
-            value,
-          }),
-        });
-
-        if (!response.ok) {
-          console.error("Erreur lors de l'enregistrement de la réponse :", await response.json());
-        }
-      } catch (error) {
-        console.error("Erreur lors de la sauvegarde :", error);
-      }
-    };
-
     const loadAndRender = async () => {
       let loadedData = {};
       if (id_participant) {
@@ -160,7 +134,7 @@ const FormViewer = () => {
       dataInitialized.current = true;
 
       form.on("submit", (event) => {
-        event.preventDefault(); // Prevent default form submission behavior
+        event.preventDefault();
         showModal(
           "Validation",
           "Votre formulaire a été soumis avec succès. Cliquez sur le bouton ci-dessous pour continuer.",
@@ -209,33 +183,38 @@ const FormViewer = () => {
     return () => {
       form.destroy();
     };
-  }, [schema, pages, currentPage, componentMapping]);
-
-
+  }, [schema, pages, currentPage, componentMapping, id_participant, navigate]);
 
   return (
-    <div className={styles.formViewerContainer}>
-      <h2>Form Viewer</h2>
-      {!id_participant && (
-        <button className="btn" onClick={handleGoHome}>
-          Retour à l'accueil
-        </button>
-      )}
-      {!id_participant && formDetails && (
-        <div className={styles.formDetails}>
-          <p><strong>ID du Formulaire :</strong> {formDetails.id}</p>
-          <p><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
-          <p><strong>Pour intégrer dans un scénario Tobii utilisez :</strong> http://localhost:3000/form-viewer/{id}/{page}/id_participant</p>
-          <p>Ajoutez <strong>?navigation=True</strong> à la fin si vous voulez permettre la navigation entre pages.</p>
-        </div>
-      )}
+    <>
+      <div className={styles.formViewerContainer}>
+        <h2>Form Viewer</h2>
 
+        {/* Bouton Retour affiché seulement en mode Admin */}
+        {!id_participant && (
+          <button className="btn" onClick={handleGoHome}>
+            Retour à l'accueil
+          </button>
+        )}
+
+        {/* Informations sur le formulaire */}
+        {!id_participant && formDetails && (
+          <div className={styles.formDetails}>
+            <p><strong>ID du Formulaire :</strong> {formDetails.id}</p>
+            <p><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
+            <p><strong>Pour intégrer dans un scénario Tobii utilisez :</strong> http://localhost:3000/form-viewer/{id}/{page}/id_participant</p>
+            <p>Ajoutez <strong>?navigation=True</strong> à la fin si vous voulez permettre la navigation entre pages.</p>
+          </div>
+        )}
+
+        {/* Info Participant */}
         {id_participant && (
           <div>
             <p><strong>ID du Participant :</strong> {id_participant}</p>
           </div>
         )}
 
+        {/* Navigation entre pages */}
         {showNavigation && (
           <div className={styles.navigationButtons}>
             <div className={styles.navButtonWrapper}>
@@ -280,18 +259,13 @@ const FormViewer = () => {
           </div>
         )}
 
+        {/* Formulaire affiché */}
         {schema ? (
           <div ref={containerRef} id="form" style={{ width: "100%" }}></div>
         ) : (
           <p>Chargement du formulaire...</p>
         )}
       </div>
-      <Modal
-        isOpen={modal.isOpen}
-        title={modal.title}
-        message={modal.message}
-        onClose={closeModal}
-      />
     </>
   );
 };
