@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FormEditor } from "@bpmn-io/form-js-editor";
-import "./form_editorr.css";
+import "./form_editor.css";
 import './form-js-editor.css';
 
 const FormEditor2 = () => {

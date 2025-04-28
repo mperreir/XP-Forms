@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, BrowserRouter } from "react-rou
 import React from "react";
 import './App.css';
 import Accueil from "./pages/accueil/accueil";
-import FormEditor2 from "./pages/form_editorr/form_editorr";
+import FormEditor2 from "./pages/form_editor/form_editor";
 import FormViewer from "./pages/form_viewer/form_viewer";
 import FormResponsesList from "./pages/FormResponsesList/FormResponsesList";
 
