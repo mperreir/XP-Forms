@@ -101,14 +101,16 @@ const deleteForm = (id) => {
         db.run("BEGIN TRANSACTION", (err) => {
           if (err) return reject(err);
 
-          db.run("DELETE FROM response_values WHERE response_id IN (SELECT id FROM responses WHERE form_id = ?)", [id]);
-          db.run("DELETE FROM responses WHERE form_id = ?", [id]);
-
-          db.run("DELETE FROM forms WHERE id = ?", [id], (err) => {
+          db.run("DELETE FROM responses WHERE form_id = ?", [id], (err) => {
             if (err) return reject(err);
-            db.run("COMMIT", (err) => {
+
+            db.run("DELETE FROM forms WHERE id = ?", [id], (err) => {
               if (err) return reject(err);
-              resolve("Formulaire et réponses supprimés avec succès !");
+
+              db.run("COMMIT", (err) => {
+                if (err) return reject(err);
+                resolve("Formulaire et réponses supprimés avec succès !");
+              });
             });
           });
         });
