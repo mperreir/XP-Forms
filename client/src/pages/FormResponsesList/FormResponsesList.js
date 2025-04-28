@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import styles from "./FormResponsesList.module.css";
 
 const FormResponsesList = () => {
   const { id } = useParams(); // Récupération de l'ID du formulaire
   const [responses, setResponses] = useState([]);
   const [questions, setQuestions] = useState([]);
+  const navigate = useNavigate(); 
+
+  const handleGoHome = () => {
+    navigate("/");
+  };
+
 
   useEffect(() => {
     const fetchResponses = async () => {
@@ -36,6 +42,7 @@ const FormResponsesList = () => {
     fetchResponses();
   }, [id]);
 
+ 
   const exportToCSV = () => {
     // Build CSV content
     const headers = ["ID Utilisateur", ...questions];
@@ -67,6 +74,9 @@ const FormResponsesList = () => {
   return (
     <div className={styles.container}>
       <h2>Réponses du formulaire</h2>
+      <button className="btn" onClick={handleGoHome}>
+        Retour à l'accueil
+      </button>
       <button onClick={exportToCSV} style={{ marginBottom: "10px" }}>
         Exporter en CSV
       </button>

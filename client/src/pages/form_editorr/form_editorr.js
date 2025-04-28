@@ -5,12 +5,12 @@ import "./form_editorr.css";
 import './form-js-editor.css';
 
 const FormEditor2 = () => {
-  const { id } = useParams(); // Récupérer l'ID du formulaire s'il est en modification
+  const { id } = useParams();
   const navigate = useNavigate();
   const editorContainerRef = useRef(null);
   const [formEditor, setFormEditor] = useState(null);
-  const [title, setTitle] = useState(""); // Initialize title as empty string
-  const [isEditing, setIsEditing] = useState(false); // Mode édition
+  const [title, setTitle] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (!editorContainerRef.current) return;
@@ -22,19 +22,17 @@ const FormEditor2 = () => {
     setFormEditor(editor);
 
     if (id) {
-      // Charger le formulaire existant pour modification
       fetch(`http://localhost:5000/api/forms/${id}`)
         .then((response) => response.json())
         .then((data) => {
           if (!data.json_data) throw new Error("Le schéma du formulaire est vide !");
-          editor.importSchema(data.json_data); // Charger le schéma
-          setTitle(data.title || ""); // Set title if exists or keep empty
-          setIsEditing(true); // Activer le mode édition
+          editor.importSchema(data.json_data);
+          setTitle(data.title || "");
+          setIsEditing(true);
           console.log(data);
         })
         .catch((err) => console.error("Erreur de chargement :", err));
     } else {
-      // Nouveau formulaire (schéma vide par défaut)
       const defaultSchema = { type: "default", components: [] };
       editor.importSchema(defaultSchema);
     }
@@ -44,7 +42,6 @@ const FormEditor2 = () => {
     };
   }, [id]);
 
-  // Fonction pour enregistrer ou modifier un formulaire
   const handleSaveForm = async () => {
     if (!formEditor) {
       console.warn("L'éditeur n'est pas encore prêt !");
@@ -53,7 +50,7 @@ const FormEditor2 = () => {
 
     const schema = await formEditor.getSchema();
     const formId = id || schema.id || `Form_${Date.now()}`;
-    const formTitle = title.trim() || "Formulaire sans titre"; // Use existing title if not provided
+    const formTitle = title.trim() || "Formulaire sans titre";
 
     const formData = { id: formId, title: formTitle, json_data: schema };
 
@@ -80,17 +77,29 @@ const FormEditor2 = () => {
     }
   };
 
+  const handleGoHome = () => {
+    navigate("/");
+  };
+
   return (
     <div>
       <h2>{isEditing ? "Modifier le formulaire" : "Créer un formulaire"}</h2>
+      <button className="btn" onClick={handleGoHome}>
+        Retour à l'accueil
+      </button>
+      <br />
       <label htmlFor="titre">Titre :</label>
       <input
         type="text"
         id="titre"
         value={title}
-        onChange={(e) => setTitle(e.target.value)} // Update title based on user input
+        onChange={(e) => setTitle(e.target.value)}
       />
-      <button onClick={handleSaveForm}>{isEditing ? "Mettre à jour" : "Enregistrer"}</button>
+      <div style={{ marginTop: "20px", marginBottom: "20px" }}>
+        <button onClick={handleSaveForm} style={{ marginRight: "10px" }}>
+          {isEditing ? "Mettre à jour" : "Enregistrer"}
+        </button>
+      </div>
       <div ref={editorContainerRef} id="form-editor" style={{ width: "100%", height: "500px", border: "1px solid #ccc" }} />
     </div>
   );

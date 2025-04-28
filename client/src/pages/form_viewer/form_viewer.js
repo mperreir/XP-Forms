@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Form } from "@bpmn-io/form-js-viewer";
-import styles from './form_viewer.module.css'; 
+import styles from './form_viewer.module.css';
 
 const FormViewer = () => {
   const { id, page, id_participant } = useParams();
@@ -43,6 +43,10 @@ const FormViewer = () => {
       }
     });
     return pages;
+  };
+  
+  const handleGoHome = () => {
+    navigate("/");
   };
 
   const fetchSavedData = async () => {
@@ -151,13 +155,13 @@ const FormViewer = () => {
                 value,
               }),
             })
-            .then((response) => response.json())
-            .then((data) => {
-              console.log("Réponse sauvegardée :", data);
-            })
-            .catch((error) => {
-              console.error("Erreur lors de la sauvegarde :", error);
-            });
+              .then((response) => response.json())
+              .then((data) => {
+                console.log("Réponse sauvegardée :", data);
+              })
+              .catch((error) => {
+                console.error("Erreur lors de la sauvegarde :", error);
+              });
           }
         });
       });
@@ -170,10 +174,14 @@ const FormViewer = () => {
     };
   }, [schema, pages, currentPage, componentMapping]);
 
+
+
   return (
     <div className={styles.formViewerContainer}>
       <h2>Form Viewer</h2>
-
+      <button className="btn" onClick={handleGoHome}>
+        Retour à l'accueil
+      </button>
       {!id_participant && formDetails && (
         <div className={styles.formDetails}>
           <p><strong>ID du Formulaire :</strong> {formDetails.id}</p>
