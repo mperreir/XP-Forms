@@ -58,10 +58,24 @@ const shutdown = async (req, res) => {
   }
 };
 
+const deleteFormResponses = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await responseService.deleteResponsesByFormId(id);
+    res.json(result);
+  } catch (error) {
+    console.error("Erreur dans deleteFormResponses :", error);
+    res.status(500).json({ error: "Erreur serveur lors de la suppression des réponses." });
+  }
+};
+
+
 module.exports = {
   submitForm,
   saveResponse,
   getResponses,
   getParticipantResponses,
   shutdown,
+  deleteFormResponses,
 };

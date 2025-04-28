@@ -6,7 +6,7 @@ const FormResponsesList = () => {
   const { id } = useParams(); // Récupération de l'ID du formulaire
   const [responses, setResponses] = useState([]);
   const [questions, setQuestions] = useState([]);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const handleGoHome = () => {
     navigate("/");
@@ -42,7 +42,7 @@ const FormResponsesList = () => {
     fetchResponses();
   }, [id]);
 
- 
+
   const exportToCSV = () => {
     // Build CSV content
     const headers = ["ID Utilisateur", ...questions];
@@ -69,6 +69,29 @@ const FormResponsesList = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleDeleteResponses = async () => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer toutes les réponses de ce formulaire ?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/forms/${id}/responses`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        alert("Toutes les réponses ont été supprimées !");
+        setResponses([]); // Vider localement après suppression
+      } else {
+        const errorData = await response.json();
+        alert("Erreur : " + errorData.error);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression des réponses :", error);
+      alert("Impossible de contacter le serveur.");
+    }
   };
 
   return (
@@ -105,6 +128,13 @@ const FormResponsesList = () => {
       ) : (
         <p className={styles.message}>Chargement des données ou aucune réponse trouvée.</p>
       )}
+      <button
+        onClick={handleDeleteResponses}
+        style={{ backgroundColor: "#dc3545", color: "white", marginBottom: "10px", marginLeft: "10px" }}
+      >
+        Supprimer toutes les réponses
+      </button>
+
     </div>
   );
 };

@@ -100,10 +100,24 @@ const shutdownServer = (req, res) => {
   });
 };
 
+const deleteResponsesByFormId = (formId) => {
+  return new Promise((resolve, reject) => {
+    db.run("DELETE FROM responses WHERE form_id = ?", [formId], function (err) {
+      if (err) {
+        console.error("Erreur SQL lors de la suppression des réponses :", err);
+        reject(err);
+      } else {
+        resolve({ message: "Toutes les réponses du formulaire ont été supprimées." });
+      }
+    });
+  });
+};
+
 module.exports = {
   submitForm,
   saveResponse,
   getResponses,
   getParticipantResponses,
   shutdownServer,
+  deleteResponsesByFormId,
 };
