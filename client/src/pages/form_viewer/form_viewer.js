@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate, useLocation  } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Form } from "@bpmn-io/form-js-viewer";
 import styles from './form_viewer.module.css'; 
 
 const FormViewer = () => {
   const { id, page, id_participant } = useParams();
   const navigate = useNavigate();
-  const currentPage = parseInt(page) || 1;
   const location = useLocation();
+  const currentPage = parseInt(page) || 1;
   const queryParams = new URLSearchParams(location.search);
   const showNavigation = queryParams.get("navigation") === "True";
 
@@ -19,6 +19,19 @@ const FormViewer = () => {
   const [formData, setFormData] = useState({});
 
   const dataInitialized = useRef(false);
+
+  // 👉 Vérification si @ est dans l'URL
+  useEffect(() => {
+    if (id_participant === '@') {
+      const defaultUserId = localStorage.getItem('defaultUserId');
+      if (defaultUserId) {
+        const newPath = `/form-viewer/${id}/${page}/${defaultUserId}${location.search}`;
+        navigate(newPath, { replace: true });
+      } else {
+        alert("Aucun ID utilisateur par défaut trouvé dans le stockage local.");
+      }
+    }
+  }, [id_participant, id, page, navigate, location.search]);
 
   const splitSchemaBySeparator = (components) => {
     const pages = [[]];
@@ -104,11 +117,12 @@ const FormViewer = () => {
         components: pages[currentPage - 1] || [],
       };
 
-      await form.importSchema(pageSchema,loadedData);
+      await form.importSchema(pageSchema, loadedData);
 
       dataInitialized.current = true;
 
       form.on("submit", (event) => {
+        // Rien pour le moment
       });
 
       form.on("changed", (event) => {
@@ -164,8 +178,8 @@ const FormViewer = () => {
         <div className={styles.formDetails}>
           <p><strong>ID du Formulaire :</strong> {formDetails.id}</p>
           <p><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
-          <p><strong>Pour integrer dans un scénario Tobii veuillez utiliser cet URL en remplaçant 'id_participant' par l'id du participant :</strong> http://localhost:3000/form-viewer/{id}/{page}/id_participant</p>
-          <p>Si vous voulez que le participant puisse naviguer entre les pages du form veuillez ajouter <strong> ?navigation=True </strong> à la fin de l'URL</p>
+          <p><strong>Pour intégrer dans un scénario Tobii utilisez :</strong> http://localhost:3000/form-viewer/{id}/{page}/id_participant</p>
+          <p>Ajoutez <strong>?navigation=True</strong> à la fin si vous voulez permettre la navigation entre pages.</p>
         </div>
       )}
 
@@ -218,7 +232,6 @@ const FormViewer = () => {
           </div>
         </div>
       )}
-
 
       {schema ? (
         <div ref={containerRef} id="form" style={{ width: "100%" }}></div>

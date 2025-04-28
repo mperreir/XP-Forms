@@ -38,3 +38,7 @@ CREATE TABLE responses (
     FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE,
     UNIQUE(form_id, component_id, user_id)
 );
+
+
+/*ALTER TABLE forms ADD COLUMN default_user_id TEXT;*/
+

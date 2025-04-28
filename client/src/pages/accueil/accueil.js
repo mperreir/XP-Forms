@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 const Accueil = () => {
     const [forms, setForms] = useState([]);
+    const [newUserId, setNewUserId] = useState(localStorage.getItem('defaultUserId') || ""); // Utiliser la valeur du localStorage ou une valeur vide
     const navigate = useNavigate(); // Permet de gérer la navigation
 
     useEffect(() => {
@@ -59,7 +60,6 @@ const Accueil = () => {
         }
     };
 
-
     const handleDuplicateForm = async (formId) => {
         try {
             const response = await fetch(`http://localhost:5000/api/forms/${formId}/duplicate`, { method: 'POST' });
@@ -67,20 +67,18 @@ const Accueil = () => {
 
             if (data.newFormId) {
                 alert(`Formulaire dupliqué avec succès ! Nouveau Formulaire ID: ${data.newFormId}`);
-                // Optionally, you can navigate to the new form's editor page
-                //navigate(`/form-editor2/${data.newFormId}`);
-                 // Refresh the forms list to include the new duplicated form
-                 const fetchForms = async () => {
+                // Rafraîchir la liste des formulaires après duplication
+                const fetchForms = async () => {
                     try {
                         const response = await fetch('http://localhost:5000/api/forms');
                         if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
                         const data = await response.json();
-                        setForms(data); // Update the form list after duplication
+                        setForms(data); // Mise à jour de la liste des formulaires
                     } catch (error) {
                         console.error(error);
                     }
                 };
-                fetchForms(); // Call the function to refresh the list
+                fetchForms(); // Appel pour mettre à jour la liste
             } else {
                 alert("Erreur lors de la duplication du formulaire.");
             }
@@ -90,11 +88,33 @@ const Accueil = () => {
         }
     };
 
+    // Gérer le changement de l'ID utilisateur par défaut
+    const handleDefaultUserIdChange = (event) => {
+        setNewUserId(event.target.value);
+    };
+
+    // Sauvegarder l'ID utilisateur par défaut dans le localStorage
+    const handleSaveDefaultUserId = () => {
+        localStorage.setItem('defaultUserId', newUserId);
+        alert(`L'ID utilisateur par défaut a été mis à jour : ${newUserId}`);
+    };
 
     return (
         <div>
             <h1>XP-LAB</h1>
             <Link id={styles.createFormLink} to="/form-editor2">Créer un nouveau formulaire</Link>
+
+            {/* Champ pour entrer l'ID utilisateur par défaut */}
+            <div className={styles.defaultUserIdContainer}>
+                <input
+                    type="text"
+                    placeholder="ID Utilisateur par défaut"
+                    value={newUserId}
+                    onChange={handleDefaultUserIdChange}
+                    className={styles.defaultUserIdInput}
+                />
+                <button onClick={handleSaveDefaultUserId} className={styles.saveButton}>Sauvegarder ID par défaut</button>
+            </div>
 
             <h2>Liste des formulaires enregistrés</h2>
             <table className={styles.table}>
