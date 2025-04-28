@@ -12,7 +12,6 @@ const FormResponsesList = () => {
     navigate("/");
   };
 
-
   useEffect(() => {
     const fetchResponses = async () => {
       try {
@@ -20,9 +19,8 @@ const FormResponsesList = () => {
         if (!response.ok) throw new Error("Erreur lors du chargement des réponses");
 
         const data = await response.json();
-        console.log(" Réponses reçues :", data); // Debugging
+        console.log("Réponses reçues :", data);
 
-        // Extraire les questions uniques
         const extractedQuestions = [];
         data.forEach((userResponse) => {
           userResponse.responses.forEach((resp) => {
@@ -32,8 +30,8 @@ const FormResponsesList = () => {
           });
         });
 
-        setQuestions(extractedQuestions); // Stocker les questions uniques
-        setResponses(data); // Stocker les réponses
+        setQuestions(extractedQuestions);
+        setResponses(data);
       } catch (error) {
         console.error("Erreur lors du chargement des réponses :", error);
       }
@@ -42,9 +40,7 @@ const FormResponsesList = () => {
     fetchResponses();
   }, [id]);
 
-
   const exportToCSV = () => {
-    // Build CSV content
     const headers = ["ID Utilisateur", ...questions];
     const rows = responses.map((userResponse) => {
       const row = [userResponse.user_id];
@@ -55,12 +51,10 @@ const FormResponsesList = () => {
       return row;
     });
 
-    // Combine headers and rows
     const csvContent = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${cell}"`).join(",")) // Escape cells with quotes
+      .map((row) => row.map((cell) => `"${cell}"`).join(","))
       .join("\n");
 
-    // Create a Blob and trigger download
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -83,7 +77,7 @@ const FormResponsesList = () => {
 
       if (response.ok) {
         alert("Toutes les réponses ont été supprimées !");
-        setResponses([]); // Vider localement après suppression
+        setResponses([]); // Vide les réponses localement
       } else {
         const errorData = await response.json();
         alert("Erreur : " + errorData.error);
@@ -97,12 +91,19 @@ const FormResponsesList = () => {
   return (
     <div className={styles.container}>
       <h2>Réponses du formulaire</h2>
+
       <button className="btn" onClick={handleGoHome}>
         Retour à l'accueil
       </button>
-      <button onClick={exportToCSV} style={{ marginBottom: "10px" }}>
-        Exporter en CSV
-      </button>
+
+      {responses.length > 0 && (
+        <>
+          <button onClick={exportToCSV} style={{ marginBottom: "10px", marginLeft: "10px" }}>
+            Exporter en CSV
+          </button>
+        </>
+      )}
+
       {responses.length > 0 && questions.length > 0 ? (
         <table>
           <thead>
@@ -134,7 +135,6 @@ const FormResponsesList = () => {
       >
         Supprimer toutes les réponses
       </button>
-
     </div>
   );
 };
