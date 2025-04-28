@@ -44,7 +44,7 @@ const FormViewer = () => {
     });
     return pages;
   };
-  
+
   const handleGoHome = () => {
     navigate("/");
   };
@@ -179,9 +179,11 @@ const FormViewer = () => {
   return (
     <div className={styles.formViewerContainer}>
       <h2>Form Viewer</h2>
-      <button className="btn" onClick={handleGoHome}>
-        Retour à l'accueil
-      </button>
+      {!id_participant && (
+        <button className="btn" onClick={handleGoHome}>
+          Retour à l'accueil
+        </button>
+      )}
       {!id_participant && formDetails && (
         <div className={styles.formDetails}>
           <p><strong>ID du Formulaire :</strong> {formDetails.id}</p>

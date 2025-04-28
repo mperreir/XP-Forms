@@ -130,7 +130,6 @@ const duplicateForm = async (formId) => {
   return new Promise((resolve, reject) => {
     db.run("BEGIN TRANSACTION");
 
-    // Step 1: Duplicate the form
     db.get("SELECT * FROM forms WHERE id = ?", [formId], (err, form) => {
       if (err) {
         db.run("ROLLBACK");
@@ -142,60 +141,93 @@ const duplicateForm = async (formId) => {
         return reject({ success: false, error: "Formulaire introuvable" });
       }
 
-      // Generate new form ID and title
-      const newFormId = `new_id_${Math.floor(Math.random() * 1000000)}`;
       const newTitle = `${form.title} (copy)`;
       const newJsonData = form.json_data;
 
-      // Step 2: Insert the new form with the generated ID
-      db.run(
-        "INSERT INTO forms (id, title, json_data, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
-        [newFormId, newTitle, newJsonData],
-        (err) => {
-          if (err) {
-            db.run("ROLLBACK");
-            return reject({ success: false, error: err.message });
-          }
-
-          // Step 3: Duplicate the components
-          db.all("SELECT * FROM components WHERE form_id = ?", [formId], (err, components) => {
-            if (err) {
-              db.run("ROLLBACK");
-              return reject({ success: false, error: err.message });
-            }
-
-            // Insert each component with new IDs linked to the new form
-            components.forEach((component) => {
-              const newComponentId = `new_id_${Math.floor(Math.random() * 1000000)}`;
-              db.run(
-                "INSERT INTO components (id, form_id, label, type, action, key_name, layout) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                [
-                  newComponentId,
-                  newFormId,
-                  component.label,
-                  component.type,
-                  component.action,
-                  component.key_name,
-                  component.layout,
-                ],
-                (err) => {
-                  if (err) {
-                    db.run("ROLLBACK");
-                    return reject({ success: false, error: err.message });
-                  }
-                }
-              );
+      // Fonction pour générer un ID et vérifier son unicité
+      const generateUniqueFormId = () => {
+        return new Promise((resolve, reject) => {
+          const attemptGenerate = () => {
+            const candidateId = `Form_${Math.random().toString(36).substring(2, 10)}`; // Ex: Form_ab23kd9d
+            db.get("SELECT id FROM forms WHERE id = ?", [candidateId], (err, row) => {
+              if (err) return reject(err);
+              if (row) {
+                // ID existe déjà → refaire
+                attemptGenerate();
+              } else {
+                resolve(candidateId);
+              }
             });
+          };
+          attemptGenerate();
+        });
+      };
 
-            // Step 4: Commit the transaction
-            db.run("COMMIT");
-            resolve({ success: true, newFormId });
-          });
-        }
-      );
+      generateUniqueFormId()
+        .then((newFormId) => {
+          db.run(
+            "INSERT INTO forms (id, title, json_data, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+            [newFormId, newTitle, newJsonData],
+            (err) => {
+              if (err) {
+                db.run("ROLLBACK");
+                return reject({ success: false, error: err.message });
+              }
+
+              db.all("SELECT * FROM components WHERE form_id = ?", [formId], (err, components) => {
+                if (err) {
+                  db.run("ROLLBACK");
+                  return reject({ success: false, error: err.message });
+                }
+
+                const insertComponentPromises = components.map((component) => {
+                  return new Promise((resolve, reject) => {
+                    const newComponentId = `Component_${Math.random().toString(36).substring(2, 10)}`;
+                    db.run(
+                      "INSERT INTO components (id, form_id, label, type, action, key_name, layout) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                      [
+                        newComponentId,
+                        newFormId,
+                        component.label,
+                        component.type,
+                        component.action,
+                        component.key_name,
+                        component.layout,
+                      ],
+                      (err) => {
+                        if (err) return reject(err);
+                        resolve();
+                      }
+                    );
+                  });
+                });
+
+                Promise.all(insertComponentPromises)
+                  .then(() => {
+                    db.run("COMMIT", (err) => {
+                      if (err) {
+                        db.run("ROLLBACK");
+                        return reject({ success: false, error: err.message });
+                      }
+                      resolve({ success: true, newFormId });
+                    });
+                  })
+                  .catch((error) => {
+                    db.run("ROLLBACK");
+                    reject({ success: false, error: error.message });
+                  });
+              });
+            }
+          );
+        })
+        .catch((error) => {
+          db.run("ROLLBACK");
+          reject({ success: false, error: error.message });
+        });
     });
   });
 };
+
 
 module.exports = {
   saveForm,
