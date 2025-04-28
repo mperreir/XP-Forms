@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Form } from "@bpmn-io/form-js-viewer";
+import Modal from "../../components/Modal";
 import styles from './form_viewer.module.css';
 
 const FormViewer = () => {
@@ -17,8 +18,20 @@ const FormViewer = () => {
   const [formDetails, setFormDetails] = useState(null);
   const [componentMapping, setComponentMapping] = useState({});
   const [formData, setFormData] = useState({});
+  const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onClose: null });
 
   const dataInitialized = useRef(false);
+
+  const showModal = (title, message, onClose = null) => {
+    setModal({ isOpen: true, title, message, onClose });
+  };
+
+  const closeModal = () => {
+    setModal({ isOpen: false, title: "", message: "", onClose: null });
+    if (modal.onClose) {
+      modal.onClose();
+    }
+  };
 
   // 👉 Vérification si @ est dans l'URL
   useEffect(() => {
@@ -28,7 +41,7 @@ const FormViewer = () => {
         const newPath = `/form-viewer/${id}/${page}/${defaultUserId}${location.search}`;
         navigate(newPath, { replace: true });
       } else {
-        alert("Aucun ID utilisateur par défaut trouvé dans le stockage local.");
+        showModal("Erreur", "Aucun ID utilisateur par défaut trouvé dans le stockage local.");
       }
     }
   }, [id_participant, id, page, navigate, location.search]);
@@ -92,7 +105,7 @@ const FormViewer = () => {
 
       } catch (error) {
         console.error("Erreur lors du chargement du schéma du formulaire:", error);
-        alert("Erreur lors du chargement du formulaire");
+        showModal("Erreur", "Erreur lors du chargement du formulaire");
       }
     };
     fetchFormSchema();
@@ -108,6 +121,27 @@ const FormViewer = () => {
     const form = new Form({
       container: containerRef.current,
     });
+
+    const handleResponseSave = async (component_id, value) => {
+      try {
+        const response = await fetch("http://localhost:5000/api/save-response", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            form_id: id,
+            user_id: id_participant,
+            component_id,
+            value,
+          }),
+        });
+
+        if (!response.ok) {
+          console.error("Erreur lors de l'enregistrement de la réponse :", await response.json());
+        }
+      } catch (error) {
+        console.error("Erreur lors de la sauvegarde :", error);
+      }
+    };
 
     const loadAndRender = async () => {
       let loadedData = {};
@@ -126,7 +160,12 @@ const FormViewer = () => {
       dataInitialized.current = true;
 
       form.on("submit", (event) => {
-        // Rien pour le moment
+        event.preventDefault(); // Prevent default form submission behavior
+        showModal(
+          "Validation",
+          "Votre formulaire a été soumis avec succès. Cliquez sur le bouton ci-dessous pour continuer.",
+          () => navigate("/merci")
+        );
       });
 
       form.on("changed", (event) => {
@@ -142,8 +181,6 @@ const FormViewer = () => {
 
             const component_id = componentMapping[key];
             if (!component_id) return;
-
-            console.log(`Auto-save: component_id=${component_id}, value=${value}`);
 
             fetch("http://localhost:5000/api/save-response", {
               method: "POST",
@@ -193,62 +230,69 @@ const FormViewer = () => {
         </div>
       )}
 
-      {id_participant && (
-        <div>
-          <p><strong>ID du Participant :</strong> {id_participant}</p>
-        </div>
-      )}
-
-      {showNavigation && (
-        <div className={styles.navigationButtons}>
-          <div className={styles.navButtonWrapper}>
-            {currentPage > 1 ? (
-              <button
-                onClick={() =>
-                  navigate(
-                    !id_participant
-                      ? `/form-viewer/${id}/${currentPage - 1}?navigation=True`
-                      : `/form-viewer/${id}/${currentPage - 1}/${id_participant}?navigation=True`
-                  )
-                }
-              >
-                Page précédente
-              </button>
-            ) : (
-              <div className={styles.placeholder}></div>
-            )}
+        {id_participant && (
+          <div>
+            <p><strong>ID du Participant :</strong> {id_participant}</p>
           </div>
+        )}
 
-          <div className={styles.pageIndicator}>
-            Page : {currentPage} / {pages.length}
+        {showNavigation && (
+          <div className={styles.navigationButtons}>
+            <div className={styles.navButtonWrapper}>
+              {currentPage > 1 ? (
+                <button
+                  onClick={() =>
+                    navigate(
+                      !id_participant
+                        ? `/form-viewer/${id}/${currentPage - 1}?navigation=True`
+                        : `/form-viewer/${id}/${currentPage - 1}/${id_participant}?navigation=True`
+                    )
+                  }
+                >
+                  Page précédente
+                </button>
+              ) : (
+                <div className={styles.placeholder}></div>
+              )}
+            </div>
+
+            <div className={styles.pageIndicator}>
+              Page : {currentPage} / {pages.length}
+            </div>
+
+            <div className={styles.navButtonWrapper}>
+              {currentPage < pages.length ? (
+                <button
+                  onClick={() =>
+                    navigate(
+                      !id_participant
+                        ? `/form-viewer/${id}/${currentPage + 1}?navigation=True`
+                        : `/form-viewer/${id}/${currentPage + 1}/${id_participant}?navigation=True`
+                    )
+                  }
+                >
+                  Page suivante
+                </button>
+              ) : (
+                <div className={styles.placeholder}></div>
+              )}
+            </div>
           </div>
+        )}
 
-          <div className={styles.navButtonWrapper}>
-            {currentPage < pages.length ? (
-              <button
-                onClick={() =>
-                  navigate(
-                    !id_participant
-                      ? `/form-viewer/${id}/${currentPage + 1}?navigation=True`
-                      : `/form-viewer/${id}/${currentPage + 1}/${id_participant}?navigation=True`
-                  )
-                }
-              >
-                Page suivante
-              </button>
-            ) : (
-              <div className={styles.placeholder}></div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {schema ? (
-        <div ref={containerRef} id="form" style={{ width: "100%" }}></div>
-      ) : (
-        <p>Chargement du formulaire...</p>
-      )}
-    </div>
+        {schema ? (
+          <div ref={containerRef} id="form" style={{ width: "100%" }}></div>
+        ) : (
+          <p>Chargement du formulaire...</p>
+        )}
+      </div>
+      <Modal
+        isOpen={modal.isOpen}
+        title={modal.title}
+        message={modal.message}
+        onClose={closeModal}
+      />
+    </>
   );
 };
 
