@@ -32,7 +32,7 @@ const FormEditor = () => {
     setFormEditor(editor);
 
     if (id) {
-      fetch(`http://localhost:5000/api/forms/${id}`)
+      fetch(`/api/forms/${id}`)
         .then((response) => response.json())
         .then((data) => {
           if (!data.json_data) throw new Error("Le schéma du formulaire est vide !");
@@ -65,7 +65,7 @@ const FormEditor = () => {
     const formData = { id: formId, title: formTitle, json_data: schema };
 
     try {
-      const url = id ? `http://localhost:5000/api/forms/${formId}` : "http://localhost:5000/api/save-form";
+      const url = id ? `/api/forms/${formId}` : "/api/save-form";
       const method = id ? "PUT" : "POST";
 
       const response = await fetch(url, {

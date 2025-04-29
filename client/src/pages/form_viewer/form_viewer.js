@@ -59,7 +59,7 @@ const FormViewer = () => {
 
   const fetchSavedData = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/form-responses-participant/${id}/${id_participant}`);
+      const response = await fetch(`/api/form-responses-participant/${id}/${id_participant}`);
       if (!response.ok) throw new Error("Erreur lors du chargement des réponses sauvegardées");
       const data = await response.json();
 
@@ -78,7 +78,7 @@ const FormViewer = () => {
   useEffect(() => {
     const fetchFormSchema = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/forms/${id}`);
+        const response = await fetch(`/api/forms/${id}`);
         if (!response.ok) throw new Error("Erreur lors du chargement du formulaire");
         const data = await response.json();
 
@@ -156,7 +156,7 @@ const FormViewer = () => {
             const component_id = componentMapping[key];
             if (!component_id) return;
 
-            fetch("http://localhost:5000/api/save-response", {
+            fetch("/api/save-response", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({

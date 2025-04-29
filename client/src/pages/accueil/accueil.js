@@ -21,7 +21,7 @@ const Accueil = () => {
     useEffect(() => {
         const fetchForms = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/forms');
+                const response = await fetch('/api/forms');
                 if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
                 const data = await response.json();
                 setForms(data);
@@ -39,7 +39,7 @@ const Accueil = () => {
             "Êtes-vous sûr de vouloir supprimer ce formulaire ? Toutes les réponses associées seront perdues. Cette action est irréversible.",
             async () => {
                 try {
-                    const response = await fetch(`http://localhost:5000/api/forms/${formId}`, { method: "DELETE" });
+                    const response = await fetch(`/api/forms/${formId}`, { method: "DELETE" });
 
                     if (response.ok) {
                         showModal("Succès", "Formulaire et réponses supprimés !");
@@ -58,7 +58,7 @@ const Accueil = () => {
 
     const handleEditForm = async (formId) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/forms/${formId}/has-responses`);
+            const response = await fetch(`/api/forms/${formId}/has-responses`);
             const data = await response.json();
 
             if (data.hasResponses) {
@@ -74,7 +74,7 @@ const Accueil = () => {
 
     const handleDuplicateForm = async (formId) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/forms/${formId}/duplicate`, { method: 'POST' });
+            const response = await fetch(`/api/forms/${formId}/duplicate`, { method: 'POST' });
             const data = await response.json();
 
             if (data.newFormId) {
@@ -82,7 +82,7 @@ const Accueil = () => {
                 // Rafraîchir la liste des formulaires après duplication
                 const fetchForms = async () => {
                     try {
-                        const response = await fetch('http://localhost:5000/api/forms');
+                        const response = await fetch('/api/forms');
                         if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
                         const data = await response.json();
                         setForms(data); // Mise à jour de la liste des formulaires
