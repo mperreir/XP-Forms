@@ -1,0 +1,29 @@
+.headerContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.pageTitle {
+  margin: 0;
+}
+
+.titleContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.titleInput {
+  flex: 1;
+  padding: 8px;
+  font-size: 16px;
+}
+
+.saveButton {
+  padding: 8px 16px;
+  font-size: 16px;
+  cursor: pointer;
+}

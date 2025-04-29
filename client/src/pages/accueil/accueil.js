@@ -119,15 +119,21 @@ const Accueil = () => {
 
                 {/* Champ pour entrer l'ID utilisateur par défaut */}
                 <div className={styles.defaultUserIdContainer}>
+                    <label htmlFor="defaultUserId" className={styles.defaultUserIdLabel}>
+                        ID utilisateur par défaut :
+                    </label>
                     <input
+                        id="defaultUserId"
                         type="text"
-                        placeholder="ID Utilisateur par défaut"
                         value={newUserId}
                         onChange={handleDefaultUserIdChange}
                         className={styles.defaultUserIdInput}
                     />
-                    <button onClick={handleSaveDefaultUserId} className={styles.saveButton}>Sauvegarder ID par défaut</button>
+                    <button onClick={handleSaveDefaultUserId} className={styles.saveButton}>
+                        Sauvegarder
+                    </button>
                 </div>
+
 
                 <h2>Liste des formulaires enregistrés</h2>
                 <table className={styles.table}>

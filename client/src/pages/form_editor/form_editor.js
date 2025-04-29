@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FormEditor as BPMNFormEditor } from "@bpmn-io/form-js-editor";
 import Modal from "../../components/Modal";
-import "./form_editor.css";
 import './form-js-editor.css';
+import styles from "./form_editor.module.css"; 
+
 
 const FormEditor = () => {
   const { id } = useParams();
@@ -92,35 +93,49 @@ const FormEditor = () => {
   };
 
   return (
-    <>
-      <div>
-        <h2>{isEditing ? "Modifier le formulaire" : "Créer un formulaire"}</h2>
-        <button className="btn" onClick={handleGoHome}>
-          Retour à l'accueil
-        </button>
-        <br />
-        <label htmlFor="titre">Titre :</label>
-        <input
-          type="text"
-          id="titre"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <div style={{ marginTop: "20px", marginBottom: "20px" }}>
-          <button onClick={handleSaveForm} style={{ marginRight: "10px" }}>
-            {isEditing ? "Mettre à jour" : "Enregistrer"}
-          </button>
-        </div>
-        <div ref={editorContainerRef} id="form-editor" style={{ width: "100%", height: "500px", border: "1px solid #ccc" }} />
-      </div>
-      <Modal
-        isOpen={modal.isOpen}
-        title={modal.title}
-        message={modal.message}
-        onClose={closeModal}
+  <>
+    <div className={styles.headerContainer}>
+      <h2 className={styles.pageTitle}>
+        {isEditing ? "Modifier le formulaire" : "Créer un formulaire"}
+      </h2>
+      <button className="btn" onClick={handleGoHome}>
+        Retour à l'accueil
+      </button>
+    </div>
+
+    <div className={styles.titleContainer}>
+      <label htmlFor="titre">Titre :</label>
+      <input
+        type="text"
+        id="titre"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className={styles.titleInput}
       />
-    </>
-  );
-};
+      <button onClick={handleSaveForm} className={styles.saveButton}>
+        {isEditing ? "Mettre à jour" : "Enregistrer"}
+      </button>
+    </div>
+
+    <div
+      ref={editorContainerRef}
+      id="form-editor"
+      style={{
+        width: "100%",
+        height: "500px",
+        border: "1px solid #ccc",
+        marginTop: "20px",
+      }}
+    />
+
+    <Modal
+      isOpen={modal.isOpen}
+      title={modal.title}
+      message={modal.message}
+      onClose={closeModal}
+    />
+  </>
+);
+}; 
 
 export default FormEditor;
