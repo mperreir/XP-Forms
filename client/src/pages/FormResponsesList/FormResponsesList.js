@@ -14,12 +14,12 @@ const FormResponsesList = () => {
     navigate("/");
   };
 
-  const showModal = (title, message, onConfirm = null) => {
-    setModal({ isOpen: true, title, message, onConfirm });
+  const showModal = (title, message, onConfirm = null, onClose = null) => {
+    setModal({ isOpen: true, title, message, onConfirm, onClose });
   };
 
   const closeModal = () => {
-    setModal({ isOpen: false, title: "", message: "", onConfirm: null });
+    setModal({ isOpen: false, title: "", message: "", onConfirm: null, onClose: null });
   };
 
   useEffect(() => {
@@ -83,10 +83,13 @@ const FormResponsesList = () => {
           const response = await fetch(`/api/forms/${id}/responses`, {
             method: "DELETE",
           });
-
           if (response.ok) {
-            showModal("Succès", "Toutes les réponses ont été supprimées !");
-            setResponses([]); // Vider l'affichage local
+            showModal(
+              "Succès",
+              "Toutes les réponses ont été supprimées.",
+              () => setModal({ isOpen: false }) // Close the modal on confirmation
+            );
+            setResponses([]); // Clear local responses
           } else {
             const errorData = await response.json();
             showModal("Erreur", "Erreur : " + errorData.error);
@@ -95,7 +98,8 @@ const FormResponsesList = () => {
           console.error("Erreur lors de la suppression :", error);
           showModal("Erreur", "Impossible de contacter le serveur.");
         }
-      }
+      },
+      closeModal // Pass the closeModal function for the "Annuler" button
     );
   };
 
@@ -144,8 +148,8 @@ const FormResponsesList = () => {
         isOpen={modal.isOpen}
         title={modal.title}
         message={modal.message}
-        onConfirm={modal.onConfirm}
-        onClose={closeModal}
+        onConfirm={modal.onConfirm} // Confirmation button
+        onClose={modal.onClose} // Annuler button
       />
     </div>
   );
