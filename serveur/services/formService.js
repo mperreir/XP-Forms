@@ -80,16 +80,70 @@ const hasResponses = (id) => {
 
 const updateForm = (id, title, json_data) => {
   return new Promise((resolve, reject) => {
-    db.run(
-      "UPDATE forms SET title = ?, json_data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-      [title, JSON.stringify(json_data), id],
-      function (err) {
-        if (err) return reject(err);
-        resolve(this.changes); // return 0 if not found
-      }
-    );
+    db.run("BEGIN TRANSACTION", async (err) => {
+      if (err) return reject(err);
+
+      // 1. Mettre à jour le formulaire
+      db.run(
+        "UPDATE forms SET title = ?, json_data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [title, JSON.stringify(json_data), id],
+        function (err) {
+          if (err) {
+            db.run("ROLLBACK");
+            return reject(err);
+          }
+
+          // 2. Supprimer les composants existants
+          db.run("DELETE FROM components WHERE form_id = ?", [id], (err) => {
+            if (err) {
+              db.run("ROLLBACK");
+              return reject(err);
+            }
+
+            // 3. Réinsérer les composants à partir de json_data
+            const components = json_data.components || [];
+
+            const insertPromises = components.map((c) => {
+              return new Promise((res, rej) => {
+                db.run(
+                  "INSERT INTO components (id, form_id, label, type, key_name, layout) VALUES (?, ?, ?, ?, ?, ?)",
+                  [
+                    c.id,
+                    id,
+                    c.label || "",
+                    c.type || "text",
+                    c.key || "",
+                    JSON.stringify(c.layout || {}),
+                  ],
+                  (err) => {
+                    if (err) return rej(err);
+                    res();
+                  }
+                );
+              });
+            });
+
+            Promise.all(insertPromises)
+              .then(() => {
+                db.run("COMMIT", (err) => {
+                  if (err) {
+                    db.run("ROLLBACK");
+                    return reject(err);
+                  }
+                  resolve(1); // 1 = succès
+                });
+              })
+              .catch((err) => {
+                db.run("ROLLBACK");
+                reject(err);
+              });
+          });
+        }
+      );
+    });
   });
 };
+
 
 const deleteForm = (id) => {
   return new Promise((resolve, reject) => {

@@ -131,7 +131,7 @@ const Accueil = () => {
     return (
         <>
             <div>
-                <h1>XP-LAB</h1>
+                <h1>XP-Forms</h1>
                 <button
                     className={styles.createFormButton}
                     onClick={() => navigate("/form-editor2")}
@@ -142,7 +142,7 @@ const Accueil = () => {
                 {/* Champ pour entrer l'ID utilisateur par défaut */}
                 <div className={styles.defaultUserIdContainer}>
                     <label htmlFor="defaultUserId" className={styles.defaultUserIdLabel}>
-                        ID utilisateur par défaut :
+                        ID participant par défaut :
                     </label>
                     <input
                         id="defaultUserId"
