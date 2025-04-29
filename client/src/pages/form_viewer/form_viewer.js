@@ -30,16 +30,32 @@ const FormViewer = () => {
 
   // 👉 Vérification si @ est dans l'URL
   useEffect(() => {
-    if (id_participant === '@') {
-      const defaultUserId = localStorage.getItem('defaultUserId');
-      if (defaultUserId) {
-        const newPath = `/form-viewer/${id}/${page}/${defaultUserId}${location.search}`;
-        navigate(newPath, { replace: true });
-      } else {
-        showModal("Erreur", "Aucun ID utilisateur par défaut trouvé dans le stockage local.");
+    const handleParticipantId = async () => {
+      if (id_participant === '@') {
+        // Cas 1 : @ --> Aller chercher l'id par défaut
+        try {
+          const response = await fetch('/api/default-user-id');
+          if (!response.ok) throw new Error("Erreur lors de la récupération de l'ID utilisateur par défaut.");
+
+          const data = await response.json();
+          const defaultUserId = data.defaultUserId;
+
+          if (defaultUserId) {
+            const newPath = `/form-viewer/${id}/${page}/${defaultUserId}${location.search}`;
+            navigate(newPath, { replace: true });
+          } else {
+            showModal("Erreur", "Aucun ID utilisateur par défaut enregistré.");
+          }
+        } catch (error) {
+          console.error(error);
+          showModal("Erreur", "Impossible de récupérer l'ID utilisateur par défaut.");
+        }
       }
-    }
+    };
+
+    handleParticipantId();
   }, [id_participant, id, page, navigate, location.search]);
+
 
   const splitSchemaBySeparator = (components) => {
     const pages = [[]];

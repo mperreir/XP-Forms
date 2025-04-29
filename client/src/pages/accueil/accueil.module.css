@@ -62,6 +62,19 @@ tbody tr:hover {
     text-align: center;
 }
 
+.createFormButton {
+    display: block;
+    margin: 20px auto; /* Center horizontally */
+    padding: 12px 24px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+
 /* Color scheme for action buttons */
 .viewButton {
     background-color: #0057f9; /* blue */
@@ -125,6 +138,7 @@ tbody tr:hover {
 }
 
 
+
 .defaultUserIdContainer {
     display: flex;
     align-items: center;
@@ -158,4 +172,89 @@ tbody tr:hover {
   .saveButton:hover {
     background-color: #0056b3;
   }
-  
+/* Align "Créer un nouveau formulaire" button to the left */
+.createFormButton {
+    margin: 20px 0; /* Remove auto centering */
+    padding: 12px 24px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* General button styles */
+.button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    margin: 5px;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    height: 40px;
+    text-align: center;
+}
+
+/* Specific button color schemes */
+.viewButton {
+    background-color: #0057f9; /* Blue */
+    color: white;
+}
+
+.viewButton:hover {
+    background-color: #0b3e5d;
+}
+
+.editButton {
+    background-color: #17b8a0; /* Blue */
+    color: white;
+}
+
+.editButton:hover {
+    background-color: #138496;
+}
+
+.deleteButton {
+    background-color: #da0505; /* Red */
+    color: white;
+}
+
+.deleteButton:hover {
+    background-color: #810c17;
+}
+
+.responsesButton {
+    background-color: #ffc107; /* Yellow */
+    color: white;
+}
+
+.responsesButton:hover {
+    background-color: #a47f12;
+}
+
+.duplicateButton {
+    background-color: #5911e0; /* Purple */
+    color: white;
+}
+
+.duplicateButton:hover {
+    background-color: #341077;
+}
+
+/* Save button styling */
+.saveButton {
+    padding: 8px 16px;
+    font-size: 14px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.saveButton:hover {
+    background-color: #0056b3;
+}

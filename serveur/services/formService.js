@@ -1,4 +1,4 @@
-require("../base_de_donnee/initDb.js"); 
+require("../base_de_donnee/initDb.js");
 const db = require("../base_de_donnee/db");
 
 
@@ -228,6 +228,36 @@ const duplicateForm = async (formId) => {
   });
 };
 
+
+exports.setDefaultUserId = (form_id, default_user_id) => {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `
+      INSERT INTO default_user_ids (form_id, default_user_id)
+      VALUES (?, ?)
+      ON CONFLICT(form_id) DO UPDATE SET default_user_id = excluded.default_user_id
+      `,
+      [form_id, default_user_id],
+      (err) => {
+        if (err) return reject(err);
+        resolve();
+      }
+    );
+  });
+};
+
+exports.getDefaultUserId = (form_id) => {
+  return new Promise((resolve, reject) => {
+    db.get(
+      `SELECT default_user_id FROM default_user_ids WHERE form_id = ?`,
+      [form_id],
+      (err, row) => {
+        if (err) return reject(err);
+        resolve(row ? row.default_user_id : null);
+      }
+    );
+  });
+};
 
 module.exports = {
   saveForm,

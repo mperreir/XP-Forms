@@ -40,5 +40,7 @@ CREATE TABLE responses (
 );
 
 
-/*ALTER TABLE forms ADD COLUMN default_user_id TEXT;*/
-
+CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT
+);

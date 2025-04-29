@@ -101,6 +101,31 @@ const duplicateForm = async (req, res) => {
   }
 };
 
+
+exports.setDefaultUserId = async (req, res) => {
+  try {
+    const { default_user_id } = req.body;
+    const { id } = req.params;
+    await formService.setDefaultUserId(id, default_user_id);
+    res.json({ message: "Default user ID saved!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error saving default user ID" });
+  }
+};
+
+exports.getDefaultUserId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const defaultUserId = await formService.getDefaultUserId(id);
+    res.json({ default_user_id: defaultUserId });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error fetching default user ID" });
+  }
+};
+
+
 module.exports = {
   saveForm,
   getAllForms,

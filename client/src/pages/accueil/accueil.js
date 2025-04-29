@@ -100,22 +100,44 @@ const Accueil = () => {
         }
     };
 
-    // Gérer le changement de l'ID utilisateur par défaut
-    const handleDefaultUserIdChange = (event) => {
-        setNewUserId(event.target.value);
+    // Pour mettre à jour ce que tape l'utilisateur dans l'input
+    // Juste avant le return (
+    const handleDefaultUserIdChange = (e) => {
+        setNewUserId(e.target.value);
     };
 
-    // Sauvegarder l'ID utilisateur par défaut dans le localStorage
-    const handleSaveDefaultUserId = () => {
-        localStorage.setItem('defaultUserId', newUserId);
-        showModal("Succès", `L'ID utilisateur par défaut a été mis à jour : ${newUserId}`);
+
+    // Pour sauvegarder le nouvel ID par défaut dans ta table server-side
+    const handleSaveDefaultUserId = async () => {
+        try {
+            const response = await fetch('/api/default-user-id', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ defaultUserId: newUserId }),
+            });
+
+            if (!response.ok) throw new Error("Erreur lors de l'enregistrement de l'ID utilisateur par défaut.");
+
+            showModal("Succès", "ID utilisateur par défaut enregistré !");
+        } catch (error) {
+            console.error(error);
+            showModal("Erreur", "Impossible d'enregistrer l'ID utilisateur par défaut.");
+        }
     };
+
 
     return (
         <>
             <div>
                 <h1>XP-LAB</h1>
-                <Link id={styles.createFormLink} to="/form-editor2">Créer un nouveau formulaire</Link>
+                <button
+                    className={styles.createFormButton}
+                    onClick={() => navigate("/form-editor2")}
+                >
+                    Créer un nouveau formulaire
+                </button>
 
                 {/* Champ pour entrer l'ID utilisateur par défaut */}
                 <div className={styles.defaultUserIdContainer}>
@@ -154,7 +176,7 @@ const Accueil = () => {
                                     <td>{form.title}</td>
                                     <td>{new Date(form.created_at).toLocaleString()}</td>
                                     <td>{new Date(form.updated_at).toLocaleString()}</td>
-                                    <td class="row">
+                                    <td className="row">
                                         <Link to={`/form-viewer/${form.id}/1?navigation=True`}>
                                             <button className={`${styles.button} ${styles.viewButton}`}>Voir</button>
                                         </Link>
@@ -191,3 +213,4 @@ const Accueil = () => {
 };
 
 export default Accueil;
+
