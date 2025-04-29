@@ -35,3 +35,5 @@ This will:
     npm run dev
 
 This command will use concurrently to run the client and server at the same time. The client will be accessible at http://localhost:3000 and the server will run on http://localhost:5000.
+
+
