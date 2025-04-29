@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Modal.module.css";
 
-const Modal = ({ isOpen, title, message, onClose, onConfirm, redirectPath }) => {
+const Modal = ({ isOpen, title, message, onConfirm }) => {
   const navigate = useNavigate();
 
   if (!isOpen) return null;
@@ -13,19 +13,12 @@ const Modal = ({ isOpen, title, message, onClose, onConfirm, redirectPath }) => 
         <h2>{title}</h2>
         <p>{message}</p>
         <div className={styles.modalActions}>
-          {onConfirm && (
-            <button
-              onClick={() => {
-                onConfirm();
-                if (redirectPath) navigate(redirectPath);
-                onClose();
-              }}
-              className={styles.confirmButton}
-            >
-              Confirmer
-            </button>
-          )}
-          <button onClick={onClose} className={styles.closeButton}>
+          <button
+            onClick={() => {
+              if (onConfirm) onConfirm(); // Call the onConfirm callback
+            }}
+            className={styles.confirmButton}
+          >
             Fermer
           </button>
         </div>

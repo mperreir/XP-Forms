@@ -18,12 +18,12 @@ const FormViewer = () => {
   const [formDetails, setFormDetails] = useState(null);
   const [componentMapping, setComponentMapping] = useState({});
   const [formData, setFormData] = useState({});
-  const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onClose: null });
+  const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
 
   const dataInitialized = useRef(false);
 
-  const showModal = (title, message, onClose = null) => {
-    setModal({ isOpen: true, title, message, onClose });
+  const showModal = (title, message, onConfirm = null) => {
+    setModal({ isOpen: true, title, message, onConfirm });
   };
 
 
@@ -153,8 +153,8 @@ const FormViewer = () => {
         event.preventDefault();
         showModal(
           "Validation",
-          "Votre formulaire a été soumis avec succès. Cliquez sur le bouton ci-dessous pour continuer.",
-          () => navigate("/merci")
+          "Votre formulaire a été soumis avec succès.",
+          () => navigate("/merci") // Redirect to the "Merci" page when "Fermer" is pressed
         );
       });
 
@@ -282,6 +282,12 @@ const FormViewer = () => {
           <p>Chargement du formulaire...</p>
         )}
       </div>
+      <Modal
+        isOpen={modal.isOpen}
+        title={modal.title}
+        message={modal.message}
+        onConfirm={modal.onConfirm} // Correctly pass the onConfirm callback
+      />
     </>
   );
 };
