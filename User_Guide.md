@@ -1,93 +1,3 @@
-## Scénarios d'utilisation
-Vous trouverez ci-après des descriptions textuelles de l’ensemble des scénarios d’utilisation de notre plateforme : 
-
-#### 1/ Créer un formulaire : 
-<img src="Guide Images/sce.JPG" width="450"/>
-
-#### 2/ Modifier un formulaire : 
-<img src="Guide Images/sce2.JPG" width="450"/>
-
-#### 3/ Supprimer un formulaire : 
-<img src="Guide Images/sce3.JPG" width="450"/>
-
-#### 4/ Dupliquer un formulaire : 
-<img src="Guide Images/sce4.JPG" width="450"/>
-
-#### 5/ Consulter un formulaire : 
-<img src="Guide Images/sce5.JPG" width="450"/>
-
-#### 6/ Consulter les réponses des participants à un formulaire : 
-<img src="Guide Images/sce6.JPG" width="450"/>
-
-#### 7/ Remplir un formulaire : 
-<img src="Guide Images/sce7.JPG" width="450"/>
-
-#### 8/ Définir un id participant par défaut : 
-<img src="Guide Images/sce8.JPG" width="450"/>
-
-
-## Architecture du projet
--/client → Application React (interface utilisateur)
-
--/serveur → Application Express.js (API backend + base de données SQLite)
-
-## Base de Données
-
-La base de données de la plateforme contient `quatre tables` :
-* Une table `forms`, dans laquelle sont enregistrés les différents formulaires créés, chacun possède un identifiant unique, un titre, une date et une heure de création, une date et une heure de dernière modification, ainsi qu’un schéma JSON contenant sa structure et permettant de le générer.
-* Une table `components`, contenant les différents composants (ou widgets) formant chaque formulaire. Un composant possède un identifiant unique, est associé à un formulaire spécifique grâce à une clé étrangère form_id, dispose d’un label, d’un type, d’une action (par exemple submit dans le cas d’un bouton), d’un key_name et d’un layout (indiquant sa mise en page et sa position dans le formulaire).
-* Une table `responses`, dans laquelle sont enregistrées les réponses des participants aux différentes questions des formulaires. Une réponse est associée à un identifiant unique, à un formulaire spécifique grâce à une clé étrangère form_id, à un composant spécifique grâce à une clé étrangère component_id, à un participant spécifique grâce à une clé étrangère user_id. Elle possède également une valeur (la réponse saisie ou sélectionnée) et une date et une heure d’enregistrement.
-* Une table `settings`, dans laquelle est enregistré l’id du participant par défaut.
-
-Ci-après est le diagramme entité-relation de la base de données de la plateforme.
-
-<img src="Guide Images/Capturebdd.JPG" width="250"/>
-
-
-Une notion fondamentale introduite par la librairie form.js, utilisée pour l’implémentation de la plateforme, et sur laquelle nous nous basons pour sauvegarder les formulaires créés et les générer après leur création, est celle du schéma JSON du formulaire.
-
-Ce schéma est une représentation du formulaire, de ses composants, de leur mise en page (ainsi que de leurs identifiants), sous format JSON, selon la structure suivante :
-    
-```bash
-{"components":[
-
-    {"label":"Textfield","type":"textfield","layout"{"row":"Row_0txg27r","columns":null},"id":"Field_070s0b2","key":"textfield_rocwla"},
-    {"label":"Number","type":"number","layout":{"row":"Row_046itkl","columns":null},"id":"Field_0g8xpov","key":"number_bhp49i"},
-    {"label":"Textarea","type":"textarea","layout":{"row":"Row_046itkl","columns":null},"id":"Field_1idcu8b","key":"textarea_sn0qj"},
-    {"label":"Button","action":"submit","type":"button","layout":{"row":"Row_0dlsesg","columns":null},"id":"Field_1y62q4z"},
-    {"type":"separator","layout":{"row":"Row_0sbjd66","columns":null},"id":"Field_1y0ijgl"},
-    {"subtype":"date","dateLabel":"Date","type":"datetime","layout":{"row":"Row_112rraf","columns":null},"id":"Field_0q64yj7","key":"datetime_2gl9m"},
-    {"label":"Number","type":"number","layout":{"row":"Row_0dqxbe4","columns":null},"id":"Field_0xzw87z","key":"number_a7hz8"},
-    {"label":"Button","action":"submit","type":"button","layout":{"row":"Row_0lckcsx","columns":null},"id":"Field_16mmdtg"}],
-    
-    "type":"default","id":"Form_1ptsvm8","schemaVersion":18}
-```
-
-## API Routes (Backend)
-
-### Routes Formulaires 
-
-
-| Méthode | URL                         | Description                                 |
-|:--------|:----------------------------|:--------------------------------------------|
-| `POST`  | `/api/save-form`             | Enregistrer un nouveau formulaire |
-| `GET`   | `/api/forms`                 | Récupérer la liste de tous les formulaires |
-| `GET`   | `/api/forms/:id`             | Récupérer un formulaire spécifique par ID |
-| `GET`   | `/api/forms/:id/has-responses`| Vérifier si un formulaire a déjà des réponses |
-| `PUT`   | `/api/forms/:id`             | Mettre à jour un formulaire existant |
-| `DELETE`| `/api/forms/:id`             | Supprimer un formulaire (et ses réponses associées) |
-| `POST`  | `/api/forms/:id/duplicate`   | Dupliquer un formulaire existant |
-
-### Routes Utilsateur (responses)
-
-| Méthode | URL                                         | Description |
-|:--------|:--------------------------------------------|:------------|
-| `POST`  | `/api/submit-form`                          | Soumettre toutes les réponses d'un formulaire en une seule fois |
-| `POST`  | `/api/save-response`                        | Sauvegarder une réponse individuelle (auto-save champ par champ) |
-| `GET`   | `/api/forms/:id/responses`                  | Récupérer toutes les réponses pour un formulaire |
-| `GET`   | `/api/form-responses-participant/:form_id/:user_id` | Récupérer toutes les réponses d'un participant spécifique pour un formulaire |
-| `DELETE`| `/api/forms/:id/responses`                  | Supprimer toutes les réponses d'un formulaire (sans supprimer le formulaire lui-même) |
-
 ## Le Frontend
 
 La plateforme que nous avons implémentée est composée de différentes pages, chacune permettant d’effectuer des tâches spécifiques et destinée à un acteur particulier.
@@ -224,3 +134,93 @@ Comme le montre la capture d’écran suivante, le participant nommé Kevin a é
 Dans la capture d’écran suivante, on trouve la page de Tobii Pro Lab contenant les enregistrements d’écran (Recordings) effectués lors du passage des participants par le scénario d’expérimentation.
 
 ![alt text](<Guide Images/UI14.JPG>)
+
+## Scénarios d'utilisation
+Vous trouverez ci-après des descriptions textuelles de l’ensemble des scénarios d’utilisation de notre plateforme : 
+
+#### 1/ Créer un formulaire : 
+<img src="Guide Images/sce.JPG" width="450"/>
+
+#### 2/ Modifier un formulaire : 
+<img src="Guide Images/sce2.JPG" width="450"/>
+
+#### 3/ Supprimer un formulaire : 
+<img src="Guide Images/sce3.JPG" width="450"/>
+
+#### 4/ Dupliquer un formulaire : 
+<img src="Guide Images/sce4.JPG" width="450"/>
+
+#### 5/ Consulter un formulaire : 
+<img src="Guide Images/sce5.JPG" width="450"/>
+
+#### 6/ Consulter les réponses des participants à un formulaire : 
+<img src="Guide Images/sce6.JPG" width="450"/>
+
+#### 7/ Remplir un formulaire : 
+<img src="Guide Images/sce7.JPG" width="450"/>
+
+#### 8/ Définir un id participant par défaut : 
+<img src="Guide Images/sce8.JPG" width="450"/>
+
+
+## Architecture du projet
+-/client → Application React (interface utilisateur)
+
+-/serveur → Application Express.js (API backend + base de données SQLite)
+
+## Base de Données
+
+La base de données de la plateforme contient `quatre tables` :
+* Une table `forms`, dans laquelle sont enregistrés les différents formulaires créés, chacun possède un identifiant unique, un titre, une date et une heure de création, une date et une heure de dernière modification, ainsi qu’un schéma JSON contenant sa structure et permettant de le générer.
+* Une table `components`, contenant les différents composants (ou widgets) formant chaque formulaire. Un composant possède un identifiant unique, est associé à un formulaire spécifique grâce à une clé étrangère form_id, dispose d’un label, d’un type, d’une action (par exemple submit dans le cas d’un bouton), d’un key_name et d’un layout (indiquant sa mise en page et sa position dans le formulaire).
+* Une table `responses`, dans laquelle sont enregistrées les réponses des participants aux différentes questions des formulaires. Une réponse est associée à un identifiant unique, à un formulaire spécifique grâce à une clé étrangère form_id, à un composant spécifique grâce à une clé étrangère component_id, à un participant spécifique grâce à une clé étrangère user_id. Elle possède également une valeur (la réponse saisie ou sélectionnée) et une date et une heure d’enregistrement.
+* Une table `settings`, dans laquelle est enregistré l’id du participant par défaut.
+
+Ci-après est le diagramme entité-relation de la base de données de la plateforme.
+
+<img src="Guide Images/Capturebdd.JPG" width="250"/>
+
+
+Une notion fondamentale introduite par la librairie form.js, utilisée pour l’implémentation de la plateforme, et sur laquelle nous nous basons pour sauvegarder les formulaires créés et les générer après leur création, est celle du schéma JSON du formulaire.
+
+Ce schéma est une représentation du formulaire, de ses composants, de leur mise en page (ainsi que de leurs identifiants), sous format JSON, selon la structure suivante :
+    
+```bash
+{"components":[
+
+    {"label":"Textfield","type":"textfield","layout"{"row":"Row_0txg27r","columns":null},"id":"Field_070s0b2","key":"textfield_rocwla"},
+    {"label":"Number","type":"number","layout":{"row":"Row_046itkl","columns":null},"id":"Field_0g8xpov","key":"number_bhp49i"},
+    {"label":"Textarea","type":"textarea","layout":{"row":"Row_046itkl","columns":null},"id":"Field_1idcu8b","key":"textarea_sn0qj"},
+    {"label":"Button","action":"submit","type":"button","layout":{"row":"Row_0dlsesg","columns":null},"id":"Field_1y62q4z"},
+    {"type":"separator","layout":{"row":"Row_0sbjd66","columns":null},"id":"Field_1y0ijgl"},
+    {"subtype":"date","dateLabel":"Date","type":"datetime","layout":{"row":"Row_112rraf","columns":null},"id":"Field_0q64yj7","key":"datetime_2gl9m"},
+    {"label":"Number","type":"number","layout":{"row":"Row_0dqxbe4","columns":null},"id":"Field_0xzw87z","key":"number_a7hz8"},
+    {"label":"Button","action":"submit","type":"button","layout":{"row":"Row_0lckcsx","columns":null},"id":"Field_16mmdtg"}],
+    
+    "type":"default","id":"Form_1ptsvm8","schemaVersion":18}
+```
+
+## API Routes (Backend)
+
+### Routes Formulaires 
+
+
+| Méthode | URL                         | Description                                 |
+|:--------|:----------------------------|:--------------------------------------------|
+| `POST`  | `/api/save-form`             | Enregistrer un nouveau formulaire |
+| `GET`   | `/api/forms`                 | Récupérer la liste de tous les formulaires |
+| `GET`   | `/api/forms/:id`             | Récupérer un formulaire spécifique par ID |
+| `GET`   | `/api/forms/:id/has-responses`| Vérifier si un formulaire a déjà des réponses |
+| `PUT`   | `/api/forms/:id`             | Mettre à jour un formulaire existant |
+| `DELETE`| `/api/forms/:id`             | Supprimer un formulaire (et ses réponses associées) |
+| `POST`  | `/api/forms/:id/duplicate`   | Dupliquer un formulaire existant |
+
+### Routes Utilsateur (responses)
+
+| Méthode | URL                                         | Description |
+|:--------|:--------------------------------------------|:------------|
+| `POST`  | `/api/submit-form`                          | Soumettre toutes les réponses d'un formulaire en une seule fois |
+| `POST`  | `/api/save-response`                        | Sauvegarder une réponse individuelle (auto-save champ par champ) |
+| `GET`   | `/api/forms/:id/responses`                  | Récupérer toutes les réponses pour un formulaire |
+| `GET`   | `/api/form-responses-participant/:form_id/:user_id` | Récupérer toutes les réponses d'un participant spécifique pour un formulaire |
+| `DELETE`| `/api/forms/:id/responses`                  | Supprimer toutes les réponses d'un formulaire (sans supprimer le formulaire lui-même) |
