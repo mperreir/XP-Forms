@@ -130,9 +130,8 @@ const Accueil = () => {
 
     return (
         <>
-            <div className={styles.centeredContainer}>
-                <h1>XP-Forms</h1>
-
+             <div>
+             <h1>XP-Forms</h1>
                 {/* Champ pour entrer l'ID utilisateur par défaut */}
                 <div className={styles.defaultUserIdContainer}>
                     <label htmlFor="defaultUserId" className={styles.defaultUserIdLabel}>

@@ -142,32 +142,32 @@ tbody tr:hover {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 20px;
+    margin: 20px 0;
     max-width: 600px;
-}
+  }
 
-.defaultUserIdLabel {
+  .defaultUserIdLabel {
     font-weight: bold;
-}
+  }
 
-.defaultUserIdInput {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-.saveButton {
-    padding: 10px 20px;
+  .defaultUserIdInput {
+    padding: 8px;
+    font-size: 14px;
+    flex: 1;
+    max-width: 300px;
+    width: 250px; 
+  }
+  
+  .saveButton {
+    padding: 8px 16px;
     font-size: 14px;
     background-color: #007bff;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
-    margin-top: 15px;
-}
+  }
+  
 
 .saveButton:hover {
     background-color: #0056b3;
@@ -175,13 +175,14 @@ tbody tr:hover {
 
 /* Align "Créer un nouveau formulaire" button to the left */
 .createFormButton {
-    background-color: #28a745; /* Green color */
+    margin: 20px 0; /* Remove auto centering */
+    padding: 12px 24px;
+    background-color: #28a745;
     color: white;
-    padding: 10px 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: 4px;
+    font-size: 16px;
     cursor: pointer;
-    margin-top: 15px;
 }
 
 .createFormButton:hover {
