@@ -219,6 +219,7 @@ const FormViewer = () => {
             <p><strong>ID du Formulaire :</strong> {formDetails.id}</p>
             <p><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
             <p><strong>Pour intégrer dans un scénario Tobii utilisez :</strong> http://localhost:3000/form-viewer/{id}/{page}/id_participant</p>
+            <p>Ajoutez <strong>@</strong> comme ID participant pour utiliser l'ID utilisateur par défaut.</p>
             <p>Ajoutez <strong>?navigation=True</strong> à la fin si vous voulez permettre la navigation entre pages.</p>
           </div>
         )}

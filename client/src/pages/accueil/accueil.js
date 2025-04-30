@@ -130,14 +130,8 @@ const Accueil = () => {
 
     return (
         <>
-            <div>
+            <div className={styles.centeredContainer}>
                 <h1>XP-Forms</h1>
-                <button
-                    className={styles.createFormButton}
-                    onClick={() => navigate("/form-editor2")}
-                >
-                    Créer un nouveau formulaire
-                </button>
 
                 {/* Champ pour entrer l'ID utilisateur par défaut */}
                 <div className={styles.defaultUserIdContainer}>
@@ -155,8 +149,15 @@ const Accueil = () => {
                         Sauvegarder
                     </button>
                 </div>
+                <button
+                    className={styles.createFormButton}
+                    onClick={() => navigate("/form-editor2")}
+                >
+                    Créer un nouveau formulaire
+                </button>
+            </div>
 
-
+            <div>
                 <h2>Liste des formulaires enregistrés</h2>
                 <table className={styles.table}>
                     <thead>

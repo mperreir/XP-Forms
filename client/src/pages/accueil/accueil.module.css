@@ -63,17 +63,18 @@ tbody tr:hover {
 }
 
 .createFormButton {
-    display: block;
-    margin: 20px auto; /* Center horizontally */
-    padding: 12px 24px;
-    background-color: #28a745;
+    background-color: #28a745; /* Green color */
     color: white;
+    padding: 10px 20px;
     border: none;
-    border-radius: 4px;
-    font-size: 16px;
+    border-radius: 5px;
     cursor: pointer;
+    margin-top: 15px;
 }
 
+.createFormButton:hover {
+    background-color: #218838; /* Darker green on hover */
+}
 
 /* Color scheme for action buttons */
 .viewButton {
@@ -137,51 +138,54 @@ tbody tr:hover {
     background-color: #341077;
 }
 
-
-
 .defaultUserIdContainer {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: 20px 0;
+    margin-bottom: 20px;
     max-width: 600px;
-  }
-  
-  .defaultUserIdLabel {
+}
+
+.defaultUserIdLabel {
     font-weight: bold;
-  }
-  
-  .defaultUserIdInput {
-    padding: 8px;
-    font-size: 14px;
-    flex: 1;
-    max-width: 300px;
-    width: 250px; 
-  }
-  
-  .saveButton {
-    padding: 8px 16px;
+}
+
+.defaultUserIdInput {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.saveButton {
+    padding: 10px 20px;
     font-size: 14px;
     background-color: #007bff;
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     cursor: pointer;
-  }
-  
-  .saveButton:hover {
+    margin-top: 15px;
+}
+
+.saveButton:hover {
     background-color: #0056b3;
-  }
+}
+
 /* Align "Créer un nouveau formulaire" button to the left */
 .createFormButton {
-    margin: 20px 0; /* Remove auto centering */
-    padding: 12px 24px;
-    background-color: #28a745;
+    background-color: #28a745; /* Green color */
     color: white;
+    padding: 10px 20px;
     border: none;
-    border-radius: 4px;
-    font-size: 16px;
+    border-radius: 5px;
     cursor: pointer;
+    margin-top: 15px;
+}
+
+.createFormButton:hover {
+    background-color: #218838; /* Darker green on hover */
 }
 
 /* General button styles */
@@ -246,15 +250,26 @@ tbody tr:hover {
 
 /* Save button styling */
 .saveButton {
-    padding: 8px 16px;
+    padding: 10px 20px;
     font-size: 14px;
     background-color: #007bff;
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     cursor: pointer;
+    margin-top: 15px;
 }
 
 .saveButton:hover {
     background-color: #0056b3;
+}
+
+.centeredContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin: 20px auto;
+    max-width: 600px;
 }
