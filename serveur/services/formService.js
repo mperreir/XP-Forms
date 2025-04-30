@@ -1,5 +1,7 @@
 require("../base_de_donnee/initDb.js");
 const db = require("../base_de_donnee/db");
+const { v4: uuidv4 } = require('uuid');
+
 
 
 const saveForm = (id, title, json_data) => {
@@ -185,43 +187,49 @@ const duplicateForm = async (formId) => {
     db.run("BEGIN TRANSACTION");
 
     db.get("SELECT * FROM forms WHERE id = ?", [formId], (err, form) => {
-      if (err) {
+      if (err || !form) {
         db.run("ROLLBACK");
-        return reject({ success: false, error: err.message });
+        return reject({ success: false, error: err ? err.message : "Formulaire introuvable" });
       }
 
-      if (!form) {
-        db.run("ROLLBACK");
-        return reject({ success: false, error: "Formulaire introuvable" });
-      }
+      const oldJson = JSON.parse(form.json_data);
+      const componentIdMap = {};
 
-      const newTitle = `${form.title} (copy)`;
-      const newJsonData = form.json_data;
+      // Générer un nouvel ID pour chaque composant
+      const newComponents = oldJson.components.map((comp) => {
+        const newId = `Comp_${uuidv4().slice(0, 8)}`;
+        componentIdMap[comp.id] = newId;
+        return { ...comp, id: newId };
+      });
 
-      // Fonction pour générer un ID et vérifier son unicité
+      const newFormJson = {
+        ...oldJson,
+        components: newComponents
+      };
+
+      // Générer un ID de formulaire unique
       const generateUniqueFormId = () => {
         return new Promise((resolve, reject) => {
-          const attemptGenerate = () => {
-            const candidateId = `Form_${Math.random().toString(36).substring(2, 10)}`; // Ex: Form_ab23kd9d
-            db.get("SELECT id FROM forms WHERE id = ?", [candidateId], (err, row) => {
+          const tryGenerate = () => {
+            const newId = `Form_${Math.random().toString(36).slice(2, 10)}`;
+            db.get("SELECT id FROM forms WHERE id = ?", [newId], (err, row) => {
               if (err) return reject(err);
-              if (row) {
-                // ID existe déjà → refaire
-                attemptGenerate();
-              } else {
-                resolve(candidateId);
-              }
+              if (row) return tryGenerate();
+              resolve(newId);
             });
           };
-          attemptGenerate();
+          tryGenerate();
         });
       };
 
       generateUniqueFormId()
         .then((newFormId) => {
+          const newTitle = `${form.title} (copy)`;
+          const jsonDataString = JSON.stringify(newFormJson);
+
           db.run(
             "INSERT INTO forms (id, title, json_data, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
-            [newFormId, newTitle, newJsonData],
+            [newFormId, newTitle, jsonDataString],
             (err) => {
               if (err) {
                 db.run("ROLLBACK");
@@ -234,29 +242,29 @@ const duplicateForm = async (formId) => {
                   return reject({ success: false, error: err.message });
                 }
 
-                const insertComponentPromises = components.map((component) => {
-                  return new Promise((resolve, reject) => {
-                    const newComponentId = `Component_${Math.random().toString(36).substring(2, 10)}`;
+                const insertTasks = components.map((comp) => {
+                  const newId = componentIdMap[comp.id];
+                  return new Promise((res, rej) => {
                     db.run(
                       "INSERT INTO components (id, form_id, label, type, action, key_name, layout) VALUES (?, ?, ?, ?, ?, ?, ?)",
                       [
-                        newComponentId,
+                        newId,
                         newFormId,
-                        component.label,
-                        component.type,
-                        component.action,
-                        component.key_name,
-                        component.layout,
+                        comp.label,
+                        comp.type,
+                        comp.action,
+                        comp.key_name,
+                        comp.layout
                       ],
                       (err) => {
-                        if (err) return reject(err);
-                        resolve();
+                        if (err) return rej(err);
+                        res();
                       }
                     );
                   });
                 });
 
-                Promise.all(insertComponentPromises)
+                Promise.all(insertTasks)
                   .then(() => {
                     db.run("COMMIT", (err) => {
                       if (err) {
