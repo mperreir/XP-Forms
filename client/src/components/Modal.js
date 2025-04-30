@@ -25,7 +25,7 @@ const Modal = ({ isOpen, title, message, onConfirm, onClose }) => {
               onClick={onClose} // Call the onClose callback
               className={styles.closeButton}
             >
-              Annuler
+              Fermer
             </button>
           )}
         </div>

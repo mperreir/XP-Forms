@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Modal from "../../components/Modal"; // Assure-toi d'avoir ce composant
+import Modal from "../../components/Modal";
+import DeleteResponsesSuccessModal from "../../components/DeleteResponsesSuccessModal";
 import styles from "./FormResponsesList.module.css";
 
 const FormResponsesList = () => {
@@ -8,6 +9,7 @@ const FormResponsesList = () => {
   const [responses, setResponses] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
+  const [successModal, setSuccessModal] = useState({ isOpen: false, title: "", message: "" });
   const navigate = useNavigate();
 
   const handleGoHome = () => {
@@ -20,6 +22,14 @@ const FormResponsesList = () => {
 
   const closeModal = () => {
     setModal({ isOpen: false, title: "", message: "", onConfirm: null, onClose: null });
+  };
+
+  const showSuccessModal = (title, message) => {
+    setSuccessModal({ isOpen: true, title, message });
+  };
+
+  const closeSuccessModal = () => {
+    setSuccessModal({ isOpen: false, title: "", message: "" });
   };
 
   useEffect(() => {
@@ -84,12 +94,9 @@ const FormResponsesList = () => {
             method: "DELETE",
           });
           if (response.ok) {
-            showModal(
-              "Succès",
-              "Toutes les réponses ont été supprimées.",
-              () => setModal({ isOpen: false }) // Close the modal on confirmation
-            );
-            setResponses([]); // Clear local responses
+            closeModal();
+            showSuccessModal("Succès", "Toutes les réponses ont été supprimées.");
+            setResponses([]);
           } else {
             const errorData = await response.json();
             showModal("Erreur", "Erreur : " + errorData.error);
@@ -99,7 +106,7 @@ const FormResponsesList = () => {
           showModal("Erreur", "Impossible de contacter le serveur.");
         }
       },
-      closeModal // Pass the closeModal function for the "Annuler" button
+      closeModal
     );
   };
 
@@ -143,13 +150,19 @@ const FormResponsesList = () => {
         Supprimer toutes les réponses
       </button>
 
-      {/* Modal pour confirmation */}
       <Modal
         isOpen={modal.isOpen}
         title={modal.title}
         message={modal.message}
-        onConfirm={modal.onConfirm} // Confirmation button
-        onClose={modal.onClose} // Annuler button
+        onConfirm={modal.onConfirm}
+        onClose={modal.onClose}
+      />
+
+      <DeleteResponsesSuccessModal
+        isOpen={successModal.isOpen}
+        title={successModal.title}
+        message={successModal.message}
+        onClose={closeSuccessModal}
       />
     </div>
   );
