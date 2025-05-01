@@ -69,7 +69,7 @@ http://localhost:3000/form-viewer/ID_du_formulaire/numéro_de_la_page/ID_du_part
  
 La figure suivante présente la vue de l’expérimentateur de la page de consultation de formulaires.
 
-![alt text](<Guide Images/UI21.JPG>)
+![alt text](<Guide Images/UI29.JPG>)
 
 ### La page de consultation de formulaires (vue du participant)
 Dans cette vue, le participant est amené à remplir le formulaire affiché, ou une page spécifique de celui-ci.
@@ -201,6 +201,15 @@ Ce schéma est une représentation du formulaire, de ses composants, de leur mis
 ```
 
 ## API Routes (Backend)
+
+### Organisation du code 
+
+L’implémentation back-end est organisée en plusieurs couches pour assurer la modularité et la maintenabilité :
+
+- `routes/` : contient tous les points d'entrée HTTP (API REST), organisés par fonctionnalité.
+- `controllers/`: traite la logique métier liée à chaque route.
+- `services/` : effectue les interactions directes avec la base de données SQLite.
+- `database/` : gère la création et l’ouverture de la base bd.db, ainsi que l’initialisation automatique des tables à partir du script bd.sql.
 
 ### Routes Formulaires 
 
