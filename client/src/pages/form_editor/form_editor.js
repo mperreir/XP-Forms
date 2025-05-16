@@ -39,13 +39,14 @@ const FormEditor = () => {
           if (!data.json_data) throw new Error("Le schéma du formulaire est vide !");
           editor.importSchema(data.json_data);
           setTitle(data.title || "");
-          setIsEditing(true);
+          setIsEditing(true);  /* Si l'id d'un formulaire est present dans l'URL -> isEditing = true -> page de modification de formulaires */
           console.log(data);
         })
         .catch((err) => console.error("Erreur de chargement :", err));
     } else {
       const defaultSchema = { type: "default", components: [] };
       editor.importSchema(defaultSchema);
+      /* Si l'id d'un formulaire n'est pas present dans l'URL -> isEditing reste égale à false -> page de création de formulaires */
     }
 
     // Détection des modifications dans l'éditeur
