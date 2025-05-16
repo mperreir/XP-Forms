@@ -5,23 +5,22 @@ import Modal from "../../components/Modal";
 import './form-js-editor.css';
 import styles from "./form_editor.module.css"; 
 
-
 const FormEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const editorContainerRef = useRef(null);
   const [formEditor, setFormEditor] = useState(null);
   const [title, setTitle] = useState("");
-  const [defaultUserId, setDefaultUserId] = useState("");
   const [isEditing, setIsEditing] = useState(false);
-  const [modal, setModal] = useState({ isOpen: false, title: "", message: "" });
+  const [isModified, setIsModified] = useState(false); // Pour suivre les modifications
+  const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
 
-  const showModal = (title, message) => {
-    setModal({ isOpen: true, title, message });
+  const showModal = (title, message, onConfirm = null) => {
+    setModal({ isOpen: true, title, message, onConfirm });
   };
 
   const closeModal = () => {
-    setModal({ isOpen: false, title: "", message: "" });
+    setModal({ isOpen: false, title: "", message: "", onConfirm: null });
   };
 
   useEffect(() => {
@@ -49,6 +48,11 @@ const FormEditor = () => {
       editor.importSchema(defaultSchema);
     }
 
+    // Détection des modifications dans l'éditeur
+    editor.on("changed", () => {
+      setIsModified(true);
+    });
+
     return () => {
       editor.destroy();
     };
@@ -63,7 +67,6 @@ const FormEditor = () => {
     const schema = await formEditor.getSchema();
     const formId = id || schema.id || `Form_${Date.now()}`;
     const formTitle = title.trim() || "Formulaire sans titre";
-
     const formData = { id: formId, title: formTitle, json_data: schema };
 
     try {
@@ -77,8 +80,10 @@ const FormEditor = () => {
       });
 
       if (response.ok) {
-        showModal("Succès", isEditing ? "Formulaire mis à jour !" : "Formulaire enregistré !");
-        navigate("/accueil");
+        setIsModified(false); // Les modifications sont enregistrées
+        showModal("Succès", isEditing ? "Formulaire mis à jour !" : "Formulaire enregistré !", () => {
+          navigate("/accueil");
+        });
       } else {
         console.error("Erreur serveur :", await response.json());
         showModal("Erreur", "Erreur lors de l'enregistrement.");
@@ -90,7 +95,15 @@ const FormEditor = () => {
   };
 
   const handleGoHome = () => {
-    navigate("/");
+    if (isModified) {
+      showModal(
+        "Attention",
+        "Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter cette page ?",
+        () => navigate("/accueil")
+      );
+    } else {
+      navigate("/accueil");
+    }
   };
 
   return (
@@ -104,14 +117,16 @@ const FormEditor = () => {
         </button>
       </div>
 
-      {/* Section Titre du formulaire */}
       <div className={styles.titleContainer}>
         <label htmlFor="titre">Titre :</label>
         <input
           type="text"
           id="titre"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => {
+            setTitle(e.target.value);
+            setIsModified(true); // Le titre est une modification
+          }}
           className={styles.titleInput}
         />
         <button onClick={handleSaveForm} className={styles.saveButton}>
@@ -135,6 +150,7 @@ const FormEditor = () => {
         title={modal.title}
         message={modal.message}
         onClose={closeModal}
+        onConfirm={modal.onConfirm}
       />
     </div>
   );
