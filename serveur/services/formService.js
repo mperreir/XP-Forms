@@ -21,9 +21,14 @@ const saveForm = (id, title, json_data) => {
           }
 
           components.forEach((c) => {
+
+            // Récupération dynamique du label selon le type
+            const label = c.label || c.dateLabel || "";  
+
             db.run(
+
               "INSERT INTO components (id, form_id, label, type, key_name, layout) VALUES (?, ?, ?, ?, ?, ?)",
-              [c.id, id, c.label || "", c.type, c.key || "", JSON.stringify(c.layout)],
+              [c.id, id, label, c.type, c.key || "", JSON.stringify(c.layout)],
               (err) => {
                 if (err) {
                   db.run("ROLLBACK");
