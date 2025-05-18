@@ -27,21 +27,34 @@ const submitForm = (form_id, user_id, responses) => {
 
 const saveResponse = (form_id, user_id, component_id, value) => {
   return new Promise((resolve, reject) => {
-    db.run(
-      `
-      INSERT INTO responses (form_id, component_id, user_id, value)
-      VALUES (?, ?, ?, ?)
-      ON CONFLICT(form_id, component_id, user_id) DO UPDATE SET value = excluded.value, submitted_at = CURRENT_TIMESTAMP
-      `,
-      [form_id, component_id, user_id, value],
-      function (err) {
-        if (err) {
-          reject(new Error("Erreur lors de l'insertion ou mise à jour de la réponse : " + err.message));
-        } else {
-          resolve("Réponse enregistrée ou mise à jour.");
-        }
+    // Check if the component is a checklist and handle accordingly
+    db.get("SELECT type FROM components WHERE id = ?", [component_id], (err, row) => {
+      if (err) {
+        return reject(new Error("Erreur lors de la vérification du type de composant : " + err.message));
       }
-    );
+      
+      // Properly format checklist values as comma-separated strings
+      let formattedValue = value;
+      if (row && row.type === "checklist" && Array.isArray(value)) {
+        formattedValue = value.join(",");
+      }
+      
+      db.run(
+        `
+        INSERT INTO responses (form_id, component_id, user_id, value)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(form_id, component_id, user_id) DO UPDATE SET value = excluded.value, submitted_at = CURRENT_TIMESTAMP
+        `,
+        [form_id, component_id, user_id, formattedValue],
+        function (err) {
+          if (err) {
+            reject(new Error("Erreur lors de l'insertion ou mise à jour de la réponse : " + err.message));
+          } else {
+            resolve("Réponse enregistrée ou mise à jour.");
+          }
+        }
+      );
+    });
   });
 };
 
