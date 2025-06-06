@@ -2,11 +2,33 @@ require("../base_de_donnee/initDb.js");
 const db = require("../base_de_donnee/db");
 const { v4: uuidv4 } = require('uuid');
 
+const flattenComponents = (components) => {
+  const flat = [];
 
+  const recurse = (comps) => {
+    comps.forEach((c) => {
+      flat.push(c);
+      if (Array.isArray(c.components)) {
+        recurse(c.components);
+      }
+      if (Array.isArray(c.columns)) {
+        c.columns.forEach((col) => {
+          if (Array.isArray(col.components)) {
+            recurse(col.components);
+          }
+        });
+      }
+    });
+  };
+
+  recurse(components);
+  return flat;
+};
 
 const saveForm = (id, title, json_data) => {
   return new Promise((resolve, reject) => {
     const components = json_data.components || [];
+    const flatComponents = flattenComponents(components);
 
     db.run("BEGIN TRANSACTION", (err) => {
       if (err) return reject(err);
@@ -20,17 +42,18 @@ const saveForm = (id, title, json_data) => {
             return reject(err);
           }
 
-          components.forEach((c) => {
+          // boucle sur tous les composants flattenés
+          let hasError = false;
+          flatComponents.forEach((c) => {
+            if (hasError) return;
 
-            // Récupération dynamique du label selon le type
-            const label = c.label || c.dateLabel || "";  
-
+            const label = c.label || c.dateLabel || "";
             db.run(
-
               "INSERT INTO components (id, form_id, label, type, key_name, layout) VALUES (?, ?, ?, ?, ?, ?)",
               [c.id, id, label, c.type, c.key || "", JSON.stringify(c.layout)],
               (err) => {
                 if (err) {
+                  hasError = true;
                   db.run("ROLLBACK");
                   return reject(err);
                 }
@@ -47,6 +70,7 @@ const saveForm = (id, title, json_data) => {
     });
   });
 };
+
 
 const getAllForms = () => {
   return new Promise((resolve, reject) => {
@@ -87,8 +111,8 @@ const hasResponses = (id) => {
 
 const updateForm = (id, title, json_data) => {
   return new Promise((resolve, reject) => {
-    db.run("BEGIN TRANSACTION", async (err) => {
-      if (err) return reject(err);
+    db.serialize(() => {
+      db.run("BEGIN TRANSACTION");
 
       // 1. Mettre à jour le formulaire
       db.run(
@@ -100,56 +124,69 @@ const updateForm = (id, title, json_data) => {
             return reject(err);
           }
 
-          // 2. Supprimer les composants existants
-          db.run("DELETE FROM components WHERE form_id = ?", [id], (err) => {
+          // 2. Supprimer les anciens composants
+          db.run("DELETE FROM components WHERE form_id = ?", [id], async (err) => {
             if (err) {
               db.run("ROLLBACK");
               return reject(err);
             }
 
-            // 3. Réinsérer les composants à partir de json_data
-            const components = json_data.components || [];
+            try {
+              // 3. Flatten + validation
+              const components = json_data.components || [];
+              const flatComponents = flattenComponents(components);
 
-            const insertPromises = components.map((c) => {
-              return new Promise((res, rej) => {
-                db.run(
-                  "INSERT INTO components (id, form_id, label, type, key_name, layout) VALUES (?, ?, ?, ?, ?, ?)",
-                  [
-                    c.id,
-                    id,
-                    c.label || "",
-                    c.type || "text",
-                    c.key || "",
-                    JSON.stringify(c.layout || {}),
-                  ],
-                  (err) => {
-                    if (err) return rej(err);
-                    res();
-                  }
-                );
-              });
-            });
-
-            Promise.all(insertPromises)
-              .then(() => {
-                db.run("COMMIT", (err) => {
-                  if (err) {
-                    db.run("ROLLBACK");
-                    return reject(err);
-                  }
-                  resolve(1); // 1 = succès
-                });
-              })
-              .catch((err) => {
+              // Vérifier unicité des IDs
+              const ids = flatComponents.map(c => c.id);
+              const duplicateIds = ids.filter((id, index) => ids.indexOf(id) !== index);
+              if (duplicateIds.length > 0) {
                 db.run("ROLLBACK");
-                reject(err);
+                return reject(new Error("Doublons détectés dans les IDs : " + duplicateIds.join(", ")));
+              }
+              console.log(ids);
+
+              // 4. Insérer les nouveaux composants
+              for (const c of flatComponents) {
+                const label = c.label || c.dateLabel || "";
+                await new Promise((res, rej) => {
+                  db.run(
+                    "INSERT INTO components (id, form_id, label, type, key_name, layout) VALUES (?, ?, ?, ?, ?, ?)",
+                    [
+                      c.id,
+                      id,
+                      label,
+                      c.type || "text",
+                      c.key || "",
+                      JSON.stringify(c.layout || {})
+                    ],
+                    (err) => {
+                      if (err) return rej(err);
+                      res();
+                    }
+                  );
+                });
+              }
+
+              // 5. Commit
+              db.run("COMMIT", (err) => {
+                if (err) {
+                  db.run("ROLLBACK");
+                  return reject(err);
+                }
+                resolve(1); // Succès
               });
+            } catch (e) {
+              db.run("ROLLBACK");
+              reject(e);
+            }
           });
         }
       );
     });
   });
 };
+
+
 
 
 const deleteForm = (id) => {

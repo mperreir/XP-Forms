@@ -3,7 +3,7 @@
 /* General container for the form viewer */
 .formViewerContainer {
   width: 100%;
-  max-width: 1200px;
+  max-width: 100%;
   margin: 20px auto;
   padding: 20px;
   background-color: #f9f9f9;
@@ -172,4 +172,15 @@ button:focus {
     width: 90%;
   }
 
+}
+
+@media (min-width: 2000px) {
+  body {
+    zoom: 1.1;
+  }
+}
+@media (min-width: 3500px) {
+  body {
+    zoom: 1.9;
+  }
 }

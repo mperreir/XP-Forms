@@ -92,6 +92,19 @@ const FormViewer = () => {
   };
 
   useEffect(() => {
+    const flattenComponents = (components) => {
+      const flat = [];
+
+      components.forEach((component) => {
+        flat.push(component);
+        if (Array.isArray(component.components) && component.components.length > 0) {
+          flat.push(...flattenComponents(component.components));
+        }
+      });
+
+      return flat;
+    };
+
     const fetchFormSchema = async () => {
       try {
         const response = await fetch(`/api/forms/${id}`);
@@ -108,9 +121,12 @@ const FormViewer = () => {
         const paginated = splitSchemaBySeparator(data.json_data.components);
         setPages(paginated);
 
+        const allComponents = flattenComponents(data.json_data.components);
         const mapping = {};
-        data.json_data.components.forEach((component) => {
-          mapping[component.key] = component.id;
+        allComponents.forEach((component) => {
+          if (component.key) {
+            mapping[component.key] = component.id;
+          }
         });
         setComponentMapping(mapping);
 
@@ -119,8 +135,10 @@ const FormViewer = () => {
         showModal("Erreur", "Erreur lors du chargement du formulaire");
       }
     };
+
     fetchFormSchema();
   }, [id]);
+
 
   useEffect(() => {
     if (!schema || pages.length === 0) return;

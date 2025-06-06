@@ -3,7 +3,7 @@ CREATE TABLE forms (
     id TEXT PRIMARY KEY,  -- Form ID
     title TEXT NOT NULL,
     json_data TEXT,  -- Stocke le JSON complet sous forme de texte
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,  -- Utilise DATETIME
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -15,21 +15,22 @@ BEGIN
     UPDATE forms SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;
 
--- Table components
+-- Table components (clé primaire = id + form_id)
 CREATE TABLE components (
-    id TEXT PRIMARY KEY,  -- Component ID
-    form_id TEXT,
+    id TEXT NOT NULL,          -- Component ID (non unique globalement)
+    form_id TEXT NOT NULL,     -- Formulaire auquel le composant appartient
     label TEXT NOT NULL,
-    type TEXT NOT NULL,  -- Textfield, textarea, etc.
+    type TEXT NOT NULL,        -- textfield, textarea, etc.
     action TEXT,
-    key_name TEXT,  -- Clé unique du champ dans le JSON
-    layout TEXT,  -- Stocke l'organisation sous forme de texte JSON
+    key_name TEXT,
+    layout TEXT,
+    PRIMARY KEY (id, form_id),
     FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE
 );
 
 -- Table responses
 CREATE TABLE responses (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,  -- Id auto-incrémenté
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     form_id TEXT,
     component_id TEXT,
     user_id TEXT,
@@ -39,7 +40,7 @@ CREATE TABLE responses (
     UNIQUE(form_id, component_id, user_id)
 );
 
-
+-- Table settings
 CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT
