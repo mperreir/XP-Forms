@@ -36,3 +36,8 @@
     transform: rotate(360deg);
   }
 }
+
+.fjs-form, .fjs-layout-row:has(img) {
+  display: flex;
+  justify-content: center;
+}

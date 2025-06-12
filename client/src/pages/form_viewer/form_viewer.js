@@ -168,6 +168,13 @@ const FormViewer = () => {
       dataInitialized.current = true;
 
       form.on("submit", (event) => {
+        const errors = form.validate();
+
+        if (Object.keys(errors).length) {
+          console.error('Form has errors', errors);
+          return;
+        }
+
         event.preventDefault();
         showModal(
           "Validation",

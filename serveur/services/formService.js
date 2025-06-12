@@ -1,4 +1,5 @@
 require("../base_de_donnee/initDb.js");
+const { json } = require("express");
 const db = require("../base_de_donnee/db");
 const { v4: uuidv4 } = require('uuid');
 
@@ -237,12 +238,25 @@ const duplicateForm = async (formId) => {
       const oldJson = JSON.parse(form.json_data);
       const componentIdMap = {};
 
-      // Générer un nouvel ID pour chaque composant
-      const newComponents = oldJson.components.map((comp) => {
+      function cloneComponentWithNewIds(component) { // Cloner récursivement les components
         const newId = `Comp_${uuidv4().slice(0, 8)}`;
-        componentIdMap[comp.id] = newId;
-        return { ...comp, id: newId };
-      });
+        componentIdMap[component.id] = newId;
+
+        let clonedChildren = undefined;
+        if (component.components && Array.isArray(component.components)) {
+          clonedChildren = component.components.map(cloneComponentWithNewIds);
+        }
+
+        return {
+          ...component,
+          id: newId,
+          ...(clonedChildren ? { components: clonedChildren } : {})
+        };
+      }
+
+      const oldComponents = oldJson.components || [];
+
+      const newComponents = oldComponents.map(cloneComponentWithNewIds);
 
       const newFormJson = {
         ...oldJson,
