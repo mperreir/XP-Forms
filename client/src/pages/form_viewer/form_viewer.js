@@ -187,34 +187,38 @@ const FormViewer = () => {
         if (!id_participant || !dataInitialized.current) return;
 
         const newData = event.data;
+
         Object.entries(newData).forEach(([key, value]) => {
-          if (formData[key] !== value) {
-            setFormData((prevData) => ({
-              ...prevData,
-              [key]: value,
-            }));
+          setFormData((prevData) => {
+            if (prevData[key] === value) {
+              return prevData;
+            }
+
+            const updated = { ...prevData, [key]: value };
 
             const component_id = componentMapping[key];
-            if (!component_id) return;
-
-            fetch("/api/save-response", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                form_id: id,
-                user_id: id_participant,
-                component_id,
-                value,
-              }),
-            })
-              .then((response) => response.json())
-              .then((data) => {
-                console.log("Réponse sauvegardée :", data);
+            if (component_id) {
+              fetch("/api/save-response", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  form_id: id,
+                  user_id: id_participant,
+                  component_id,
+                  value,
+                }),
               })
-              .catch((error) => {
-                console.error("Erreur lors de la sauvegarde :", error);
-              });
-          }
+                .then((response) => response.json())
+                .then((data) => {
+                  console.log("Réponse sauvegardée :", data);
+                })
+                .catch((error) => {
+                  console.error("Erreur lors de la sauvegarde :", error);
+                });
+            }
+
+            return updated;
+          });
         });
       });
     };

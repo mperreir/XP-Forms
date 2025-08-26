@@ -9,7 +9,8 @@ const defaultUserIdRoutes = require("./routes/settingsRoutes");
 const cors = require("cors");
 app.use(cors());
 
-
+const path = require('path');
+app.use('/images', express.static(path.join(__dirname, '../client/public/images')));
 
 app.use(express.json()); // Middleware for JSON
 app.use(bodyParser.json());
