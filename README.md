@@ -12,8 +12,8 @@ You need **Node.js** and **npm** installed on your computer. If you don't have t
 
    First, clone the project repository to your local machine:
    ```bash
-   git clone https://github.com/ghassenjrad/Ptrans.git
-   cd Ptrans
+   git clone https://github.com/mperreir/XP-Forms.git
+   cd XP-Forms
 
 2. **Install Dependencies:**
     Run the following command to install all dependencies for both the client and the server:
@@ -35,5 +35,4 @@ This will:
     npm run dev
 
 This command will use concurrently to run the client and server at the same time. The client will be accessible at http://localhost:3000 and the server will run on http://localhost:5000.
-
 
