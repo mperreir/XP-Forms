@@ -161,7 +161,6 @@ const Accueil = () => {
                 <table className={styles.table}>
                     <thead>
                         <tr>
-                            <th className={styles.th}>ID</th>
                             <th className={styles.th}>Titre</th>
                             <th className={styles.th}>Date de création</th>
                             <th className={styles.th}>Dernière mise à jour</th>
@@ -172,7 +171,6 @@ const Accueil = () => {
                         {forms.length > 0 ? (
                             forms.map(form => (
                                 <tr key={form.id}>
-                                    <td>{form.id}</td>
                                     <td>{form.title}</td>
                                     <td>{new Date(form.created_at).toLocaleString()}</td>
                                     <td>{new Date(form.updated_at).toLocaleString()}</td>
