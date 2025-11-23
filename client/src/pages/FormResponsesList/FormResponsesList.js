@@ -6,6 +6,7 @@ import styles from "./FormResponsesList.module.css";
 
 const FormResponsesList = () => {
   const { id } = useParams();
+  const [formTitle, setFormTitle] = useState("");
   const [responses, setResponses] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
@@ -31,6 +32,22 @@ const FormResponsesList = () => {
   const closeSuccessModal = () => {
     setSuccessModal({ isOpen: false, title: "", message: "" });
   };
+
+  useEffect(() => {
+    const fetchFormInfo = async () => {
+      try {
+        const response = await fetch(`/api/forms/${id}`);
+        if (!response.ok) throw new Error("Erreur lors du chargement du formulaire");
+
+        const form = await response.json();
+        setFormTitle(form.title || "formulaire");
+
+      } catch (error) {
+        console.error("Erreur chargement formulaire :", error);
+      }
+    };
+    fetchFormInfo();
+  }, [id]);
 
   useEffect(() => {
     const fetchResponses = async () => {
@@ -76,9 +93,10 @@ const FormResponsesList = () => {
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
+    const title = formTitle.replace(/[^a-z0-9_-]/gi, "_");
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `form_${id}_responses.csv`);
+    link.setAttribute("download", `${title}_responses.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
