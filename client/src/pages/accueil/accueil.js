@@ -24,7 +24,19 @@ const Accueil = () => {
                 const response = await fetch('/api/forms');
                 if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
                 const data = await response.json();
-                setForms(data);
+                const formsWithCounts = await Promise.all(
+                data.map(async (form) => {
+                    try {
+                        const res = await fetch(`/api/forms/${form.id}/responses`);
+                        const responses = res.ok ? await res.json() : [];
+                        return { ...form, responseCount: responses.length };
+                    } catch (e) {
+                        console.error("Erreur chargement réponses pour form", form.id, e);
+                        return { ...form, responseCount: 0 };
+                    }
+                })
+            );
+                setForms(formsWithCounts);
             } catch (error) {
                 console.error(error);
             }
@@ -164,6 +176,7 @@ const Accueil = () => {
                             <th className={styles.th}>Titre</th>
                             <th className={styles.th}>Date de création</th>
                             <th className={styles.th}>Dernière mise à jour</th>
+                            <th className={styles.th}>Nombre de réponses</th>
                             <th className={styles.th}>Actions</th>
                         </tr>
                     </thead>
@@ -174,6 +187,7 @@ const Accueil = () => {
                                     <td>{form.title}</td>
                                     <td>{new Date(form.created_at).toLocaleString()}</td>
                                     <td>{new Date(form.updated_at).toLocaleString()}</td>
+                                    <td>{form.responseCount}</td>
                                     <td className="row">
                                         <Link to={`/form-viewer/${form.id}/1?navigation=True`}>
                                             <button className={`${styles.button} ${styles.viewButton}`}>Voir</button>
