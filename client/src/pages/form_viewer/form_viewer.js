@@ -22,9 +22,14 @@ const FormViewer = () => {
 
   const dataInitialized = useRef(false);
 
-  const showModal = (title, message, onConfirm = null) => {
-    setModal({ isOpen: true, title, message, onConfirm });
+const showModal = (title, message, onConfirm = null) => {
+  const handleClose = () => {
+    setModal({ isOpen: false, title: "", message: "", onConfirm: null });
+    if (onConfirm) onConfirm();
   };
+  setModal({ isOpen: true, title, message, onConfirm: handleClose });
+};
+
 
 
 
@@ -90,6 +95,22 @@ const FormViewer = () => {
       return {};
     }
   };
+
+const validateCurrentPage = () => {
+  if (!schema || !pages[currentPage - 1]) return false;
+
+  const currentComponents = pages[currentPage - 1];
+  let isValid = true;
+  currentComponents.forEach((comp) => {
+    if (comp.validate?.required) {  // <- ici on regarde comp.validate.required
+      const value = formData[comp.key] || "";
+      if (value === "" || value === null) isValid = false;
+    }
+  });
+
+  console.log("Résultat validation page", currentPage, ":", isValid);
+  return isValid;
+};
 
   useEffect(() => {
     const flattenComponents = (components) => {
@@ -288,15 +309,19 @@ const FormViewer = () => {
             <div className={styles.navButtonWrapper}>
               {currentPage < pages.length ? (
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    if (!validateCurrentPage()) {
+                      showModal("Erreur", "Veuillez remplir tous les champs obligatoires avant de passer à la page suivante.");
+                      return;
+                    }
                     navigate(
                       !id_participant
                         ? `/form-viewer/${id}/${currentPage + 1}?navigation=True`
                         : `/form-viewer/${id}/${currentPage + 1}/${id_participant}?navigation=True`
-                    )
-                  }
+                    );
+                  }}
                 >
-                  Page suivante
+                Page suivante
                 </button>
               ) : (
                 <div className={styles.placeholder}></div>
