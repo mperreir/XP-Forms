@@ -16,15 +16,22 @@
 }
 
 /* General styles for table */
+.tableContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .table {
-    width: 100%;
+    width: 90%;
     border-collapse: collapse;
     margin-top: 20px;
     border-radius: 8px;
     overflow: hidden;
 }
 
-.th, .td {
+.th,
+.td {
     text-align: left;
     padding: 12px;
 }
@@ -36,14 +43,11 @@
 
 .td {
     background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
 }
 
 .row {
     display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    margin-right: -15px;
+    margin-right: 0px;
     margin-left: 0px;
 }
 
@@ -71,7 +75,8 @@ tbody tr:hover {
 }
 
 .createFormButton {
-    background-color: #28a745; /* Green color */
+    background-color: #28a745;
+    /* Green color */
     color: white;
     padding: 10px 20px;
     border: none;
@@ -81,12 +86,14 @@ tbody tr:hover {
 }
 
 .createFormButton:hover {
-    background-color: #218838; /* Darker green on hover */
+    background-color: #218838;
+    /* Darker green on hover */
 }
 
 /* Color scheme for action buttons */
 .viewButton {
-    background-color: #0057f9; /* blue */
+    background-color: #0057f9;
+    /* blue */
     color: white;
 }
 
@@ -95,7 +102,8 @@ tbody tr:hover {
 }
 
 .editButton {
-    background-color: #17b8a0; /* Blue */
+    background-color: #17b8a0;
+    /* Blue */
     color: white;
 }
 
@@ -104,7 +112,8 @@ tbody tr:hover {
 }
 
 .deleteButton {
-    background-color: #da0505; /* Red */
+    background-color: #da0505;
+    /* Red */
     color: white;
 }
 
@@ -113,7 +122,8 @@ tbody tr:hover {
 }
 
 .responsesButton {
-    background-color: #ffc107; /* Yellow */
+    background-color: #ffc107;
+    /* Yellow */
     color: white;
 }
 
@@ -127,7 +137,8 @@ tbody tr:hover {
         font-size: 14px;
     }
 
-    .th, .td {
+    .th,
+    .td {
         padding: 8px;
     }
 
@@ -138,7 +149,8 @@ tbody tr:hover {
 }
 
 .duplicateButton {
-    background-color: #5911e0; /* Purple */
+    background-color: #5911e0;
+    /* Purple */
     color: white;
 }
 
@@ -152,21 +164,21 @@ tbody tr:hover {
     gap: 10px;
     margin: 20px 0;
     max-width: 600px;
-  }
+}
 
-  .defaultUserIdLabel {
+.defaultUserIdLabel {
     font-weight: bold;
-  }
+}
 
-  .defaultUserIdInput {
+.defaultUserIdInput {
     padding: 8px;
     font-size: 14px;
     flex: 1;
     max-width: 300px;
-    width: 250px; 
-  }
-  
-  .saveButton {
+    width: 250px;
+}
+
+.saveButton {
     padding: 8px 16px;
     font-size: 14px;
     background-color: #007bff;
@@ -174,8 +186,8 @@ tbody tr:hover {
     border: none;
     border-radius: 6px;
     cursor: pointer;
-  }
-  
+}
+
 
 .saveButton:hover {
     background-color: #0056b3;
@@ -183,7 +195,8 @@ tbody tr:hover {
 
 /* Align "Créer un nouveau formulaire" button to the left */
 .createFormButton {
-    margin: 20px 0; /* Remove auto centering */
+    margin: 20px 0;
+    /* Remove auto centering */
     padding: 12px 24px;
     background-color: #28a745;
     color: white;
@@ -194,7 +207,8 @@ tbody tr:hover {
 }
 
 .createFormButton:hover {
-    background-color: #218838; /* Darker green on hover */
+    background-color: #218838;
+    /* Darker green on hover */
 }
 
 /* General button styles */
@@ -213,7 +227,8 @@ tbody tr:hover {
 
 /* Specific button color schemes */
 .viewButton {
-    background-color: #0057f9; /* Blue */
+    background-color: #0057f9;
+    /* Blue */
     color: white;
 }
 
@@ -222,7 +237,8 @@ tbody tr:hover {
 }
 
 .editButton {
-    background-color: #17b8a0; /* Blue */
+    background-color: #17b8a0;
+    /* Blue */
     color: white;
 }
 
@@ -231,7 +247,8 @@ tbody tr:hover {
 }
 
 .deleteButton {
-    background-color: #da0505; /* Red */
+    background-color: #da0505;
+    /* Red */
     color: white;
 }
 
@@ -240,7 +257,8 @@ tbody tr:hover {
 }
 
 .responsesButton {
-    background-color: #ffc107; /* Yellow */
+    background-color: #ffc107;
+    /* Yellow */
     color: white;
 }
 
@@ -249,7 +267,8 @@ tbody tr:hover {
 }
 
 .duplicateButton {
-    background-color: #5911e0; /* Purple */
+    background-color: #5911e0;
+    /* Purple */
     color: white;
 }
 
@@ -282,4 +301,3 @@ tbody tr:hover {
     margin: 20px auto;
     max-width: 600px;
 }
-

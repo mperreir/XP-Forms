@@ -25,17 +25,17 @@ const Accueil = () => {
                 if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
                 const data = await response.json();
                 const formsWithCounts = await Promise.all(
-                data.map(async (form) => {
-                    try {
-                        const res = await fetch(`/api/forms/${form.id}/responses`);
-                        const responses = res.ok ? await res.json() : [];
-                        return { ...form, responseCount: responses.length };
-                    } catch (e) {
-                        console.error("Erreur chargement réponses pour form", form.id, e);
-                        return { ...form, responseCount: 0 };
-                    }
-                })
-            );
+                    data.map(async (form) => {
+                        try {
+                            const res = await fetch(`/api/forms/${form.id}/responses`);
+                            const responses = res.ok ? await res.json() : [];
+                            return { ...form, responseCount: responses.length };
+                        } catch (e) {
+                            console.error("Erreur chargement réponses pour form", form.id, e);
+                            return { ...form, responseCount: 0 };
+                        }
+                    })
+                );
                 setForms(formsWithCounts);
             } catch (error) {
                 console.error(error);
@@ -142,8 +142,8 @@ const Accueil = () => {
 
     return (
         <>
-             <div>
-             <h1>XP-Forms</h1>
+            <div>
+                <h1>XP-Forms</h1>
                 {/* Champ pour entrer l'ID utilisateur par défaut */}
                 <div className={styles.defaultUserIdContainer}>
                     <label htmlFor="defaultUserId" className={styles.defaultUserIdLabel}>
@@ -168,7 +168,7 @@ const Accueil = () => {
                 </button>
             </div>
 
-            <div>
+            <div className={styles.tableContainer}>
                 <h2>Liste des formulaires enregistrés</h2>
                 <table className={styles.table}>
                     <thead>
@@ -184,11 +184,11 @@ const Accueil = () => {
                         {forms.length > 0 ? (
                             forms.map(form => (
                                 <tr key={form.id}>
-                                    <td>{form.title}</td>
-                                    <td>{new Date(form.created_at).toLocaleString()}</td>
-                                    <td>{new Date(form.updated_at).toLocaleString()}</td>
-                                    <td>{form.responseCount}</td>
-                                    <td className={styles.row}>
+                                    <td className={styles.td}>{form.title}</td>
+                                    <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
+                                    <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
+                                    <td className={styles.td}>{form.responseCount}</td>
+                                    <td className={`${styles.row} ${styles.td}`} >
                                         <Link to={`/form-viewer/${form.id}/1?navigation=True`}>
                                             <button className={`${styles.button} ${styles.viewButton}`}>Voir</button>
                                         </Link>
@@ -212,7 +212,7 @@ const Accueil = () => {
                         )}
                     </tbody>
                 </table>
-            </div>
+            </div >
             <Modal
                 isOpen={modal.isOpen}
                 title={modal.title}
