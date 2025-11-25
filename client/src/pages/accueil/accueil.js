@@ -178,6 +178,11 @@ const Accueil = () => {
                 >
                     Créer un nouveau formulaire
                 </button>
+                <button 
+                    className={styles.selectButton}
+                >
+                    Séléctionner
+                </button>
             </div>
 
             <div className={styles.tableContainer}>
