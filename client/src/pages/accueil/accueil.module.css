@@ -211,22 +211,6 @@ tbody tr:hover {
     /* Darker green on hover */
 }
 
-.selectButton {
-    margin: 20px 0;
-    /* Remove auto centering */
-    padding: 12px 24px;
-    background-color: #585757;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.selectButton:hover {
-    background-color: #383737;
-}
-
 /* General button styles */
 .button {
     padding: 8px 16px;
@@ -239,6 +223,12 @@ tbody tr:hover {
     min-width: 120px;
     height: 40px;
     text-align: center;
+}
+
+button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 /* Specific button color schemes */
@@ -288,8 +278,28 @@ tbody tr:hover {
     color: white;
 }
 
+.duplicateButtonCheck, .deleteButtonCheck {
+    position: absolute;
+    display: none;
+}
+
+.duplicateButtonCheck {
+    right: 140px;
+}
+
+.deleteButtonCheck {
+    right: 10px;
+}
+
 .duplicateButton:hover {
     background-color: #341077;
+}
+
+.checkbox{
+    margin-left: 30px;
+    display: grid;
+    grid-template-columns: 1em auto;
+    gap: 0.2em;
 }
 
 /* Save button styling */
@@ -317,3 +327,4 @@ tbody tr:hover {
     margin: 20px auto;
     max-width: 600px;
 }
+
