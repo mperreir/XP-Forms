@@ -97,7 +97,19 @@ const Accueil = () => {
                         const response = await fetch('/api/forms');
                         if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
                         const data = await response.json();
-                        setForms(data); // Mise à jour de la liste des formulaires
+                        const formsWithCounts = await Promise.all(
+                            data.map(async (form) => {
+                                try {
+                                    const res = await fetch(`/api/forms/${form.id}/responses`);
+                                    const responses = res.ok ? await res.json() : [];
+                                    return { ...form, responseCount: responses.length };
+                                } catch (e) {
+                                    console.error("Erreur chargement réponses pour form", form.id, e);
+                                    return { ...form, responseCount: 0 };
+                                }
+                            })
+                    );
+                        setForms(formsWithCounts);
                     } catch (error) {
                         console.error(error);
                     }
