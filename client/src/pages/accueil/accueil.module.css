@@ -39,6 +39,14 @@
     border: 1px solid #dee2e6;
 }
 
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    margin-right: -15px;
+    margin-left: 0px;
+}
+
 .td:hover {
     background-color: #f1f3f5;
 }
@@ -274,3 +282,4 @@ tbody tr:hover {
     margin: 20px auto;
     max-width: 600px;
 }
+

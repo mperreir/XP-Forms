@@ -188,7 +188,7 @@ const Accueil = () => {
                                     <td>{new Date(form.created_at).toLocaleString()}</td>
                                     <td>{new Date(form.updated_at).toLocaleString()}</td>
                                     <td>{form.responseCount}</td>
-                                    <td className="row">
+                                    <td className={styles.row}>
                                         <Link to={`/form-viewer/${form.id}/1?navigation=True`}>
                                             <button className={`${styles.button} ${styles.viewButton}`}>Voir</button>
                                         </Link>
