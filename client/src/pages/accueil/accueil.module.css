@@ -280,19 +280,30 @@ button:disabled {
 
 .duplicateButtonCheck, .deleteButtonCheck {
     position: absolute;
-    display: none;
 }
 
 .duplicateButtonCheck {
     right: 140px;
+    top: 180px;
 }
 
 .deleteButtonCheck {
     right: 10px;
+    top: 180px;
 }
 
 .duplicateButton:hover {
     background-color: #341077;
+}
+
+.checkButton {
+    position: absolute;
+    right: 75px;
+}
+
+.uncheckButton {
+    position: absolute;
+    right: 75px;
 }
 
 .checkbox{

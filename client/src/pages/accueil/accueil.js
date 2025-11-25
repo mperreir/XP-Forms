@@ -144,6 +144,17 @@ const Accueil = () => {
         }
     };
 
+    // Tout cocher
+    const handleCheckAll = () => {
+        const allIds = forms.map(form => form.id);
+        setSelectedForms(allIds);
+    };
+
+    // Tout décocher
+    const handleUncheckAll = () => {
+        setSelectedForms([]);
+    };
+
     // Duplication de tous les formulaires cochés
     const handleDuplicateSelected = async () => {
         if (selectedForms.length === 0) return;
@@ -196,7 +207,6 @@ const Accueil = () => {
     };
 
 
-
     return (
         <>
             <div>
@@ -237,6 +247,22 @@ const Accueil = () => {
                     onClick={handleDeleteSelected}
                 >
                     Tout Supprimer
+                </button>
+
+                <button
+                    className={`${styles.button} ${styles.checkButton}`}
+                    style={{ display: selectedForms.length === 0 ? "inline-block" : "none" }}
+                    onClick={handleCheckAll}
+                >
+                    Tout Cocher
+                </button>
+
+                <button
+                    className={`${styles.button} ${styles.uncheckButton}`}
+                    style={{ display: selectedForms.length > 0 ? "inline-block" : "none" }}
+                    onClick={handleUncheckAll}
+                >
+                    Tout Décocher
                 </button>
             </div>
 
