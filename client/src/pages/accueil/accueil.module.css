@@ -22,6 +22,16 @@
     align-items: center;
 }
 
+.scrollableTable {
+    max-height: 600px;
+    overflow-y: auto;
+    margin-bottom: 50px;
+}
+
+.scrollableTable table {
+    width: 100%;
+}
+
 .table {
     width: 90%;
     border-collapse: collapse;

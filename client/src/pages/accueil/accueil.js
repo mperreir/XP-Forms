@@ -268,84 +268,86 @@ const Accueil = () => {
 
             <div className={styles.tableContainer}>
                 <h2>Liste des formulaires enregistrés</h2>
-                <table className={styles.table}>
-                    <thead>
-                        <tr>
-                            <th className={styles.th}>Titre</th>
-                            <th className={styles.th}>Date de création</th>
-                            <th className={styles.th}>Dernière mise à jour</th>
-                            <th className={styles.th}>Nombre de réponses</th>
-                            <th className={styles.th}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {forms.length > 0 ? (
-                            forms.map(form => (
-                                <tr key={form.id}>
-                                    <td className={styles.td}>{form.title}</td>
-                                    <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
-                                    <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
-                                    <td className={styles.td}>{form.responseCount}</td>
-                                    <td className={`${styles.row} ${styles.td}`} >
-                                        <Link 
-                                            to={`/form-viewer/${form.id}/1?navigation=True`}
-                                            onClick={(e) => { if (isOneChecked) e.preventDefault(); }}
-                                        >
-                                            <button 
-                                                className={`${styles.button} ${styles.viewButton}`}
-                                                disabled={isOneChecked}
-                                            >
-                                                Voir
-                                            </button>
-                                        </Link>
-                                        <button 
-                                            className={`${styles.button} ${styles.editButton}`} 
-                                            onClick={() => handleEditForm(form.id)}
-                                            disabled={isOneChecked}
-                                            >
-                                                Modifier
-                                            </button>
-                                        <Link 
-                                            to={`/form-responses/${form.id}`}
-                                            onClick={(e) => { if (isOneChecked) e.preventDefault(); }}
-                                        >
-                                            <button 
-                                                className={`${styles.button} ${styles.responsesButton}`}
-                                                disabled={isOneChecked}
-                                            >
-                                                Voir Réponses
-                                            </button>
-                                        </Link>
-                                        <button 
-                                            className={`${styles.button} ${styles.duplicateButton}`} 
-                                            onClick={() => handleDuplicateForm(form.id)}
-                                            disabled={isOneChecked}
-                                        >
-                                            Dupliquer
-                                        </button>
-                                        <button 
-                                            className={`${styles.button} ${styles.deleteButton}`} 
-                                            onClick={() => handleDeleteForm(form.id)}
-                                            disabled={isOneChecked}
-                                        >
-                                            Supprimer
-                                        </button>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            checked={selectedForms.includes(form.id)}
-                                            onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
-                                        />                                    
-                                        </td>
-                                </tr>
-                            ))
-                        ) : (
+                <div className={styles.scrollableTable}>
+                    <table className={styles.table}>
+                        <thead>
                             <tr>
-                                <td colSpan="5">Aucun formulaire trouvé</td>
+                                <th className={styles.th}>Titre</th>
+                                <th className={styles.th}>Date de création</th>
+                                <th className={styles.th}>Dernière mise à jour</th>
+                                <th className={styles.th}>Nombre de réponses</th>
+                                <th className={styles.th}>Actions</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {forms.length > 0 ? (
+                                forms.map(form => (
+                                    <tr key={form.id}>
+                                        <td className={styles.td}>{form.title}</td>
+                                        <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
+                                        <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
+                                        <td className={styles.td}>{form.responseCount}</td>
+                                        <td className={`${styles.row} ${styles.td}`} >
+                                            <Link 
+                                                to={`/form-viewer/${form.id}/1?navigation=True`}
+                                                onClick={(e) => { if (isOneChecked) e.preventDefault(); }}
+                                            >
+                                                <button 
+                                                    className={`${styles.button} ${styles.viewButton}`}
+                                                    disabled={isOneChecked}
+                                                >
+                                                    Voir
+                                                </button>
+                                            </Link>
+                                            <button 
+                                                className={`${styles.button} ${styles.editButton}`} 
+                                                onClick={() => handleEditForm(form.id)}
+                                                disabled={isOneChecked}
+                                                >
+                                                    Modifier
+                                                </button>
+                                            <Link 
+                                                to={`/form-responses/${form.id}`}
+                                                onClick={(e) => { if (isOneChecked) e.preventDefault(); }}
+                                            >
+                                                <button 
+                                                    className={`${styles.button} ${styles.responsesButton}`}
+                                                    disabled={isOneChecked}
+                                                >
+                                                    Voir Réponses
+                                                </button>
+                                            </Link>
+                                            <button 
+                                                className={`${styles.button} ${styles.duplicateButton}`} 
+                                                onClick={() => handleDuplicateForm(form.id)}
+                                                disabled={isOneChecked}
+                                            >
+                                                Dupliquer
+                                            </button>
+                                            <button 
+                                                className={`${styles.button} ${styles.deleteButton}`} 
+                                                onClick={() => handleDeleteForm(form.id)}
+                                                disabled={isOneChecked}
+                                            >
+                                                Supprimer
+                                            </button>
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                checked={selectedForms.includes(form.id)}
+                                                onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
+                                            />                                    
+                                            </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="5">Aucun formulaire trouvé</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div >
             <Modal
                 isOpen={modal.isOpen}
