@@ -47,11 +47,12 @@ CREATE TABLE IF NOT EXISTS settings (
     value TEXT
 );
 
-CREATE TABLE folders (
+CREATE TABLE IF NOT EXISTS folders (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    parent_id INTEGER DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(parent_id) REFERENCES folders(id)
 );
 
 CREATE TRIGGER trigger_update_folders_updated_at

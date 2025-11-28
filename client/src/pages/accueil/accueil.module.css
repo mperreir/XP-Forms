@@ -22,6 +22,16 @@
     align-items: center;
 }
 
+.scrollableTable {
+    max-height: 600px;
+    overflow-y: auto;
+    margin-bottom: 50px;
+}
+
+.scrollableTable table {
+    width: 100%;
+}
+
 .table {
     width: 90%;
     border-collapse: collapse;
@@ -32,7 +42,7 @@
 
 .th,
 .td {
-    text-align: left;
+    text-align: center;
     padding: 12px;
 }
 
@@ -225,6 +235,12 @@ tbody tr:hover {
     text-align: center;
 }
 
+button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 /* Specific button color schemes */
 .viewButton {
     background-color: #0057f9;
@@ -272,8 +288,38 @@ tbody tr:hover {
     color: white;
 }
 
+.duplicateButtonCheck, .deleteButtonCheck {
+    position: absolute;
+}
+
+.duplicateButtonCheck {
+    right: 140px;
+    top: 180px;
+}
+
+.deleteButtonCheck {
+    right: 10px;
+    top: 180px;
+}
+
 .duplicateButton:hover {
     background-color: #341077;
+}
+
+.checkButton {
+    position: absolute;
+    right: 75px;
+}
+
+.uncheckButton {
+    position: absolute;
+    right: 75px;
+}
+
+.checkbox{
+    transform: scale(1.5);
+    -webkit-transform: scale(1.5);
+    margin: 6px;
 }
 
 /* Save button styling */
@@ -300,4 +346,30 @@ tbody tr:hover {
     text-align: center;
     margin: 20px auto;
     max-width: 600px;
+}
+
+
+.folderContainer {
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+.folderGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.folderItem {
+    background: #f4f4f4;
+    border: 1px solid #ccc;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.folderItem:hover {
+    background: #e9e9e9;
 }
