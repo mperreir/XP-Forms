@@ -10,7 +10,7 @@ router.put("/forms/:id", formController.updateForm);
 router.delete("/forms/:id", formController.deleteForm);
 router.post("/forms/:id/duplicate", formController.duplicateForm);
 router.get("/forms/:id/export", formController.exportForm);
-
+router.post("/import-form", formController.importForm);
 
 
 module.exports = router;

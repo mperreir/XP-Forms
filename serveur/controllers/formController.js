@@ -115,6 +115,37 @@ const exportForm = async (req, res) => {
   }
 };
 
+const importForm = async (req, res) => {
+  const { title, json_data } = req.body;
+
+  // Générer un ID de formulaire unique
+  const generateUniqueFormId = () => {
+    return new Promise((resolve, reject) => {
+      const tryGenerate = () => {
+        const newId = `Form_${Math.random().toString(36).slice(2, 10)}`;
+        fetch(`/api/forms/${newId}`)
+          .then((row) => {
+            return tryGenerate();
+          })
+          .catch((err) => {
+            return reject(err);
+          });
+        resolve(newId);
+      };
+      tryGenerate();
+    });
+  };
+
+  try {
+    const newFormID = await generateUniqueFormId();
+    json_data.id = newFormID;
+    const message = await formService.saveForm(newFormID, title, json_data);
+    res.status(201).json({ message });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.setDefaultUserId = async (req, res) => {
   try {
     const { default_user_id } = req.body;
@@ -148,4 +179,5 @@ module.exports = {
   deleteForm,
   duplicateForm,
   exportForm,
+  importForm,
 };

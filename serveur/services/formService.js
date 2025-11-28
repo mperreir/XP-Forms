@@ -357,7 +357,7 @@ const exportForm = async (formId) => {
       const formName = form.title;
       const formJson = JSON.parse(form.json_data);
 
-      resolve({ formJson, title: formName });
+      resolve({ "json_data": formJson, "title": formName });
     });
   });
 };

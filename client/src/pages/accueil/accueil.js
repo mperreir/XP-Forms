@@ -131,10 +131,11 @@ const Accueil = () => {
             if (response.ok) {
                 const formJson = await response.json();
 
+                // Téléchargement du fichier exporté
                 let element = document.createElement('a');
                 element.setAttribute('href',
                     'data:text/plain;charset=utf-8, '
-                    + encodeURIComponent(JSON.stringify(formJson.formJson)));
+                    + encodeURIComponent(JSON.stringify(formJson)));
                 element.setAttribute('download', formJson.title);
 
                 document.body.appendChild(element);
