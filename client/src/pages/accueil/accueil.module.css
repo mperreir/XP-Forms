@@ -276,6 +276,16 @@ tbody tr:hover {
     background-color: #341077;
 }
 
+.exportButton {
+    background-color: #ffc107;
+    /* Yellow */
+    color: white;
+}
+
+.exportButton:hover {
+    background-color: #a47f12;
+}
+
 /* Save button styling */
 .saveButton {
     padding: 10px 20px;

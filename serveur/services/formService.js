@@ -346,6 +346,22 @@ const duplicateForm = async (formId) => {
   });
 };
 
+const exportForm = async (formId) => {
+  return new Promise((resolve, reject) => {
+
+    db.get("SELECT * FROM forms WHERE id = ?", [formId], (err, form) => {
+      if (err) {
+        return reject({ success: false, error: err ? err.message : "Formulaire introuvable" });
+      }
+
+      const formName = form.title;
+      const formJson = JSON.parse(form.json_data);
+
+      resolve({ formJson, title: formName });
+    });
+  });
+};
+
 
 exports.setDefaultUserId = (form_id, default_user_id) => {
   return new Promise((resolve, reject) => {
@@ -385,4 +401,5 @@ module.exports = {
   updateForm,
   deleteForm,
   duplicateForm,
+  exportForm,
 };

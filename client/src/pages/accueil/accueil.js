@@ -108,7 +108,7 @@ const Accueil = () => {
                                     return { ...form, responseCount: 0 };
                                 }
                             })
-                    );
+                        );
                         setForms(formsWithCounts);
                     } catch (error) {
                         console.error(error);
@@ -121,6 +121,34 @@ const Accueil = () => {
         } catch (error) {
             console.error("Erreur lors de la duplication du formulaire :", error);
             showModal("Erreur", "Impossible de contacter le serveur pour la duplication.");
+        }
+    };
+
+    const handleExportForm = async (formId) => {
+        try {
+            const response = await fetch(`/api/forms/${formId}/export`);
+
+            if (response.ok) {
+                const formJson = await response.json();
+
+                let element = document.createElement('a');
+                element.setAttribute('href',
+                    'data:text/plain;charset=utf-8, '
+                    + encodeURIComponent(JSON.stringify(formJson.formJson)));
+                element.setAttribute('download', formJson.title);
+
+                document.body.appendChild(element);
+                element.click();
+                document.body.removeChild(element);
+
+                showModal("Succès", "Formulaire exporté !");
+            } else {
+                const errorData = await response.json();
+                showModal("Erreur", "Erreur : " + errorData.error);
+            }
+        } catch (error) {
+            console.error("Erreur :", error);
+            showModal("Erreur", "Impossible de contacter le serveur.");
         }
     };
 
@@ -213,6 +241,9 @@ const Accueil = () => {
                                         </button>
                                         <button className={`${styles.button} ${styles.deleteButton}`} onClick={() => handleDeleteForm(form.id)}>
                                             Supprimer
+                                        </button>
+                                        <button className={`${styles.button} ${styles.exportButton}`} onClick={() => handleExportForm(form.id)}>
+                                            Exporter
                                         </button>
                                     </td>
                                 </tr>

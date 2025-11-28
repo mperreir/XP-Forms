@@ -101,6 +101,19 @@ const duplicateForm = async (req, res) => {
   }
 };
 
+const exportForm = async (req, res) => {
+  const { id } = req.params; // Get the form ID from request parameters
+
+  try {
+    // Call the service to export the form
+    const result = await formService.exportForm(id);
+
+    res.json(result);
+  } catch (error) {
+    console.error("Erreur lors de l'exportation du formulaire:", error);
+    res.status(500).json({ error: "Erreur lors de l'exportation du formulaire" });
+  }
+};
 
 exports.setDefaultUserId = async (req, res) => {
   try {
@@ -134,4 +147,5 @@ module.exports = {
   updateForm,
   deleteForm,
   duplicateForm,
+  exportForm,
 };
