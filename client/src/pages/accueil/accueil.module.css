@@ -317,10 +317,9 @@ button:disabled {
 }
 
 .checkbox{
-    margin-left: 30px;
-    display: grid;
-    grid-template-columns: 1em auto;
-    gap: 0.2em;
+    transform: scale(1.5);
+    -webkit-transform: scale(1.5);
+    margin: 6px;
 }
 
 /* Save button styling */

@@ -238,15 +238,15 @@ const Accueil = () => {
                     style={{ display: selectedForms.length > 0 ? "inline-block" : "none" }}
                     onClick={handleDuplicateSelected}
                 >
-                    Tout Dupliquer
-                </button>
+                    Dupliquer {selectedForms.length} formulaires
+                </button> 
 
                 <button
                     className={`${styles.button} ${styles.deleteButton} ${styles.deleteButtonCheck}`}
                     style={{ display: selectedForms.length > 0 ? "inline-block" : "none" }}
                     onClick={handleDeleteSelected}
                 >
-                    Tout Supprimer
+                    Supprimer {selectedForms.length} formulaires
                 </button>
 
                 <button
@@ -272,6 +272,7 @@ const Accueil = () => {
                     <table className={styles.table}>
                         <thead>
                             <tr>
+                                <th className={styles.th}></th>
                                 <th className={styles.th}>Titre</th>
                                 <th className={styles.th}>Date de création</th>
                                 <th className={styles.th}>Dernière mise à jour</th>
@@ -283,6 +284,14 @@ const Accueil = () => {
                             {forms.length > 0 ? (
                                 forms.map(form => (
                                     <tr key={form.id}>
+                                        <td className={styles.td}> 
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                checked={selectedForms.includes(form.id)}
+                                                onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
+                                            />
+                                        </td>
                                         <td className={styles.td}>{form.title}</td>
                                         <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
                                         <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
@@ -330,13 +339,7 @@ const Accueil = () => {
                                                 disabled={isOneChecked}
                                             >
                                                 Supprimer
-                                            </button>
-                                            <input
-                                                type="checkbox"
-                                                className={styles.checkbox}
-                                                checked={selectedForms.includes(form.id)}
-                                                onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
-                                            />                                    
+                                            </button>                                     
                                             </td>
                                     </tr>
                                 ))
