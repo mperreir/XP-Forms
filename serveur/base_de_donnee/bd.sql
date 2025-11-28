@@ -4,7 +4,8 @@ CREATE TABLE forms (
     title TEXT NOT NULL,
     json_data TEXT,  -- Stocke le JSON complet sous forme de texte
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    folder_id INTEGER
 );
 
 -- Fonction de mise à jour de `updated_at`
@@ -30,7 +31,7 @@ CREATE TABLE components (
 
 -- Table responses
 CREATE TABLE responses (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     form_id TEXT,
     component_id TEXT,
     user_id TEXT,
@@ -45,3 +46,17 @@ CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT
 );
+
+CREATE TABLE folders (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER trigger_update_folders_updated_at
+AFTER UPDATE ON folders
+FOR EACH ROW
+BEGIN
+    UPDATE folders SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+END;
