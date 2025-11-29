@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const formRoutes = require('./routes/formRoutes');
 const responseRoutes = require("./routes/responseRoutes");
+const folderRoutes = require("./routes/folderRoutes");
 const defaultUserIdRoutes = require("./routes/settingsRoutes");
 
 
@@ -18,6 +19,7 @@ app.use(bodyParser.json());
 // Use form routes
 app.use('/api', formRoutes);
 app.use("/api", responseRoutes);
+app.use("/api", folderRoutes);
 app.use('/api', defaultUserIdRoutes);
 
 

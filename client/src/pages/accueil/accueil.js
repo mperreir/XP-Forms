@@ -339,7 +339,11 @@ const Accueil = () => {
                 ) : (
                     <div className={styles.folderGrid}>
                         {folders.map((folder) => (
-                            <div key={folder.id} className={styles.folderItem}>
+                            <div 
+                                key={folder.id} 
+                                className={styles.folderItem}
+                                onClick={() => navigate(`/folder/${folder.id}`)}
+                            >
                                 📁 {folder.name}
                             </div>
                         ))}

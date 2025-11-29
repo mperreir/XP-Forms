@@ -12,7 +12,8 @@ exports.createFolder = async (req, res) => {
 
 exports.getAllFolders = async (req, res) => {
   try {
-    const folders = await folderServices.getAllFolders();
+    const parent_id = req.query.parent_id || null;
+    const folders = await folderServices.getAllFolders(parent_id);
     res.json(folders);
   } catch (e) {
     res.status(500).json({ error: e.message });

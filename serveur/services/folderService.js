@@ -13,9 +13,10 @@ const createFolder = (name, parent_id = null) => {
   });
 };
 
-const getAllFolders = () => {
+const getAllFolders = (parent_id = null) => {
   return new Promise((resolve, reject) => {
-    db.all(`SELECT * FROM folders ORDER BY name ASC`, [], (err, rows) => {
+    let query = "SELECT * FROM folders WHERE parent_id IS ?";
+    db.all(query, [parent_id], (err, rows) => {
       if (err) return reject(err);
       resolve(rows);
     });

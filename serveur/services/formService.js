@@ -72,10 +72,13 @@ const saveForm = (id, title, json_data) => {
   });
 };
 
-
-const getAllForms = () => {
+const getAllForms = (folder_id = null) => {
   return new Promise((resolve, reject) => {
-    db.all("SELECT id, title, created_at, updated_at FROM forms ORDER BY created_at DESC", (err, rows) => {
+    const query = folder_id
+      ? "SELECT * FROM forms WHERE folder_id = ? ORDER BY created_at DESC"
+      : "SELECT * FROM forms ORDER BY created_at DESC";
+
+    db.all(query, folder_id ? [folder_id] : [], (err, rows) => {
       if (err) return reject(err);
       resolve(rows);
     });

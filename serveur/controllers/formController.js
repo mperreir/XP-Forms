@@ -13,7 +13,8 @@ const saveForm = async (req, res) => {
 
 const getAllForms = async (req, res) => {
   try {
-    const forms = await formService.getAllForms();
+    const folder_id = req.query.folder_id || null;
+    const forms = await formService.getAllForms(folder_id);
     res.json(forms);
   } catch (error) {
     res.status(500).json({ error: error.message });
