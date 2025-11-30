@@ -4,13 +4,19 @@ import styles from "../accueil/accueil.module.css";
 import Modal from "../../components/Modal";
 
 const FolderPage = () => {
-    const { id } = useParams(); // ID du dossier courant
+    const { id } = useParams();
     const navigate = useNavigate();
 
     const [forms, setForms] = useState([]);
     const [folders, setFolders] = useState([]);
     const [selectedForms, setSelectedForms] = useState([]);
-    const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
+    const [moveModal, setMoveModal] = useState({ open: false, type: null, item: null });
+    const [modal, setModal] = useState({
+        isOpen: false,
+        title: "",
+        message: "",
+        onConfirm: null
+    });
 
     const isOneChecked = selectedForms.length > 0;
 
@@ -22,18 +28,16 @@ const FolderPage = () => {
         setModal({ isOpen: false, title: "", message: "", onConfirm: null });
     };
 
-    // ### 1) Récupère les formulaires du dossier ###
     const loadForms = async () => {
         try {
-            const res = await fetch(`/api/forms?folder_id=${id}`);
-            const data = await res.json();
+            const response = await fetch(`/api/forms?folder_id=${id}`);
+            const data = await response.json();
 
-            // Ajouter nombre de réponses
             const formsWithCounts = await Promise.all(
                 data.map(async (form) => {
                     try {
-                        const r = await fetch(`/api/forms/${form.id}/responses`);
-                        const responses = r.ok ? await r.json() : [];
+                        const res = await fetch(`/api/forms/${form.id}/responses`);
+                        const responses = res.ok ? await res.json() : [];
                         return { ...form, responseCount: responses.length };
                     } catch {
                         return { ...form, responseCount: 0 };
@@ -42,19 +46,18 @@ const FolderPage = () => {
             );
 
             setForms(formsWithCounts);
-        } catch (e) {
-            console.error(e);
+        } catch (err) {
+            console.error("Erreur loadForms :", err);
         }
     };
 
-    // ### 2) Récupère les sous-dossiers ###
     const loadFolders = async () => {
         try {
-            const res = await fetch(`/api/folders?parent_id=${id}`);
-            const data = await res.json();
+            const response = await fetch(`/api/folders?parent_id=${id}`);
+            const data = await response.json();
             setFolders(data);
-        } catch (e) {
-            console.error("Erreur loadFolders :", e);
+        } catch (err) {
+            console.error("Erreur loadFolders :", err);
         }
     };
 
@@ -64,9 +67,8 @@ const FolderPage = () => {
     }, [id]);
 
 
-    // ### 3) Créer un sous-dossier ###
     const createSubFolder = () => {
-        const name = prompt("Nom du sous-dossier :");
+        const name = prompt("Nom du nouveau sous-dossier :");
         if (!name || !name.trim()) return;
 
         fetch("/api/folders", {
@@ -75,58 +77,171 @@ const FolderPage = () => {
             body: JSON.stringify({ name, parent_id: id })
         })
             .then(() => loadFolders())
-            .catch(e => console.error("Erreur création sous-dossier :", e));
+            .catch(console.error);
     };
 
-
-    // ### 4) Créer un formulaire dans ce dossier ###
     const createFormInFolder = () => {
         navigate(`/form-editor2?folder_id=${id}`);
     };
 
-
-    // ### 5) Suppression d’un formulaire ###
-    const handleDeleteForm = async (formId) => {
+    const handleDeleteForm = (formId) => {
         showModal(
             "Confirmation",
-            "Supprimer ce formulaire ? (Toutes les réponses seront perdues)",
+            "Supprimer ce formulaire ? Toutes les réponses seront perdues.",
             async () => {
-                try {
-                    await fetch(`/api/forms/${formId}`, { method: "DELETE" });
-                    setForms(forms.filter(f => f.id !== formId));
-                } catch (e) {
-                    console.error(e);
-                }
+                await fetch(`/api/forms/${formId}`, { method: "DELETE" });
+                loadForms();
             }
         );
     };
 
+    const handleDuplicateForm = async (formId) => {
+        try {
+            await fetch(`/api/forms/${formId}/duplicate`, { method: "POST" });
+            showModal("Succès", "Formulaire dupliqué !");
+            loadForms();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleCheckboxChange = (formId, checked) => {
+        if (checked) {
+            setSelectedForms(prev => [...prev, formId]);
+        } else {
+            setSelectedForms(prev => prev.filter(id => id !== formId));
+        }
+    };
+
+    const handleCheckAll = () => {
+        const allIds = forms.map(form => form.id);
+        setSelectedForms(allIds);
+    };
+
+    const handleUncheckAll = () => {
+        setSelectedForms([]);
+    };
+
+    const handleDuplicateSelected = async () => {
+        if (selectedForms.length === 0) return;
+
+        showModal(
+            "Duplication",
+            `Dupliquer ${selectedForms.length} formulaire(s) ?`,
+            async () => {
+                for (const formId of selectedForms) {
+                    await fetch(`/api/forms/${formId}/duplicate`, { method: "POST" });
+                }
+                showModal("Succès", "Duplication terminée !");
+                setSelectedForms([]);
+                loadForms();
+            }
+        );
+    };
+
+    const handleEditForm = async (formId) => {
+        try {
+            const response = await fetch(`/api/forms/${formId}/has-responses`);
+            const data = await response.json();
+
+            if (data.hasResponses) {
+                showModal("Attention", "Ce formulaire contient déjà des réponses et ne peut pas être modifié.");
+            } else {
+                navigate(`/form-editor2/${formId}`);
+            }
+        } catch (error) {
+            console.error("Erreur lors de la vérification des réponses :", error);
+            showModal("Erreur", "Erreur lors de la vérification des réponses.");
+        }
+    };
+
+    const handleDeleteSelected = async () => {
+        if (selectedForms.length === 0) return;
+
+        showModal(
+            "Suppression",
+            `Supprimer ${selectedForms.length} formulaire(s) ?`,
+            async () => {
+                for (const formId of selectedForms) {
+                    await fetch(`/api/forms/${formId}`, { method: "DELETE" });
+                }
+                showModal("Succès", "Suppression terminée !");
+                setSelectedForms([]);
+                loadForms();
+            }
+        );
+    };
+
+    const moveItem = async (newFolderId) => {
+        if (!moveModal.item) return;
+
+        try {
+            await fetch(`/api/forms/${moveModal.item.id}/move-to-folder/${newFolderId}`, {
+                method: "PUT"
+            });
+
+            setMoveModal({ open: false, item: null, type: null });
+            loadForms();
+            loadFolders();
+        } catch (err) {
+            console.error("Erreur lors du déplacement :", err);
+        }
+    };
 
     return (
         <>
-            <button className={styles.backButton} onClick={() => navigate("/")}>
-                ⬅ Retour à l’accueil
-            </button>
+            <button className={styles.backButton} onClick={() => navigate("/")}>⬅ Retour à l'accueil</button>
 
             <h1>Dossier : {id}</h1>
 
             <button className={styles.createFormButton} onClick={createFormInFolder}>
-                Créer un formulaire dans ce dossier
+                Créer un nouveau formulaire
             </button>
 
             <button className={styles.createFormButton} onClick={createSubFolder}>
-                Créer un sous-dossier
+                Créer un nouveau dossier
+            </button>
+            <button
+                className={`${styles.button} ${styles.duplicateButton} ${styles.duplicateButtonCheck}`}
+                style={{ display: selectedForms.length > 0 ? "inline-block" : "none" }}
+                onClick={handleDuplicateSelected}
+            >
+                Dupliquer {selectedForms.length} formulaires
+            </button> 
+
+            <button
+                className={`${styles.button} ${styles.deleteButton} ${styles.deleteButtonCheck}`}
+                style={{ display: selectedForms.length > 0 ? "inline-block" : "none" }}
+                onClick={handleDeleteSelected}
+            >
+                Supprimer {selectedForms.length} formulaires
             </button>
 
-            {/* ------------------ Sous-dossiers ------------------- */}
+            <button
+                className={`${styles.button} ${styles.checkButton}`}
+                style={{ display: selectedForms.length === 0 ? "inline-block" : "none" }}
+                onClick={handleCheckAll}
+            >
+                Tout Cocher
+            </button>
+
+            <button
+                className={`${styles.button} ${styles.uncheckButton}`}
+                style={{ display: selectedForms.length > 0 ? "inline-block" : "none" }}
+                onClick={handleUncheckAll}
+            >
+                Tout Décocher
+            </button>
+                        
+
             <div className={styles.folderContainer}>
-                <h2>Sous-dossiers</h2>
+                <h2>Dossiers</h2>
 
                 {folders.length === 0 ? (
-                    <p>Aucun sous-dossier</p>
+                    <p>Aucun dossier</p>
                 ) : (
                     <div className={styles.folderGrid}>
-                        {folders.map((folder) => (
+                        {folders.map(folder => (
                             <div
                                 key={folder.id}
                                 className={styles.folderItem}
@@ -139,69 +254,87 @@ const FolderPage = () => {
                 )}
             </div>
 
-            {/* ------------------ Formulaires ------------------- */}
             <div className={styles.tableContainer}>
-                <h2>Formulaires de ce dossier</h2>
+                <h2>Liste des formulaires enregistrés</h2>
 
                 <div className={styles.scrollableTable}>
                     <table className={styles.table}>
                         <thead>
                             <tr>
-                                <th></th>
-                                <th>Titre</th>
-                                <th>Création</th>
-                                <th>MàJ</th>
-                                <th>Réponses</th>
-                                <th>Actions</th>
+                                <th className={styles.th}></th>
+                                <th className={styles.th}>Titre</th>
+                                <th className={styles.th}>Date de création</th>
+                                <th className={styles.th}>Dernière mise à jour</th>
+                                <th className={styles.th}>Nombre de réponses</th>
+                                <th className={styles.th}>Actions</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             {forms.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6">Aucun formulaire dans ce dossier</td>
+                                    <td colSpan="6">Aucun formulaire</td>
                                 </tr>
                             ) : (
                                 forms.map(form => (
                                     <tr key={form.id}>
-                                        <td>
+                                        <td className={styles.td}>
                                             <input
                                                 type="checkbox"
+                                                className={styles.checkbox}
                                                 checked={selectedForms.includes(form.id)}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setSelectedForms(prev => [...prev, form.id]);
-                                                    } else {
-                                                        setSelectedForms(prev => prev.filter(id => id !== form.id));
-                                                    }
-                                                }}
+                                                onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
                                             />
                                         </td>
 
-                                        <td>{form.title}</td>
-                                        <td>{new Date(form.created_at).toLocaleString()}</td>
-                                        <td>{new Date(form.updated_at).toLocaleString()}</td>
-                                        <td>{form.responseCount}</td>
+                                        <td className={styles.td}>{form.title}</td>
+                                        <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
+                                        <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
+                                        <td className={styles.td}>{form.responseCount}</td>
 
-                                        <td>
-                                            <Link to={`/form-viewer/${form.id}/1?navigation=True`}>
-                                                <button className={styles.viewButton}>Voir</button>
+                                        <td className={`${styles.row} ${styles.td}`}>
+                                            <Link 
+                                                to={`/form-viewer/${form.id}/1?navigation=True`}
+                                                onClick={(e) => { if (isOneChecked) e.preventDefault(); }}>
+                                                <button 
+                                                    className={`${styles.button} ${styles.viewButton}`}
+                                                    disabled={isOneChecked}
+                                                >
+                                                    Voir
+                                                </button>
+                                            </Link>
+
+                                            <button 
+                                                className={`${styles.button} ${styles.editButton}`} 
+                                                onClick={() => handleEditForm(form.id)}
+                                                disabled={isOneChecked}
+                                                >
+                                                    Modifier
+                                                </button>
+                                            <Link 
+                                                to={`/form-responses/${form.id}`}
+                                                onClick={(e) => { if (isOneChecked) e.preventDefault(); }}
+                                            >
+                                                <button 
+                                                    className={`${styles.button} ${styles.responsesButton}`}
+                                                    disabled={isOneChecked}
+                                                >
+                                                    Voir Réponses
+                                                </button>
                                             </Link>
 
                                             <button
-                                                className={styles.editButton}
-                                                onClick={() => navigate(`/form-editor2/${form.id}`)}
+                                                className={`${styles.button} ${styles.duplicateButton}`} 
+                                                onClick={() => handleDuplicateForm(form.id)}
+                                                disabled={isOneChecked}
                                             >
-                                                Modifier
+                                                Dupliquer
                                             </button>
 
-                                            <Link to={`/form-responses/${form.id}`}>
-                                                <button className={styles.responsesButton}>Réponses</button>
-                                            </Link>
-
                                             <button
-                                                className={styles.deleteButton}
+                                                className={`${styles.button} ${styles.deleteButton}`} 
                                                 onClick={() => handleDeleteForm(form.id)}
+                                                disabled={isOneChecked}
                                             >
                                                 Supprimer
                                             </button>

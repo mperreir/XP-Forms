@@ -41,8 +41,8 @@ const Accueil = () => {
                     }
                 })
             );
-
-            setForms(formsWithCounts);
+            const rootForms = formsWithCounts.filter(f => f.folder_id === null);
+            setForms(rootForms);
         } catch (error) {
             console.error(error);
         }
@@ -366,7 +366,11 @@ const Accueil = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {forms.length > 0 ? (
+                            {forms.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6">Aucun formulaire</td>
+                                </tr> 
+                            ) : (
                                 forms.map(form => (
                                     <tr key={form.id}>
                                         <td className={styles.td}> 
@@ -381,6 +385,7 @@ const Accueil = () => {
                                         <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
                                         <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
                                         <td className={styles.td}>{form.responseCount}</td>
+
                                         <td className={`${styles.row} ${styles.td}`} >
                                             <Link 
                                                 to={`/form-viewer/${form.id}/1?navigation=True`}
@@ -428,11 +433,7 @@ const Accueil = () => {
                                             </td>
                                     </tr>
                                 ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="5">Aucun formulaire trouvé</td>
-                                </tr>
-                            )}
+                            ) }
                         </tbody>
                     </table>
                 </div>

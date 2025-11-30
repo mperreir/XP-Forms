@@ -60,7 +60,6 @@ const saveForm = (id, title, json_data, folder_id = null) => {
               }
             );
           });
-          console.log(folder_id);
           db.run("COMMIT", (err) => {
             if (err) return reject(err);
             resolve("Formulaire et composants enregistrés !");
