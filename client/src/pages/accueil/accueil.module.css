@@ -90,6 +90,20 @@ tbody tr:hover {
     /* Darker green on hover */
 }
 
+.importFormButton {
+    background-color: #a528a7;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+.importFormButton:hover {
+    background-color: #772188;
+}
+
 /* Color scheme for action buttons */
 .viewButton {
     background-color: #0057f9;

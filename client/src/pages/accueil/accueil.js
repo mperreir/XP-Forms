@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 import styles from './accueil.module.css'; // Import CSS Module
 import { useNavigate } from "react-router-dom";
 import Modal from "../../components/Modal";
+import ImportModal from '../../components/ImportModal';
 
 const Accueil = () => {
     const [forms, setForms] = useState([]);
     const [newUserId, setNewUserId] = useState(localStorage.getItem('defaultUserId') || ""); // Utiliser la valeur du localStorage ou une valeur vide
     const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
+    const [importModal, setImportModal] = useState({ isOpen: false, onConfirm: null, onFormatError: null, onError: null });
     const navigate = useNavigate(); // Permet de gérer la navigation
 
     const showModal = (title, message, onConfirm = null) => {
@@ -18,31 +20,41 @@ const Accueil = () => {
         setModal({ isOpen: false, title: "", message: "", onConfirm: null });
     };
 
+    const showImportModal = (onConfirm = null, onFormatError = null, onError = null) => {
+        setImportModal({ isOpen: true, onConfirm, onFormatError, onError });
+    };
+
+    const closeImportModal = () => {
+        setImportModal({ isOpen: false, onConfirm: null, onFormatError: null, onError: null });
+    };
+
+    const fetchForms = async () => {
+        try {
+            const response = await fetch('/api/forms');
+            if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
+            const data = await response.json();
+            const formsWithCounts = await Promise.all(
+                data.map(async (form) => {
+                    try {
+                        const res = await fetch(`/api/forms/${form.id}/responses`);
+                        const responses = res.ok ? await res.json() : [];
+                        return { ...form, responseCount: responses.length };
+                    } catch (e) {
+                        console.error("Erreur chargement réponses pour form", form.id, e);
+                        return { ...form, responseCount: 0 };
+                    }
+                })
+            );
+            setForms(formsWithCounts);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     useEffect(() => {
-        const fetchForms = async () => {
-            try {
-                const response = await fetch('/api/forms');
-                if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
-                const data = await response.json();
-                const formsWithCounts = await Promise.all(
-                    data.map(async (form) => {
-                        try {
-                            const res = await fetch(`/api/forms/${form.id}/responses`);
-                            const responses = res.ok ? await res.json() : [];
-                            return { ...form, responseCount: responses.length };
-                        } catch (e) {
-                            console.error("Erreur chargement réponses pour form", form.id, e);
-                            return { ...form, responseCount: 0 };
-                        }
-                    })
-                );
-                setForms(formsWithCounts);
-            } catch (error) {
-                console.error(error);
-            }
-        };
 
         fetchForms();
+
     }, []);
 
     const handleDeleteForm = async (formId) => {
@@ -92,28 +104,6 @@ const Accueil = () => {
             if (data.newFormId) {
                 showModal("Succès", `Formulaire dupliqué avec succès ! Nouveau Formulaire ID: ${data.newFormId}`);
                 // Rafraîchir la liste des formulaires après duplication
-                const fetchForms = async () => {
-                    try {
-                        const response = await fetch('/api/forms');
-                        if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
-                        const data = await response.json();
-                        const formsWithCounts = await Promise.all(
-                            data.map(async (form) => {
-                                try {
-                                    const res = await fetch(`/api/forms/${form.id}/responses`);
-                                    const responses = res.ok ? await res.json() : [];
-                                    return { ...form, responseCount: responses.length };
-                                } catch (e) {
-                                    console.error("Erreur chargement réponses pour form", form.id, e);
-                                    return { ...form, responseCount: 0 };
-                                }
-                            })
-                        );
-                        setForms(formsWithCounts);
-                    } catch (error) {
-                        console.error(error);
-                    }
-                };
                 fetchForms(); // Appel pour mettre à jour la liste
             } else {
                 showModal("Erreur", "Erreur lors de la duplication du formulaire.");
@@ -181,6 +171,25 @@ const Accueil = () => {
     };
 
 
+    const handleImportButton = () => {
+        showImportModal(() => {
+            closeImportModal();
+            fetchForms();
+            showModal("Succès", "Formulaire importé !");
+        },
+            () => {
+                closeImportModal();
+                fetchForms();
+                showModal("Erreur", "Contenu du fichier incompatible.");
+            },
+            () => {
+                closeImportModal();
+                fetchForms();
+                showModal("Erreur", "Impossible de contacter le serveur.");
+            });
+    }
+
+
     return (
         <>
             <div>
@@ -206,6 +215,12 @@ const Accueil = () => {
                     onClick={() => navigate("/form-editor2")}
                 >
                     Créer un nouveau formulaire
+                </button>
+                <button
+                    className={styles.importFormButton}
+                    onClick={handleImportButton}
+                >
+                    Importer un formulaire
                 </button>
             </div>
 
@@ -263,6 +278,13 @@ const Accueil = () => {
                 message={modal.message}
                 onClose={closeModal}
                 onConfirm={modal.onConfirm}
+            />
+            <ImportModal
+                isOpen={importModal.isOpen}
+                onConfirm={importModal.onConfirm}
+                onClose={closeImportModal}
+                onFormatError={importModal.onFormatError}
+                onError={importModal.onError}
             />
         </>
     );
