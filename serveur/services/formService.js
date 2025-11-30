@@ -26,17 +26,16 @@ const flattenComponents = (components) => {
   return flat;
 };
 
-const saveForm = (id, title, json_data) => {
+const saveForm = (id, title, json_data, folder_id = null) => {
   return new Promise((resolve, reject) => {
     const components = json_data.components || [];
     const flatComponents = flattenComponents(components);
-
     db.run("BEGIN TRANSACTION", (err) => {
       if (err) return reject(err);
 
       db.run(
-        "INSERT INTO forms (id, title, json_data) VALUES (?, ?, ?)",
-        [id, title, JSON.stringify(json_data)],
+        "INSERT INTO forms (id, title, json_data, folder_id) VALUES (?, ?, ?, ?)",
+        [id, title, JSON.stringify(json_data), folder_id],
         (err) => {
           if (err) {
             db.run("ROLLBACK");
@@ -61,7 +60,7 @@ const saveForm = (id, title, json_data) => {
               }
             );
           });
-
+          console.log(folder_id);
           db.run("COMMIT", (err) => {
             if (err) return reject(err);
             resolve("Formulaire et composants enregistrés !");

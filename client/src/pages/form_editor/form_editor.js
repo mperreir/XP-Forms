@@ -14,6 +14,8 @@ const FormEditor = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isModified, setIsModified] = useState(false); // Pour suivre les modifications
   const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
+  const params = new URLSearchParams(window.location.search);
+  const folderId = params.get("folder_id");
 
   const showModal = (title, message, onConfirm = null) => {
     setModal({ isOpen: true, title, message, onConfirm });
@@ -68,7 +70,7 @@ const FormEditor = () => {
     const schema = await formEditor.getSchema();
     const formId = id || schema.id || `Form_${Date.now()}`;
     const formTitle = title.trim() || "Formulaire sans titre";
-    const formData = { id: formId, title: formTitle, json_data: schema };
+    const formData = { id: formId, title: formTitle, json_data: schema, folder_id: folderId };
 
     try {
       const url = id ? `/api/forms/${formId}` : "/api/save-form";

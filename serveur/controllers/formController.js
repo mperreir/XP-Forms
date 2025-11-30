@@ -2,9 +2,9 @@
 const formService = require("../services/formService");
 
 const saveForm = async (req, res) => {
-  const { id, title, json_data } = req.body;
+  const { id, title, json_data, folder_id } = req.body;
   try {
-    const message = await formService.saveForm(id, title, json_data);
+    const message = await formService.saveForm(id, title, json_data, folder_id);
     res.status(201).json({ message });
   } catch (error) {
     res.status(500).json({ error: error.message });
