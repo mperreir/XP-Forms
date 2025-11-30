@@ -6,7 +6,6 @@ import Modal from "../../components/Modal";
 const FolderPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-
     const [forms, setForms] = useState([]);
     const [folders, setFolders] = useState([]);
     const [selectedForms, setSelectedForms] = useState([]);
@@ -28,7 +27,7 @@ const FolderPage = () => {
         setModal({ isOpen: false, title: "", message: "", onConfirm: null });
     };
 
-    const loadForms = async () => {
+    const reloadForms = async () => {
         try {
             const response = await fetch(`/api/forms?folder_id=${id}`);
             const data = await response.json();
@@ -51,7 +50,7 @@ const FolderPage = () => {
         }
     };
 
-    const loadFolders = async () => {
+    const reloadFolders = async () => {
         try {
             const response = await fetch(`/api/folders?parent_id=${id}`);
             const data = await response.json();
@@ -62,13 +61,13 @@ const FolderPage = () => {
     };
 
     useEffect(() => {
-        loadForms();
-        loadFolders();
+        reloadForms();
+        reloadFolders();
     }, [id]);
 
 
     const createSubFolder = () => {
-        const name = prompt("Nom du nouveau sous-dossier :");
+        const name = prompt("Nom du nouveau dossier :");
         if (!name || !name.trim()) return;
 
         fetch("/api/folders", {
@@ -76,8 +75,8 @@ const FolderPage = () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name, parent_id: id })
         })
-            .then(() => loadFolders())
-            .catch(console.error);
+            .then(() => reloadFolders())
+            .catch(err => console.error("Erreur création dossier :", err));
     };
 
     const createFormInFolder = () => {
@@ -90,7 +89,7 @@ const FolderPage = () => {
             "Supprimer ce formulaire ? Toutes les réponses seront perdues.",
             async () => {
                 await fetch(`/api/forms/${formId}`, { method: "DELETE" });
-                loadForms();
+                reloadForms();
             }
         );
     };
@@ -99,7 +98,7 @@ const FolderPage = () => {
         try {
             await fetch(`/api/forms/${formId}/duplicate`, { method: "POST" });
             showModal("Succès", "Formulaire dupliqué !");
-            loadForms();
+            reloadForms();
         } catch (err) {
             console.error(err);
         }
@@ -124,7 +123,6 @@ const FolderPage = () => {
 
     const handleDuplicateSelected = async () => {
         if (selectedForms.length === 0) return;
-
         showModal(
             "Duplication",
             `Dupliquer ${selectedForms.length} formulaire(s) ?`,
@@ -134,7 +132,7 @@ const FolderPage = () => {
                 }
                 showModal("Succès", "Duplication terminée !");
                 setSelectedForms([]);
-                loadForms();
+                reloadForms();
             }
         );
     };
@@ -167,7 +165,7 @@ const FolderPage = () => {
                 }
                 showModal("Succès", "Suppression terminée !");
                 setSelectedForms([]);
-                loadForms();
+                reloadForms();
             }
         );
     };
@@ -181,8 +179,8 @@ const FolderPage = () => {
             });
 
             setMoveModal({ open: false, item: null, type: null });
-            loadForms();
-            loadFolders();
+            reloadForms();
+            reloadFolders();
         } catch (err) {
             console.error("Erreur lors du déplacement :", err);
         }

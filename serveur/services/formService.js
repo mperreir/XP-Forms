@@ -285,8 +285,8 @@ const duplicateForm = async (formId) => {
           const jsonDataString = JSON.stringify(newFormJson);
 
           db.run(
-            "INSERT INTO forms (id, title, json_data, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
-            [newFormId, newTitle, jsonDataString],
+            "INSERT INTO forms (id, title, json_data, folder_id, created_at, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+            [newFormId, newTitle, jsonDataString,form.folder_id],
             (err) => {
               if (err) {
                 db.run("ROLLBACK");
