@@ -347,6 +347,18 @@ const duplicateForm = async (formId) => {
   });
 };
 
+const moveForm = (id, folder_id) => {
+  return new Promise((resolve, reject) => {
+    db.run(
+      "UPDATE forms SET folder_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      [folder_id, id],
+      function (err) {
+        if (err) return reject(err);
+        resolve();
+      }
+    );
+  });
+};
 
 exports.setDefaultUserId = (form_id, default_user_id) => {
   return new Promise((resolve, reject) => {
@@ -386,4 +398,5 @@ module.exports = {
   updateForm,
   deleteForm,
   duplicateForm,
+  moveForm,
 };

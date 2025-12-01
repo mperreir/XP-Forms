@@ -13,6 +13,7 @@ const Accueil = () => {
     const isOneChecked = selectedForms.length > 0;
     const [folders, setFolders] = useState([]);
     const [moveModal, setMoveModal] = useState({open: false, type: null, item: null,});
+    const [selectedFolder, setSelectedFolder] = useState("");
 
 
     const showModal = (title, message, onConfirm = null) => {
@@ -263,6 +264,20 @@ const Accueil = () => {
             .catch(err => console.error("Erreur création dossier :", err));
     };
 
+    const handleMove = async () => {
+        if (!moveModal.item || !selectedFolder) return;
+
+        await fetch(`/api/forms/${moveModal.item.id}/move`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folder_id: selectedFolder })
+        });
+
+        setMoveModal({ open: false, item: null });
+        setSelectedFolder("");
+
+        await reloadForms();
+    };
 
 
     return (
@@ -416,6 +431,13 @@ const Accueil = () => {
                                                     Voir Réponses
                                                 </button>
                                             </Link>
+                                            <button
+                                                className={`${styles.button} ${styles.moveButton}`} 
+                                                onClick={() => setMoveModal({ open: true, item: form })}
+                                                disabled={isOneChecked}
+                                            >
+                                                Déplacer
+                                            </button>
                                             <button 
                                                 className={`${styles.button} ${styles.duplicateButton}`} 
                                                 onClick={() => handleDuplicateForm(form.id)}
@@ -445,6 +467,34 @@ const Accueil = () => {
                 onClose={closeModal}
                 onConfirm={modal.onConfirm}
             />
+            {moveModal.open && (
+                <div className={styles.moveModalOverlay}>
+                    <div className={styles.moveModalContent}>
+                        <h3>Déplacer vers…</h3>
+
+                        <select
+                            value={selectedFolder}
+                            onChange={(e) => setSelectedFolder(e.target.value)}
+                        >
+                            <option value="">Sélectionner un dossier</option>
+                            {folders.map(folder => (
+                                <option key={folder.id} value={folder.id}>
+                                    {folder.name}
+                                </option>
+                            ))}
+                        </select>
+
+                        <div className={styles.buttonsRow}>
+                            <button onClick={handleMove} disabled={!selectedFolder}>
+                                Confirmer
+                            </button>
+                            <button onClick={() => setMoveModal({ open: false, item: null })}>
+                                Annuler
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

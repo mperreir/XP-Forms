@@ -102,6 +102,17 @@ const duplicateForm = async (req, res) => {
   }
 };
 
+const moveForm = async (req, res) => {
+  const { id } = req.params;
+  const { folder_id } = req.body;
+
+  try {
+    const result = await formService.moveForm(id, folder_id);
+    res.json({ message: "Formulaire déplacé !" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 exports.setDefaultUserId = async (req, res) => {
   try {
@@ -135,4 +146,5 @@ module.exports = {
   updateForm,
   deleteForm,
   duplicateForm,
+  moveForm,
 };
