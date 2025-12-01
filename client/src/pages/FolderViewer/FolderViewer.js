@@ -168,11 +168,11 @@ const FolderPage = () => {
 
     const handleMove = async () => {
         if (!moveModal.item || !selectedFolder) return;
-
+        const folderIdToSend = selectedFolder === "root" ? null : selectedFolder;
         await fetch(`/api/forms/${moveModal.item.id}/move`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ folder_id: selectedFolder })
+            body: JSON.stringify({ folder_id: folderIdToSend })
         });
 
         setMoveModal({ open: false, item: null });
@@ -367,9 +367,10 @@ const FolderPage = () => {
                             <option value="">Sélectionner un dossier</option>
                             {folders.map(folder => (
                                 <option key={folder.id} value={folder.id}>
-                                    {folder.name}
+                                   📁 {folder.name}
                                 </option>
                             ))}
+                            <option value="root">📁 Racine</option>
                         </select>
 
                         <div className={styles.buttonsRow}>

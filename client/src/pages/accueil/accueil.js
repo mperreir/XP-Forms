@@ -221,34 +221,6 @@ const Accueil = () => {
         );
     };
 
-    const openMoveModal = (type, item) => {
-        setMoveModal({ open: true, type, item });
-    };
-
-   const moveItem = async (newFolderId) => {
-        if (!moveModal.item) return;
-
-        try {
-            if (moveModal.type === "form") {
-                await fetch(`/api/forms/${moveModal.item.id}/move-to-folder/${newFolderId}`, {
-                    method: "PUT",
-                });
-            } else {
-                await fetch(`/api/folders/${moveModal.item.id}`, {
-                    method: "PUT",
-                    body: JSON.stringify({ parent_id: newFolderId }),
-                    headers: { "Content-Type": "application/json" }
-                });
-            }
-
-            setMoveModal({ open: false, item: null, type: null });
-            await reloadFolders();
-            await reloadForms();  
-        } catch (err) {
-            console.error("Erreur lors du déplacement :", err);
-        }
-    };
-
     const createFolder = () => {
         let folderName = prompt("Nom du nouveau dossier :");
 
@@ -479,7 +451,7 @@ const Accueil = () => {
                             <option value="">Sélectionner un dossier</option>
                             {folders.map(folder => (
                                 <option key={folder.id} value={folder.id}>
-                                    {folder.name}
+                                   📁 {folder.name}
                                 </option>
                             ))}
                         </select>
