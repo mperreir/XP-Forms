@@ -9,6 +9,7 @@ const Accueil = () => {
     const [selectedForms, setSelectedForms] = useState([]);
     const [newUserId, setNewUserId] = useState(localStorage.getItem('defaultUserId') || ""); // Utiliser la valeur du localStorage ou une valeur vide
     const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
+    const [notification, setNotification] = useState({ message: "", type: "" });
     const navigate = useNavigate(); // Permet de gérer la navigation
     const isOneChecked = selectedForms.length > 0;
     const [folders, setFolders] = useState([]);
@@ -23,6 +24,14 @@ const Accueil = () => {
     const closeModal = () => {
         setModal({ isOpen: false, title: "", message: "", onConfirm: null });
     };
+
+    const showNotification = (message, type = "success", duration = 3000) => {
+        setNotification({ message, type });
+        setTimeout(() => {
+            setNotification({ message: "", type: "" });
+        }, duration);
+    };
+
 
     const reloadForms = async () => {
         try {
@@ -256,13 +265,42 @@ const Accueil = () => {
             "Supprimer le dossier",
             "ATTENTION : cela supprimera aussi tous les sous-dossiers et tous les formulaires qu'il contient. Voulez-vous continuer ?",
             async () => {
-                await fetch(`/api/folders/${folderId}`, { method: "DELETE" });
-                reloadFolders();
-                reloadForms();
+                try {
+                    closeModal();
+                    await fetch(`/api/folders/${folderId}`, { method: "DELETE" });
+
+                    reloadFolders();
+                    reloadForms();
+                    showNotification(`Dossier supprimé`, "success");
+
+                } catch(err) {
+                    console.error(err);
+                    showNotification("Impossible de dupliquer le dossier.", "error");
+                }
+                
             }
         );
     };
 
+    const handleDuplicateFolder = async (folderId) => {
+        try {
+            const response = await fetch(`/api/folders/${folderId}/duplicate`, {method: "POST"});
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                return showNotification(data.error || "Échec de la duplication", "error");
+            }
+
+            showNotification(`Dossier dupliqué : ${data.success.name}`, "success");
+
+            await reloadFolders();
+            await reloadForms();
+        } catch (err) {
+            console.error(err);
+            showNotification("Impossible de dupliquer le dossier.", "error");
+        }
+    };
 
 
     return (
@@ -345,6 +383,15 @@ const Accueil = () => {
                                 onClick={() => navigate(`/folder/${folder.id}`)}
                             >
                                 📁 {folder.name}
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDuplicateFolder(folder.id);
+                                    }}
+                                    className={styles.duplicateFolderButton}
+                                    >
+                                    📄
+                                </button>
                                 <button 
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -461,6 +508,11 @@ const Accueil = () => {
                 onClose={closeModal}
                 onConfirm={modal.onConfirm}
             />
+            {notification.message && (
+                <div className={`${styles.notification} ${styles[notification.type]}`}>
+                    {notification.message}
+                </div>
+            )}
             {moveModal.open && (
                 <div className={styles.moveModalOverlay}>
                     <div className={styles.moveModalContent}>

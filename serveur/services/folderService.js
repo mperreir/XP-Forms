@@ -1,4 +1,6 @@
 const db = require("../base_de_donnee/db");
+const { duplicateForm } = require("./formService");
+
 
 const createFolder = (name, parent_id = null) => {
   return new Promise((resolve, reject) => {
@@ -106,6 +108,46 @@ const removeFormFromFolder = (formId) => {
   });
 };
 
+const duplicateFolder = async (folderId, newParentId = null) => {
+  return new Promise((resolve, reject) => {
+    db.get(`SELECT * FROM folders WHERE id = ?`, [folderId], (err, folder) => {
+      if (err) return reject(err);
+      if (!folder) return reject(new Error("Dossier introuvable"));
+
+      const newName = folder.name + " (copie)";
+
+      db.run(
+        `INSERT INTO folders (name, parent_id) VALUES (?, ?)`,
+        [newName, newParentId],
+        function (err) {
+          if (err) return reject(err);
+          
+          const newFolderId = this.lastID;
+
+          db.all(`SELECT * FROM forms WHERE folder_id = ?`, [folderId], async (err, forms) => {
+            if (err) return reject(err);
+
+            for (const f of forms) {
+              await duplicateForm(f.id, newFolderId);
+            }
+
+            db.all(`SELECT * FROM folders WHERE parent_id = ?`, [folderId], async (err, subfolders) => {
+              if (err) return reject(err);
+
+              for (const sf of subfolders) {
+                await duplicateFolder(sf.id, newFolderId);
+              }
+
+              resolve({ id: newFolderId, name: newName, parent_id: newParentId });
+            });
+          });
+        }
+      );
+    });
+  });
+};
+
+
 module.exports = {
   createFolder,
   getAllFolders,
@@ -113,5 +155,6 @@ module.exports = {
   renameFolder,
   deleteFolder,
   moveFormToFolder,
-  removeFormFromFolder
+  removeFormFromFolder,
+  duplicateFolder
 };

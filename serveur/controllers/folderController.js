@@ -65,3 +65,15 @@ exports.removeFormFromFolder = async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 };
+
+exports.duplicateFolder = async (req, res) => {
+  try {
+    const { newParentId = null } = req.body;
+    const ok = await folderServices.duplicateFolder(req.params.id, newParentId);
+    res.json({ success: ok });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+};
+
+

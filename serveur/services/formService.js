@@ -226,7 +226,7 @@ const deleteForm = (id) => {
 
 
 // Service function to duplicate a form
-const duplicateForm = async (formId) => {
+const duplicateForm = async (formId, newFolderId = null) => {
   return new Promise((resolve, reject) => {
     db.run("BEGIN TRANSACTION");
 
@@ -286,7 +286,7 @@ const duplicateForm = async (formId) => {
 
           db.run(
             "INSERT INTO forms (id, title, json_data, folder_id, created_at, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
-            [newFormId, newTitle, jsonDataString,form.folder_id],
+            [newFormId, newTitle, jsonDataString, newFolderId ?? form.folder_id],
             (err) => {
               if (err) {
                 db.run("ROLLBACK");

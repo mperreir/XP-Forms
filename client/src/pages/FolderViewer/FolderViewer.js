@@ -12,6 +12,7 @@ const FolderPage = () => {
     const [moveModal, setMoveModal] = useState({ open: false, type: null, item: null });
     const [modal, setModal] = useState({isOpen: false, title: "", message: "", onConfirm: null});
     const [selectedFolder, setSelectedFolder] = useState("");
+    const [notification, setNotification] = useState({ message: "", type: "" });
 
     const isOneChecked = selectedForms.length > 0;
 
@@ -21,6 +22,13 @@ const FolderPage = () => {
 
     const closeModal = () => {
         setModal({ isOpen: false, title: "", message: "", onConfirm: null });
+    };
+
+    const showNotification = (message, type = "success", duration = 3000) => {
+        setNotification({ message, type });
+        setTimeout(() => {
+            setNotification({ message: "", type: "" });
+        }, duration);
     };
 
     const reloadForms = async () => {
@@ -186,11 +194,42 @@ const FolderPage = () => {
             "Supprimer le dossier",
             "ATTENTION : cela supprimera aussi tous les sous-dossiers et tous les formulaires qu'il contient. Voulez-vous continuer ?",
             async () => {
-                await fetch(`/api/folders/${folderId}`, { method: "DELETE" });
-                reloadFolders();
-                reloadForms();
+                try {
+                    closeModal();
+                    await fetch(`/api/folders/${folderId}`, { method: "DELETE" });
+
+                    reloadFolders();
+                    reloadForms();
+                    showNotification(`Dossier supprimé`, "success");
+
+                } catch(err) {
+                    console.error(err);
+                    showNotification("Impossible de dupliquer le dossier.", "error");
+                }
+                
             }
         );
+    };
+
+    const handleDuplicateFolder = async (folderId, parentId) => {
+        try {
+            const response = await fetch(`/api/folders/${folderId}/duplicate`, 
+                {method: "POST",  headers: { "Content-Type": "application/json" } ,body: JSON.stringify({ newParentId: parentId })});
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                return showNotification(data.error || "Échec de la duplication", "error");
+            }
+
+            showNotification(`Dossier dupliqué : ${data.success.name}`, "success");
+
+            await reloadFolders();
+            await reloadForms();
+        } catch (err) {
+            console.error(err);
+            showNotification("Impossible de dupliquer le dossier.", "error");
+        }
     };
 
 
@@ -256,6 +295,15 @@ const FolderPage = () => {
                                 onClick={() => navigate(`/folder/${folder.id}`)}
                             >
                                 📁 {folder.name}
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDuplicateFolder(folder.id, id);
+                                    }}
+                                    className={styles.duplicateFolderButton}
+                                    >
+                                    📄
+                                </button>
                                 <button 
                                     onClick={(e) => {
                                         e.stopPropagation();  // empêcher la navigation
@@ -377,6 +425,11 @@ const FolderPage = () => {
                 onClose={closeModal}
                 onConfirm={modal.onConfirm}
             />
+            {notification.message && (
+                <div className={`${styles.notification} ${styles[notification.type]}`}>
+                    {notification.message}
+                </div>
+            )}
             {moveModal.open && (
                 <div className={styles.moveModalOverlay}>
                     <div className={styles.moveModalContent}>
