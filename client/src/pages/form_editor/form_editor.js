@@ -39,14 +39,13 @@ const FormEditor = () => {
           if (!data.json_data) throw new Error("Le schéma du formulaire est vide !");
           editor.importSchema(data.json_data);
           setTitle(data.title || "");
-          setIsEditing(true);  /* Si l'id d'un formulaire est present dans l'URL -> isEditing = true -> page de modification de formulaires */
+          setIsEditing(true);
           console.log(data);
         })
         .catch((err) => console.error("Erreur de chargement :", err));
     } else {
       const defaultSchema = { type: "default", components: [] };
       editor.importSchema(defaultSchema);
-      /* Si l'id d'un formulaire n'est pas present dans l'URL -> isEditing reste égale à false -> page de création de formulaires */
     }
 
     // Détection des modifications dans l'éditeur
@@ -54,7 +53,84 @@ const FormEditor = () => {
       setIsModified(true);
     });
 
+    const copyComponent = async (fieldId) => {
+      const schema = editor.getSchema();
+      
+      const findComponent = (components, id) => {
+        for (const comp of components) {
+          if (comp.id === id) return comp;
+          if (comp.components) {
+            const found = findComponent(comp.components, id);
+            if (found) return found;
+          }
+        }
+      };
+      
+      const original = findComponent(schema.components, fieldId);
+      const clone = JSON.parse(JSON.stringify(original));
+      const newId = () => `${clone.type}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      clone.id = newId();
+      clone.key = newId();
+      
+      const regenerateIds = (comp) => {
+        comp.components?.forEach(child => {
+          child.id = newId();
+          child.key = newId();
+          regenerateIds(child);
+        });
+      };
+      regenerateIds(clone);
+      
+      const findLocation = (components, id, parent = null) => {
+        for (let i = 0; i < components.length; i++) {
+          if (components[i].id === id) return { parent, index: i };
+          if (components[i].components) {
+            const result = findLocation(components[i].components, id, components[i]);
+            if (result) return result;
+          }
+        }
+      };
+      
+      const location = findLocation(schema.components, fieldId);
+      const targetArray = location.parent ? location.parent.components : schema.components;
+      targetArray.splice(location.index + 1, 0, clone);
+      await editor.importSchema(schema);
+      setIsModified(true);
+    };
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.classList?.contains('fjs-context-pad') && !node.querySelector('.custom-copy-btn')) {
+            const removeBtn = node.querySelector('button[title^="Remove"]');
+            const fieldId = node.closest('[data-id]').getAttribute('data-id');
+            
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'custom-copy-btn fjs-context-pad-item';
+            copyBtn.type = 'button';
+            copyBtn.title = removeBtn.title.replace('Remove', 'Copy');
+            copyBtn.innerHTML = `
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none">
+                <rect width="16" height="16" fill="#fff" rx="3" style="mix-blend-mode: multiply;"></rect>
+                <path fill="currentcolor" d="M4 2h6v2H4V2zm8 0v2h2V2h-2zM2 6h2V4H2v2zm10 0h2V4h-2v2zM4 12H2v2h2v-2zm8 0v2h2v-2h-2zM2 8h2V6H2v2zm10 0h2V6h-2v2zM4 10H2v2h2v-2zm4-8h2v2H8V2zM6 14h2v-2H6v2zm2-4h2V8H8v2z"/>
+              </svg>
+            `;
+            copyBtn.onclick = () => copyComponent(fieldId);
+            node.appendChild(copyBtn);
+          }
+        });
+      });
+    });
+
+    // Démarrer la surveillance du DOM
+    observer.observe(editorContainerRef.current, {
+      childList: true,  // Surveiller les ajouts/suppressions d'éléments
+      subtree: true     // Surveiller aussi les sous-éléments
+    });
+
     return () => {
+      observer.disconnect();
       editor.destroy();
     };
   }, [id]);
