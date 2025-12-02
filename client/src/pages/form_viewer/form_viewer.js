@@ -19,6 +19,7 @@ const FormViewer = () => {
   const [componentMapping, setComponentMapping] = useState({});
   const [formData, setFormData] = useState({});
   const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
+  const [isNextPageDisabled, setIsNextPageDisabled] = useState(true);
 
   const dataInitialized = useRef(false);
   const formRef = useRef(null);
@@ -97,7 +98,7 @@ const showModal = (title, message, onConfirm = null) => {
     }
   }, [id, id_participant]);
 
-const validateCurrentPage = () => {
+const validateCurrentPage = useCallback(() => {
   if (!schema || !pages[currentPage - 1]) return false;
 
   const currentComponents = pages[currentPage - 1] || [];
@@ -167,7 +168,7 @@ const validateCurrentPage = () => {
 
     console.log("Résultat validation page (manual check)", currentPage, ":", isValid, "formData keys:", Object.keys(formData));
   return isValid;
-};
+}, [schema, pages, currentPage, formData]);
 
   useEffect(() => {
     const flattenComponents = (components) => {
@@ -312,6 +313,21 @@ const validateCurrentPage = () => {
     };
   }, [schema, pages, currentPage, componentMapping, id_participant, navigate, fetchSavedData, id]);
 
+  // Recalculer la validité de la page courante à chaque changement de formData
+  useEffect(() => {
+    if (!schema || pages.length === 0 || !pages[currentPage - 1]) {
+      setIsNextPageDisabled(true);
+      return;
+    }
+    // Petit délai pour s'assurer que le Form est rendu
+    const timeoutId = setTimeout(() => {
+      const isValid = validateCurrentPage();
+      setIsNextPageDisabled(!isValid);
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [formData, currentPage, schema, pages, validateCurrentPage]);
+
   return (
     <>
       <div className={styles.formViewerContainer}>
@@ -370,6 +386,7 @@ const validateCurrentPage = () => {
             <div className={styles.navButtonWrapper}>
               {currentPage < pages.length ? (
                 <button
+                  disabled={isNextPageDisabled}
                   onClick={() => {
                     const ok = validateCurrentPage();
                     console.debug('Next page clicked - validateCurrentPage:', ok, 'page', currentPage, 'formData:', formData);
