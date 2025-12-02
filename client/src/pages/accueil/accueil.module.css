@@ -393,3 +393,10 @@ button:disabled {
     border-radius: 12px;
     min-width: 300px;
 }
+
+.deleteFolderButton {
+    margin-left : 30px;
+    margin-bottom: 0;
+    margin-top: 0;
+    padding: 0;
+}

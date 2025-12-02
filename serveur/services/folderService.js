@@ -57,16 +57,28 @@ const renameFolder = (id, newName) => {
 
 const deleteFolder = (id) => {
   return new Promise((resolve, reject) => {
-    db.run(
-      `DELETE FROM folders WHERE id = ?`,
-      [id],
-      function (err) {
+    
+    db.run(`DELETE FROM forms WHERE folder_id = ?`, [id], function (err) {
+      if (err) return reject(err);
+
+      db.all(`SELECT id FROM folders WHERE parent_id = ?`, [id], (err, subFolders) => {
         if (err) return reject(err);
-        resolve(this.changes > 0);
-      }
-    );
+
+        Promise.all(subFolders.map(sf => deleteFolder(sf.id)))
+          .then(() => {
+
+            db.run(`DELETE FROM folders WHERE id = ?`, [id], function (err) {
+              if (err) return reject(err);
+              resolve(true);
+            });
+
+          })
+          .catch(reject);
+      });
+    });
   });
 };
+
 
 const moveFormToFolder = (formId, folderId) => {
   return new Promise((resolve, reject) => {

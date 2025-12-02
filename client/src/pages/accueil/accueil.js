@@ -251,6 +251,19 @@ const Accueil = () => {
         await reloadForms();
     };
 
+    const handleDeleteFolder = (folderId) => {
+        showModal(
+            "Supprimer le dossier",
+            "ATTENTION : cela supprimera aussi tous les sous-dossiers et tous les formulaires qu'il contient. Voulez-vous continuer ?",
+            async () => {
+                await fetch(`/api/folders/${folderId}`, { method: "DELETE" });
+                reloadFolders();
+                reloadForms();
+            }
+        );
+    };
+
+
 
     return (
         <>
@@ -332,6 +345,15 @@ const Accueil = () => {
                                 onClick={() => navigate(`/folder/${folder.id}`)}
                             >
                                 📁 {folder.name}
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteFolder(folder.id);
+                                    }}
+                                    className={styles.deleteFolderButton}
+                                >
+                                    🗑️
+                                </button>
                             </div>
                         ))}
                     </div>
