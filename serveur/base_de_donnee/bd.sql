@@ -5,7 +5,7 @@ CREATE TABLE forms (
     json_data TEXT,  -- Stocke le JSON complet sous forme de texte
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    folder_id INTEGER
+    group_id INTEGER
 );
 
 -- Fonction de mise à jour de `updated_at`
@@ -47,17 +47,15 @@ CREATE TABLE IF NOT EXISTS settings (
     value TEXT
 );
 
-CREATE TABLE IF NOT EXISTS folders (
+CREATE TABLE IF NOT EXISTS groups (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
-    parent_id INTEGER DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(parent_id) REFERENCES folders(id)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TRIGGER trigger_update_folders_updated_at
-AFTER UPDATE ON folders
+CREATE TRIGGER trigger_update_groups_updated_at
+AFTER UPDATE ON groups
 FOR EACH ROW
 BEGIN
-    UPDATE folders SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
+    UPDATE groups SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;

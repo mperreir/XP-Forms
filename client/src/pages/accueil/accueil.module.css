@@ -349,18 +349,18 @@ button:disabled {
 }
 
 
-.folderContainer {
+.groupContainer {
     margin-top: 30px;
     margin-bottom: 20px;
 }
 
-.folderGrid {
+.groupGrid {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
 }
 
-.folderItem {
+.groupItem {
     background: #f4f4f4;
     border: 1px solid #ccc;
     padding: 10px 15px;
@@ -370,7 +370,7 @@ button:disabled {
     transition: 0.2s;
 }
 
-.folderItem:hover {
+.groupItem:hover {
     background: #e9e9e9;
 }
 
@@ -394,7 +394,7 @@ button:disabled {
     min-width: 300px;
 }
 
-.deleteFolderButton {
+.deletegroupButton {
     margin-left : 30px;
     margin-bottom: 0;
     margin-top: 0;

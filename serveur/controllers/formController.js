@@ -2,9 +2,9 @@
 const formService = require("../services/formService");
 
 const saveForm = async (req, res) => {
-  const { id, title, json_data, folder_id } = req.body;
+  const { id, title, json_data, group_id } = req.body;
   try {
-    const message = await formService.saveForm(id, title, json_data, folder_id);
+    const message = await formService.saveForm(id, title, json_data, group_id);
     res.status(201).json({ message });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -13,8 +13,8 @@ const saveForm = async (req, res) => {
 
 const getAllForms = async (req, res) => {
   try {
-    const folder_id = req.query.folder_id || null;
-    const forms = await formService.getAllForms(folder_id);
+    const group_id = req.query.group_id || null;
+    const forms = await formService.getAllForms(group_id);
     res.json(forms);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -104,10 +104,10 @@ const duplicateForm = async (req, res) => {
 
 const moveForm = async (req, res) => {
   const { id } = req.params;
-  const { folder_id } = req.body;
+  const { group_id } = req.body;
 
   try {
-    const result = await formService.moveForm(id, folder_id);
+    const result = await formService.moveForm(id, group_id);
     res.json({ message: "Formulaire déplacé !" });
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -26,7 +26,7 @@ const flattenComponents = (components) => {
   return flat;
 };
 
-const saveForm = (id, title, json_data, folder_id = null) => {
+const saveForm = (id, title, json_data, group_id = null) => {
   return new Promise((resolve, reject) => {
     const components = json_data.components || [];
     const flatComponents = flattenComponents(components);
@@ -34,8 +34,8 @@ const saveForm = (id, title, json_data, folder_id = null) => {
       if (err) return reject(err);
 
       db.run(
-        "INSERT INTO forms (id, title, json_data, folder_id) VALUES (?, ?, ?, ?)",
-        [id, title, JSON.stringify(json_data), folder_id],
+        "INSERT INTO forms (id, title, json_data, group_id) VALUES (?, ?, ?, ?)",
+        [id, title, JSON.stringify(json_data), group_id],
         (err) => {
           if (err) {
             db.run("ROLLBACK");
@@ -70,13 +70,13 @@ const saveForm = (id, title, json_data, folder_id = null) => {
   });
 };
 
-const getAllForms = (folder_id = null) => {
+const getAllForms = (group_id = null) => {
   return new Promise((resolve, reject) => {
-    const query = folder_id
-      ? "SELECT * FROM forms WHERE folder_id = ? ORDER BY created_at DESC"
+    const query = group_id
+      ? "SELECT * FROM forms WHERE group_id = ? ORDER BY created_at DESC"
       : "SELECT * FROM forms ORDER BY created_at DESC";
 
-    db.all(query, folder_id ? [folder_id] : [], (err, rows) => {
+    db.all(query, group_id ? [group_id] : [], (err, rows) => {
       if (err) return reject(err);
       resolve(rows);
     });
@@ -226,7 +226,7 @@ const deleteForm = (id) => {
 
 
 // Service function to duplicate a form
-const duplicateForm = async (formId, newFolderId = null) => {
+const duplicateForm = async (formId, newgroupId = null) => {
   return new Promise((resolve, reject) => {
     db.run("BEGIN TRANSACTION");
 
@@ -285,8 +285,8 @@ const duplicateForm = async (formId, newFolderId = null) => {
           const jsonDataString = JSON.stringify(newFormJson);
 
           db.run(
-            "INSERT INTO forms (id, title, json_data, folder_id, created_at, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
-            [newFormId, newTitle, jsonDataString, newFolderId ?? form.folder_id],
+            "INSERT INTO forms (id, title, json_data, group_id, created_at, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+            [newFormId, newTitle, jsonDataString, newgroupId ?? form.group_id],
             (err) => {
               if (err) {
                 db.run("ROLLBACK");
@@ -347,11 +347,11 @@ const duplicateForm = async (formId, newFolderId = null) => {
   });
 };
 
-const moveForm = (id, folder_id) => {
+const moveForm = (id, group_id) => {
   return new Promise((resolve, reject) => {
     db.run(
-      "UPDATE forms SET folder_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-      [folder_id, id],
+      "UPDATE forms SET group_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      [group_id, id],
       function (err) {
         if (err) return reject(err);
         resolve();

@@ -12,9 +12,9 @@ const Accueil = () => {
     const [notification, setNotification] = useState({ message: "", type: "" });
     const navigate = useNavigate(); // Permet de gérer la navigation
     const isOneChecked = selectedForms.length > 0;
-    const [folders, setFolders] = useState([]);
+    const [groups, setgroups] = useState([]);
     const [moveModal, setMoveModal] = useState({open: false, type: null, item: null,});
-    const [selectedFolder, setSelectedFolder] = useState("");
+    const [selectedgroup, setSelectedgroup] = useState("");
 
 
     const showModal = (title, message, onConfirm = null) => {
@@ -31,7 +31,6 @@ const Accueil = () => {
             setNotification({ message: "", type: "" });
         }, duration);
     };
-
 
     const reloadForms = async () => {
         try {
@@ -51,27 +50,26 @@ const Accueil = () => {
                     }
                 })
             );
-            const rootForms = formsWithCounts.filter(f => f.folder_id === null);
-            setForms(rootForms);
+            setForms(formsWithCounts);
         } catch (error) {
             console.error(error);
         }
     };
 
-    const reloadFolders = async () => {
+    const reloadgroups = async () => {
         try {
-            const response = await fetch('/api/folders');
-            if (!response.ok) throw new Error('Erreur lors du chargement des dossiers');
+            const response = await fetch('/api/groups');
+            if (!response.ok) throw new Error('Erreur lors du chargement des groupes');
             const data = await response.json();
-            setFolders(data);
+            setgroups(data);
         } catch (error) {
-            console.error("Erreur reloadFolders :", error);
+            console.error("Erreur reloadgroups :", error);
         }
     };
 
     useEffect(() => {
         reloadForms();
-        reloadFolders();
+        reloadgroups();
     }, []);
 
     const handleDeleteForm = async (formId) => {
@@ -230,76 +228,54 @@ const Accueil = () => {
         );
     };
 
-    const createFolder = () => {
-        let folderName = prompt("Nom du nouveau dossier :");
+    const creategroup = () => {
+        let groupName = prompt("Nom du nouveau groupe :");
 
-        if (!folderName || folderName.trim() === "") return;
+        if (!groupName || groupName.trim() === "") return;
 
-        fetch("/api/folders", {
+        fetch("/api/groups", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: folderName })
+            body: JSON.stringify({ name: groupName })
         })
             .then(res => res.json())
-            .then(() => reloadFolders())
-            .catch(err => console.error("Erreur création dossier :", err));
+            .then(() => reloadgroups())
+            .catch(err => console.error("Erreur création groupe :", err));
     };
 
     const handleMove = async () => {
-        if (!moveModal.item || !selectedFolder) return;
+        if (!moveModal.item || !selectedgroup) return;
 
-        await fetch(`/api/forms/${moveModal.item.id}/move`, {
+        await fetch(`/api/forms/${moveModal.item.id}/mov-to-group/${selectedgroup}e`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ folder_id: selectedFolder })
         });
 
         setMoveModal({ open: false, item: null });
-        setSelectedFolder("");
+        setSelectedgroup("");
 
         await reloadForms();
     };
 
-    const handleDeleteFolder = (folderId) => {
+    const handleDeletegroup = (groupId) => {
         showModal(
-            "Supprimer le dossier",
-            "ATTENTION : cela supprimera aussi tous les sous-dossiers et tous les formulaires qu'il contient. Voulez-vous continuer ?",
+            "Supprimer le groupe",
+            "ATTENTION : cela supprimera aussi tous les sous-groupes et tous les formulaires qu'il contient. Voulez-vous continuer ?",
             async () => {
                 try {
                     closeModal();
-                    await fetch(`/api/folders/${folderId}`, { method: "DELETE" });
+                    await fetch(`/api/groups/${groupId}`, { method: "DELETE" });
 
-                    reloadFolders();
+                    reloadgroups();
                     reloadForms();
-                    showNotification(`Dossier supprimé`, "success");
+                    showNotification(`groupe supprimé`, "success");
 
                 } catch(err) {
                     console.error(err);
-                    showNotification("Impossible de dupliquer le dossier.", "error");
+                    showNotification("Impossible de dupliquer le groupe.", "error");
                 }
                 
             }
         );
-    };
-
-    const handleDuplicateFolder = async (folderId) => {
-        try {
-            const response = await fetch(`/api/folders/${folderId}/duplicate`, {method: "POST"});
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                return showNotification(data.error || "Échec de la duplication", "error");
-            }
-
-            showNotification(`Dossier dupliqué : ${data.success.name}`, "success");
-
-            await reloadFolders();
-            await reloadForms();
-        } catch (err) {
-            console.error(err);
-            showNotification("Impossible de dupliquer le dossier.", "error");
-        }
     };
 
 
@@ -332,9 +308,9 @@ const Accueil = () => {
 
                 <button
                     className={styles.createFormButton}
-                    onClick={() => createFolder()}
+                    onClick={() => creategroup()}
                 >
-                    Créer un nouveau dossier
+                    Créer un nouveau groupe
                 </button>
                 <button
                     className={`${styles.button} ${styles.duplicateButton} ${styles.duplicateButtonCheck}`}
@@ -369,35 +345,26 @@ const Accueil = () => {
                 </button>
             </div>
 
-            <div className={styles.folderContainer}>
-                <h2>Dossiers</h2>
+            <div className={styles.groupContainer}>
+                <h2>groupes</h2>
 
-                {folders.length === 0 ? (
-                    <p>Aucun dossier pour le moment</p>
+                {groups.length === 0 ? (
+                    <p>Aucun groupe pour le moment</p>
                 ) : (
-                    <div className={styles.folderGrid}>
-                        {folders.map((folder) => (
+                    <div className={styles.groupGrid}>
+                        {groups.map((group) => (
                             <div 
-                                key={folder.id} 
-                                className={styles.folderItem}
-                                onClick={() => navigate(`/folder/${folder.id}`)}
+                                key={group.id} 
+                                className={styles.groupItem}
+                                onClick={() => navigate(`/group/${group.id}`)}
                             >
-                                📁 {folder.name}
+                                📁 {group.name}
                                 <button 
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        handleDuplicateFolder(folder.id);
+                                        handleDeletegroup(group.id);
                                     }}
-                                    className={styles.duplicateFolderButton}
-                                    >
-                                    📄
-                                </button>
-                                <button 
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteFolder(folder.id);
-                                    }}
-                                    className={styles.deleteFolderButton}
+                                    className={styles.deletegroupButton}
                                 >
                                     🗑️
                                 </button>
@@ -519,19 +486,19 @@ const Accueil = () => {
                         <h3>Déplacer vers…</h3>
 
                         <select
-                            value={selectedFolder}
-                            onChange={(e) => setSelectedFolder(e.target.value)}
+                            value={selectedgroup}
+                            onChange={(e) => setSelectedgroup(e.target.value)}
                         >
-                            <option value="">Sélectionner un dossier</option>
-                            {folders.map(folder => (
-                                <option key={folder.id} value={folder.id}>
-                                   📁 {folder.name}
+                            <option value="">Sélectionner un groupe</option>
+                            {groups.map(group => (
+                                <option key={group.id} value={group.id}>
+                                   📁 {group.name}
                                 </option>
                             ))}
                         </select>
 
                         <div className={styles.buttonsRow}>
-                            <button onClick={handleMove} disabled={!selectedFolder}>
+                            <button onClick={handleMove} disabled={!selectedgroup}>
                                 Confirmer
                             </button>
                             <button onClick={() => setMoveModal({ open: false, item: null })}>
