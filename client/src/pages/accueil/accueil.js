@@ -246,9 +246,10 @@ const Accueil = () => {
     const handleMove = async () => {
         if (!moveModal.item || !selectedgroup) return;
 
-        await fetch(`/api/forms/${moveModal.item.id}/mov-to-group/${selectedgroup}e`, {
+        await fetch(`/api/forms/${moveModal.item.id}/move-to-group/${selectedgroup}`, {
             method: "PUT",
         });
+        showNotification(`Form déplacé`, "success");
 
         setMoveModal({ open: false, item: null });
         setSelectedgroup("");
@@ -356,7 +357,6 @@ const Accueil = () => {
                             <div 
                                 key={group.id} 
                                 className={styles.groupItem}
-                                onClick={() => navigate(`/group/${group.id}`)}
                             >
                                 📁 {group.name}
                                 <button 

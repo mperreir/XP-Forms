@@ -58,10 +58,11 @@ const renamegroup = (id, newName) => {
 const deletegroup = (id) => {
   return new Promise((resolve, reject) => {
     
-    db.run(`DELETE FROM forms WHERE group_id = ?`, [id], function (err) {
+    db.run(`UPDATE forms SET group_id = ? WHERE group_id = ?`, 
+      [null, id], function (err) {
       if (err) return reject(err);
 
-      db.all(`SELECT id FROM groups WHERE id = ?`, [id], function (err) {
+      db.all(`DELETE FROM groups WHERE id = ?`, [id], function (err) {9
         if (err) return reject(err);
           resolve(true);
       });
