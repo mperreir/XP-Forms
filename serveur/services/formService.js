@@ -70,18 +70,21 @@ const saveForm = (id, title, json_data, group_id = null) => {
   });
 };
 
-const getAllForms = (group_id = null) => {
+const getAllForms = () => {
   return new Promise((resolve, reject) => {
-    const query = group_id
-      ? "SELECT * FROM forms WHERE group_id = ? ORDER BY created_at DESC"
-      : "SELECT * FROM forms ORDER BY created_at DESC";
-
-    db.all(query, group_id ? [group_id] : [], (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows);
-    });
+    db.all(
+      `SELECT forms.*, groups.name AS group_name
+       FROM forms
+       LEFT JOIN groups ON forms.group_id = groups.id`,
+      [],
+      (err, rows) => {
+        if (err) return reject(err);
+        resolve(rows);
+      }
+    );
   });
 };
+
 
 const getFormById = (id) => {
   return new Promise((resolve, reject) => {

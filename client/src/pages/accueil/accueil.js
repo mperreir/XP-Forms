@@ -385,6 +385,7 @@ const Accueil = () => {
                                 <th className={styles.th}>Date de création</th>
                                 <th className={styles.th}>Dernière mise à jour</th>
                                 <th className={styles.th}>Nombre de réponses</th>
+                                <th className={styles.th}>Groupe</th>
                                 <th className={styles.th}>Actions</th>
                             </tr>
                         </thead>
@@ -408,6 +409,7 @@ const Accueil = () => {
                                         <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
                                         <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
                                         <td className={styles.td}>{form.responseCount}</td>
+                                        <td className={styles.td}>{form.group_name || "-"}</td>
 
                                         <td className={`${styles.row} ${styles.td}`} >
                                             <Link 

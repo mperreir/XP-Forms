@@ -13,8 +13,7 @@ const saveForm = async (req, res) => {
 
 const getAllForms = async (req, res) => {
   try {
-    const group_id = req.query.group_id || null;
-    const forms = await formService.getAllForms(group_id);
+    const forms = await formService.getAllForms();
     res.json(forms);
   } catch (error) {
     res.status(500).json({ error: error.message });
