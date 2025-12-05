@@ -5,7 +5,7 @@ CREATE TABLE forms (
     json_data TEXT,  -- Stocke le JSON complet sous forme de texte
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    group_id INTEGER
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
 );
 
 -- Fonction de mise à jour de `updated_at`
