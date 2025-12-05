@@ -15,8 +15,11 @@ const Accueil = () => {
     const [groups, setgroups] = useState([]);
     const [moveModal, setMoveModal] = useState({open: false, type: null, item: null,});
     const [selectedGroup, setSelectedGroup] = useState("");
-    const filteredForms = selectedGroup ? forms.filter(f => f.group_id === Number(selectedGroup)) : forms;
+    const [searchQuery, setSearchQuery] = useState("");
 
+    const filteredForms = forms
+        .filter(f => selectedGroup ? f.group_id === Number(selectedGroup) : true)
+        .filter(f => f.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const showModal = (title, message, onConfirm = null) => {
         setModal({ isOpen: true, title, message, onConfirm });
@@ -363,6 +366,13 @@ const Accueil = () => {
                 <h2>Liste des formulaires enregistrés</h2>
 
                 <div className={styles.filters}>
+                    <input
+                        type="text"
+                        placeholder="Rechercher un formulaire..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className={styles.searchInput}
+                    />
                     <select
                         value={selectedGroup}
                         onChange={(e) => setSelectedGroup(e.target.value)}
