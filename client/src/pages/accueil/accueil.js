@@ -15,8 +15,6 @@ const Accueil = () => {
     const [groups, setgroups] = useState([]);
     const [moveModal, setMoveModal] = useState({open: false, type: null, item: null,});
     const [selectedGroup, setSelectedGroup] = useState("");
-
-    const allGroups = [...new Set(forms.map(f => f.group_id))];
     const filteredForms = selectedGroup ? forms.filter(f => f.group_id === Number(selectedGroup)) : forms;
 
 
@@ -371,9 +369,9 @@ const Accueil = () => {
                         className={styles.select}
                     >
                         <option value="">Tous les groupes</option>
-                        {allGroups.map((g, i) => (
-                            <option key={i} value={g}>
-                                {g}
+                        {groups.map((g) => (
+                            <option key={g.id} value={g.id}>
+                                {g.name}
                             </option>
                         ))}
                     </select>
