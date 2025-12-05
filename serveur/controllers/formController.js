@@ -2,9 +2,9 @@
 const formService = require("../services/formService");
 
 const saveForm = async (req, res) => {
-  const { id, title, json_data } = req.body;
+  const { id, title, json_data, group_id } = req.body;
   try {
-    const message = await formService.saveForm(id, title, json_data);
+    const message = await formService.saveForm(id, title, json_data, group_id);
     res.status(201).json({ message });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -101,6 +101,17 @@ const duplicateForm = async (req, res) => {
   }
 };
 
+const moveForm = async (req, res) => {
+  const { id } = req.params;
+  const { group_id } = req.body;
+
+  try {
+    const result = await formService.moveForm(id, group_id);
+    res.json({ message: "Formulaire déplacé !" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 exports.setDefaultUserId = async (req, res) => {
   try {
@@ -134,4 +145,5 @@ module.exports = {
   updateForm,
   deleteForm,
   duplicateForm,
+  moveForm,
 };

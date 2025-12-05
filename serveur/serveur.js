@@ -3,8 +3,9 @@ const app = express();
 const bodyParser = require('body-parser');
 const formRoutes = require('./routes/formRoutes');
 const responseRoutes = require("./routes/responseRoutes");
-const folderRoutes = require("./routes/folderRoutes");
+const groupRoutes = require("./routes/groupRoutes");
 const defaultUserIdRoutes = require("./routes/settingsRoutes");
+
 
 const cors = require("cors");
 app.use(cors());
@@ -18,7 +19,7 @@ app.use(bodyParser.json());
 // Use form routes
 app.use('/api', formRoutes);
 app.use("/api", responseRoutes);
-app.use("/api", folderRoutes);
+app.use("/api", groupRoutes);
 app.use('/api', defaultUserIdRoutes);
 
 
