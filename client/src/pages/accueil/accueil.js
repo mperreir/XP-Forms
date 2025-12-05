@@ -14,7 +14,10 @@ const Accueil = () => {
     const isOneChecked = selectedForms.length > 0;
     const [groups, setgroups] = useState([]);
     const [moveModal, setMoveModal] = useState({open: false, type: null, item: null,});
-    const [selectedgroup, setSelectedgroup] = useState("");
+    const [selectedGroup, setSelectedGroup] = useState("");
+
+    const allGroups = [...new Set(forms.map(f => f.group_id))];
+    const filteredForms = selectedGroup ? forms.filter(f => f.group_id === Number(selectedGroup)) : forms;
 
 
     const showModal = (title, message, onConfirm = null) => {
@@ -244,15 +247,15 @@ const Accueil = () => {
     };
 
     const handleMove = async () => {
-        if (!moveModal.item || !selectedgroup) return;
+        if (!moveModal.item || !selectedGroup) return;
 
-        await fetch(`/api/forms/${moveModal.item.id}/move-to-group/${selectedgroup}`, {
+        await fetch(`/api/forms/${moveModal.item.id}/move-to-group/${selectedGroup}`, {
             method: "PUT",
         });
         showNotification(`Form déplacé`, "success");
 
         setMoveModal({ open: false, item: null });
-        setSelectedgroup("");
+        setSelectedGroup("");
 
         await reloadForms();
     };
@@ -360,6 +363,21 @@ const Accueil = () => {
 
             <div className={styles.tableContainer}>
                 <h2>Liste des formulaires enregistrés</h2>
+
+                <div className={styles.filters}>
+                    <select
+                        value={selectedGroup}
+                        onChange={(e) => setSelectedGroup(e.target.value)}
+                        className={styles.select}
+                    >
+                        <option value="">Tous les groupes</option>
+                        {allGroups.map((g, i) => (
+                            <option key={i} value={g}>
+                                {g}
+                            </option>
+                        ))}
+                    </select>
+                </div>
                 <div className={styles.scrollableTable}>
                     <table className={styles.table}>
                         <thead>
@@ -390,7 +408,7 @@ const Accueil = () => {
                                     <td colSpan="6">Aucun formulaire</td>
                                 </tr> 
                             ) : (
-                                forms.map(form => (
+                                filteredForms.map(form => (
                                     <tr key={form.id}>
                                         <td className={styles.td}> 
                                             <input
@@ -483,8 +501,8 @@ const Accueil = () => {
                         <h3>Déplacer vers…</h3>
 
                         <select
-                            value={selectedgroup}
-                            onChange={(e) => setSelectedgroup(e.target.value)}
+                            value={selectedGroup}
+                            onChange={(e) => setSelectedGroup(e.target.value)}
                         >
                             <option value="">Sélectionner un groupe</option>
                             {groups.map(group => (
@@ -495,7 +513,7 @@ const Accueil = () => {
                         </select>
 
                         <div className={styles.buttonsRow}>
-                            <button onClick={handleMove} disabled={!selectedgroup}>
+                            <button onClick={handleMove} disabled={!selectedGroup}>
                                 Confirmer
                             </button>
                             <button onClick={() => setMoveModal({ open: false, item: null })}>

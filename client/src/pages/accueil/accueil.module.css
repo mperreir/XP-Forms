@@ -419,3 +419,13 @@ button:disabled {
 .error {
     background-color: #f44336;
 }
+
+.filters {
+    margin-bottom: 12px;
+}
+
+.select {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
