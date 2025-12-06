@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import styles from './accueil.module.css'; // Import CSS Module
 import { useNavigate } from "react-router-dom";
 import Modal from "../../components/Modal";
+
 
 const Accueil = () => {
     const [forms, setForms] = useState([]);
@@ -14,6 +15,11 @@ const Accueil = () => {
     const [moveModal, setMoveModal] = useState({open: false, type: null, item: null,});
     const [selectedGroup, setSelectedGroup] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
+    const [openMenuId, setOpenMenuId] = useState(null);
+    const [menuDirection, setMenuDirection] = useState("down");
+    const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+    const [openFrom, setOpenFrom] = useState(null);
+    const menuRef = useRef(null);
 
     const filteredForms = forms
         .filter(f => selectedGroup ? f.group_id === Number(selectedGroup) : true)
@@ -73,6 +79,21 @@ const Accueil = () => {
         reloadForms();
         reloadgroups();
     }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (openMenuId && menuRef.current && !menuRef.current.contains(e.target)) {
+                setOpenMenuId(null);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [openMenuId]);
+
 
     const handleEditForm = async (formId) => {
         try {
@@ -138,16 +159,19 @@ const Accueil = () => {
     };
 
     // Duplication de tous les formulaires cochés
-    const handleDuplicateForm = async () => {
-        if (selectedForms.length === 0) return;
+    const handleDuplicateForm = async (formId = null) => {
+
+        const ids = formId ? (Array.isArray(formId) ? formId : [formId]) : selectedForms;
+
+        if (!ids || ids.length === 0) return;
 
         showModal(
             "Duplication",
-            `Dupliquer ${selectedForms.length} formulaire(s) ?`,
+            `Dupliquer ${ids.length} formulaire(s) ?`,
             async () => {
                 try {
-                    for (const formId of selectedForms) {
-                        await fetch(`/api/forms/${formId}/duplicate`, { method: "POST" });
+                    for (const id of ids) {
+                        await fetch(`/api/forms/${id}/duplicate`, { method: "POST" });
                     }
 
                     showModal("Succès", "Tous les formulaires sélectionnés ont été dupliqués !");
@@ -164,16 +188,19 @@ const Accueil = () => {
     };
 
     // Suppression de tous les formulaires cochés
-    const handleDeleteForm = async () => {
-        if (selectedForms.length === 0) return;
+    const handleDeleteForm = async (formId = null) => {
+
+        const ids = formId ? (Array.isArray(formId) ? formId : [formId]) : selectedForms;
+
+        if (!ids || ids.length === 0) return;
 
         showModal(
             "Suppression",
-            `Supprimer ${selectedForms.length} formulaire(s) ? Cette action est irréversible.`,
+            `Supprimer ${ids.length} formulaire(s) ? Cette action est irréversible.`,
             async () => {
                 try {
-                    for (const formId of selectedForms) {
-                        await fetch(`/api/forms/${formId}`, { method: "DELETE" });
+                    for (const id of ids) {
+                        await fetch(`/api/forms/${id}`, { method: "DELETE" });
                     }
 
                     showModal("Succès", "Tous les formulaires sélectionnés ont été supprimés !");
@@ -242,6 +269,23 @@ const Accueil = () => {
             }
         );
     };
+
+    const handleRightClick = (e, id) => {
+        e.preventDefault(); 
+
+        const menuHeight = 180;
+        const shouldOpenUp = e.clientY + menuHeight > window.innerHeight;
+
+        setMenuDirection(shouldOpenUp ? "up" : "down");
+
+        setMenuPosition({
+            x: e.clientX,
+            y: e.clientY,
+        });
+
+        setOpenMenuId(id);
+    };
+
 
 
     return (
@@ -342,6 +386,7 @@ const Accueil = () => {
                                 ))}
                             </select>
                             </th>
+                            <th className={styles.thFilter}></th>
                         </tr>
                         <tr>
                             <th className={styles.th}>
@@ -360,6 +405,7 @@ const Accueil = () => {
                             <th className={styles.th}>Dernière mise à jour</th>
                             <th className={styles.th}>Nombre de réponses</th>
                             <th className={styles.th}>Groupe</th>
+                            <th className={styles.th}>Actions</th>
                         </tr>
                         </thead>
 
@@ -370,7 +416,13 @@ const Accueil = () => {
                             </tr>
                         ) : (
                             filteredForms.map(form => (
-                            <tr key={form.id}>
+                            <tr 
+                                key={form.id}
+                                onContextMenu={(e) => {
+                                    handleRightClick(e, form.id)
+                                    setOpenFrom("context")
+                                }}
+                            >
                                 <td className={styles.td}>
                                 <input
                                     type="checkbox"
@@ -384,6 +436,47 @@ const Accueil = () => {
                                 <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
                                 <td className={styles.td}>{form.responseCount}</td>
                                 <td className={styles.td}>{form.group_name || "-"}</td>
+                                <td className={styles.td}>
+                                    <div className={styles.actionWrapper}>
+                                        <button
+                                            className={styles.actionButton}
+                                            onClick={(e) => {
+                                                const rect = e.target.getBoundingClientRect();
+                                                const menuHeight = 380;
+
+                                                const shouldOpenUp = rect.bottom + menuHeight > window.innerHeight;
+                                                setMenuDirection(shouldOpenUp ? "up" : "down");
+                                                setMenuPosition({x: rect.left, y: rect.bottom,});
+                                                setOpenFrom("dots");
+                                                setOpenMenuId(openMenuId === form.id ? null : form.id);
+                                            }}
+                                        >
+                                            ...
+                                        </button>
+
+                                        {openMenuId === form.id && (
+                                        <div
+                                            ref={menuRef}
+                                            className={`${styles.actionMenu} ${menuDirection === "up" ? styles.menuUp : ""}`}
+                                            style={
+                                                openFrom === "context" ? {
+                                                        position: "fixed",
+                                                        top: menuPosition.y,
+                                                        left: menuPosition.x,
+                                                    } : {}
+                                            }
+                                        >
+                                                <div onClick={() => navigate(`/form-viewer/${form.id}/1?navigation=True`)}>Voir</div>
+                                                <div onClick={() => handleEditForm(form.id)}>Modifier</div>
+                                                <div onClick={() => navigate(`/form-responses/${form.id}`)}>Réponses</div>
+                                                <div onClick={() => setMoveModal({ open: true, item: { id: [form.id] } })}>Déplacer</div>
+                                                <div onClick={() => handleDuplicateForm(form.id)}>Dupliquer</div>
+                                                <div onClick={() => handleDeleteForm(form.id)}>Supprimer</div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                </td>
                             </tr>
                             ))
                         )}
@@ -399,7 +492,7 @@ const Accueil = () => {
                         disabled={selectedForms.length === 0}
                         onChange={(e) => {
                             const action = e.target.value;
-                            e.target.value = ""; // reset
+                            e.target.value = ""; 
 
                             if (!action) return;
 
@@ -431,6 +524,7 @@ const Accueil = () => {
                         }}
                         className={styles.actionSelect}
                     >
+                        
                         <option value="">— Actions —</option>
 
                         {selectedForms.length === 1 && (

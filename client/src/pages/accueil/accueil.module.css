@@ -323,9 +323,43 @@ button:disabled {
     border-radius: 10px;
     border: 1px solid #d1d5db;
     background: #f9fafb;
-    transition: 0.2s;
 }
 
 .actionSelect:hover {
     background: #f3f4f6;
+}
+
+.actionWrapper {
+    position: relative; /* Important pour positionner le menu par rapport au bouton */
+    display: inline-block;
+}
+
+.actionMenu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 6px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 150px;
+    width: max-content;   
+    max-width: 250px;  
+    white-space: nowrap;  
+}
+
+.actionMenu div {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.actionMenu div:hover {
+    background-color: #f0f0f0;
+}
+
+.menuUp {
+    top: auto !important;
+    bottom: 100% !important;
 }
