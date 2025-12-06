@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from "react-router-dom";
 import styles from './accueil.module.css'; // Import CSS Module
 import { useNavigate } from "react-router-dom";
 import Modal from "../../components/Modal";
@@ -11,7 +10,6 @@ const Accueil = () => {
     const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
     const [notification, setNotification] = useState({ message: "", type: "" });
     const navigate = useNavigate(); // Permet de gérer la navigation
-    const isOneChecked = selectedForms.length > 0;
     const [groups, setgroups] = useState([]);
     const [moveModal, setMoveModal] = useState({open: false, type: null, item: null,});
     const [selectedGroup, setSelectedGroup] = useState("");
@@ -248,12 +246,16 @@ const Accueil = () => {
     };
 
     const handleMove = async () => {
-        if (!moveModal.item || !selectedGroup) return;
+        if (!selectedGroup) return;
 
-        await fetch(`/api/forms/${moveModal.item.id}/move-to-group/${selectedGroup}`, {
-            method: "PUT",
-        });
-        showNotification(`Form déplacé`, "success");
+        const itemsToMove = Array.isArray(moveModal.item.id) ? moveModal.item.id : [moveModal.item.id];
+
+        for (const id of itemsToMove) {
+            await fetch(`/api/forms/${id}/move-to-group/${selectedGroup}`, {
+                method: "PUT",
+            });
+        }
+        showNotification(`Formulaire(s) déplacé(s)`, "success");
 
         setMoveModal({ open: false, item: null });
         setSelectedGroup("");
@@ -407,7 +409,6 @@ const Accueil = () => {
                                 <th className={styles.th}>Dernière mise à jour</th>
                                 <th className={styles.th}>Nombre de réponses</th>
                                 <th className={styles.th}>Groupe</th>
-                                <th className={styles.th}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -431,64 +432,74 @@ const Accueil = () => {
                                         <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
                                         <td className={styles.td}>{form.responseCount}</td>
                                         <td className={styles.td}>{form.group_name || "-"}</td>
-
-                                        <td className={`${styles.row} ${styles.td}`} >
-                                            <Link 
-                                                to={`/form-viewer/${form.id}/1?navigation=True`}
-                                                onClick={(e) => { if (isOneChecked) e.preventDefault(); }}
-                                            >
-                                                <button 
-                                                    className={`${styles.button} ${styles.viewButton}`}
-                                                    disabled={isOneChecked}
-                                                >
-                                                    Voir
-                                                </button>
-                                            </Link>
-                                            <button 
-                                                className={`${styles.button} ${styles.editButton}`} 
-                                                onClick={() => handleEditForm(form.id)}
-                                                disabled={isOneChecked}
-                                                >
-                                                    Modifier
-                                                </button>
-                                            <Link 
-                                                to={`/form-responses/${form.id}`}
-                                                onClick={(e) => { if (isOneChecked) e.preventDefault(); }}
-                                            >
-                                                <button 
-                                                    className={`${styles.button} ${styles.responsesButton}`}
-                                                    disabled={isOneChecked}
-                                                >
-                                                    Voir Réponses
-                                                </button>
-                                            </Link>
-                                            <button
-                                                className={`${styles.button} ${styles.moveButton}`} 
-                                                onClick={() => setMoveModal({ open: true, item: form })}
-                                                disabled={isOneChecked}
-                                            >
-                                                Déplacer
-                                            </button>
-                                            <button 
-                                                className={`${styles.button} ${styles.duplicateButton}`} 
-                                                onClick={() => handleDuplicateForm(form.id)}
-                                                disabled={isOneChecked}
-                                            >
-                                                Dupliquer
-                                            </button>
-                                            <button 
-                                                className={`${styles.button} ${styles.deleteButton}`} 
-                                                onClick={() => handleDeleteForm(form.id)}
-                                                disabled={isOneChecked}
-                                            >
-                                                Supprimer
-                                            </button>                                     
-                                            </td>
                                     </tr>
                                 ))
                             ) }
                         </tbody>
                     </table>
+                </div>
+                <div className={styles.actionBar}>
+                    <span>{selectedForms.length} sélectionné(s)</span>
+
+                    <select
+                        value=""
+                        disabled={selectedForms.length === 0}
+                        onChange={(e) => {
+                            const action = e.target.value;
+                            e.target.value = ""; // reset
+
+                            if (!action) return;
+
+                            const isMultiple = selectedForms.length > 1;
+                            const id = selectedForms[0];
+
+                            switch (action) {
+                                case "view":
+                                    if (!isMultiple) navigate(`/form-viewer/${id}/1?navigation=True`);
+                                    break;
+                                case "edit":
+                                    if (!isMultiple) handleEditForm(id);
+                                    break;
+                                case "responses":
+                                    if (!isMultiple) navigate(`/form-responses/${id}`);
+                                    break;
+                                case "move":
+                                    setMoveModal({ open: true, item: { id: selectedForms } });
+                                    break;
+                                case "duplicate":
+                                    isMultiple ? handleDuplicateSelected() : handleDuplicateForm(id);
+                                    break;
+                                case "delete":
+                                    isMultiple ? handleDeleteSelected() : handleDeleteForm(id);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }}
+                        className={styles.actionSelect}
+                    >
+                        <option value="">— Actions —</option>
+
+                        {selectedForms.length === 1 && (
+                            <>
+                                <option value="view">Voir</option>
+                                <option value="edit">Modifier</option>
+                                <option value="responses">Voir réponses</option>
+                            </>
+                        )}
+
+                        {selectedForms.length > 0 && (
+                            <>
+                                <option value="move">Déplacer</option>
+                                <option value="duplicate">
+                                    {selectedForms.length > 1 ? "Dupliquer sélection" : "Dupliquer"}
+                                </option>
+                                <option value="delete">
+                                    {selectedForms.length > 1 ? "Supprimer sélection" : "Supprimer"}
+                                </option>
+                            </>
+                        )}
+                    </select>
                 </div>
             </div >
             <Modal
