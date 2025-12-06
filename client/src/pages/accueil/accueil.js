@@ -74,29 +74,6 @@ const Accueil = () => {
         reloadgroups();
     }, []);
 
-    const handleDeleteForm = async (formId) => {
-        showModal(
-            "Confirmation",
-            "Êtes-vous sûr de vouloir supprimer ce formulaire ? Toutes les réponses associées seront perdues. Cette action est irréversible.",
-            async () => {
-                try {
-                    const response = await fetch(`/api/forms/${formId}`, { method: "DELETE" });
-
-                    if (response.ok) {
-                        showModal("Succès", "Formulaire et réponses supprimés !");
-                        setForms(forms.filter((form) => form.id !== formId)); // Mettre à jour la liste localement
-                    } else {
-                        const errorData = await response.json();
-                        showModal("Erreur", "Erreur : " + errorData.error);
-                    }
-                } catch (error) {
-                    console.error("Erreur :", error);
-                    showModal("Erreur", "Impossible de contacter le serveur.");
-                }
-            }
-        );
-    };
-
     const handleEditForm = async (formId) => {
         try {
             const response = await fetch(`/api/forms/${formId}/has-responses`);
@@ -110,25 +87,6 @@ const Accueil = () => {
         } catch (error) {
             console.error("Erreur lors de la vérification des réponses :", error);
             showModal("Erreur", "Erreur lors de la vérification des réponses.");
-        }
-    };
-
-    const handleDuplicateForm = async (formId) => {
-        try {
-            const response = await fetch(`/api/forms/${formId}/duplicate`, { method: 'POST' });
-            const data = await response.json();
-
-            if (data.newFormId) {
-                showModal("Succès", `Formulaire dupliqué avec succès ! Nouveau Formulaire ID: ${data.newFormId}`);
-                // Rafraîchir la liste des formulaires après duplication
-                await reloadForms();
-
-            } else {
-                showModal("Erreur", "Erreur lors de la duplication du formulaire.");
-            }
-        } catch (error) {
-            console.error("Erreur lors de la duplication du formulaire :", error);
-            showModal("Erreur", "Impossible de contacter le serveur pour la duplication.");
         }
     };
 
@@ -180,7 +138,7 @@ const Accueil = () => {
     };
 
     // Duplication de tous les formulaires cochés
-    const handleDuplicateSelected = async () => {
+    const handleDuplicateForm = async () => {
         if (selectedForms.length === 0) return;
 
         showModal(
@@ -206,7 +164,7 @@ const Accueil = () => {
     };
 
     // Suppression de tous les formulaires cochés
-    const handleDeleteSelected = async () => {
+    const handleDeleteForm = async () => {
         if (selectedForms.length === 0) return;
 
         showModal(
@@ -319,21 +277,6 @@ const Accueil = () => {
                 >
                     Créer un nouveau groupe
                 </button>
-                <button
-                    className={`${styles.button} ${styles.duplicateButton} ${styles.duplicateButtonCheck}`}
-                    style={{ display: selectedForms.length > 0 ? "inline-block" : "none" }}
-                    onClick={handleDuplicateSelected}
-                >
-                    Dupliquer {selectedForms.length} formulaires
-                </button> 
-
-                <button
-                    className={`${styles.button} ${styles.deleteButton} ${styles.deleteButtonCheck}`}
-                    style={{ display: selectedForms.length > 0 ? "inline-block" : "none" }}
-                    onClick={handleDeleteSelected}
-                >
-                    Supprimer {selectedForms.length} formulaires
-                </button>
             </div>
 
             <div className={styles.groupContainer}>
@@ -367,77 +310,87 @@ const Accueil = () => {
             <div className={styles.tableContainer}>
                 <h2>Liste des formulaires enregistrés</h2>
 
-                <div className={styles.filters}>
-                    <input
-                        type="text"
-                        placeholder="Rechercher un formulaire..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className={styles.searchInput}
-                    />
-                    <select
-                        value={selectedGroup}
-                        onChange={(e) => setSelectedGroup(e.target.value)}
-                        className={styles.select}
-                    >
-                        <option value="">Tous les groupes</option>
-                        {groups.map((g) => (
-                            <option key={g.id} value={g.id}>
-                                {g.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
                 <div className={styles.scrollableTable}>
                     <table className={styles.table}>
                         <thead>
-                            <tr>
-                                <th className={styles.th}>
-                                    <input
-                                        type = "checkbox"
-                                        className={styles.checkbox}
-                                        checked={selectedForms.length === forms.length && forms.length > 0}
-                                        onChange={(e) => {
-                                            if (e.target.checked) handleCheckAll();
-                                            else handleUncheckAll();
-                                        }
-                                        }
-                                    />
-                                </th>
-                                <th className={styles.th}>Titre</th>
-                                <th className={styles.th}>Date de création</th>
-                                <th className={styles.th}>Dernière mise à jour</th>
-                                <th className={styles.th}>Nombre de réponses</th>
-                                <th className={styles.th}>Groupe</th>
-                            </tr>
+                        <tr className={styles.filterRow}>
+                            <th className={styles.thFilter}>
+                            </th>
+                            <th className={styles.thFilter}>
+                            <input
+                                type="text"
+                                placeholder="Rechercher un formulaire..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className={styles.headerSearchInput}
+                            />
+                            </th>
+                            <th className={styles.thFilter}></th>
+                            <th className={styles.thFilter}></th>
+                            <th className={styles.thFilter}></th>
+                            <th className={styles.thFilter}>
+                            <select
+                                value={selectedGroup}
+                                onChange={(e) => setSelectedGroup(e.target.value)}
+                                className={styles.headerSelect}
+                            >
+                                <option value="">Tous les groupes</option>
+                                {groups.map((g) => (
+                                <option key={g.id} value={g.id}>
+                                    {g.name}
+                                </option>
+                                ))}
+                            </select>
+                            </th>
+                        </tr>
+                        <tr>
+                            <th className={styles.th}>
+                            <input
+                                type="checkbox"
+                                className={styles.checkbox}
+                                checked={selectedForms.length === forms.length && forms.length > 0}
+                                onChange={(e) => {
+                                if (e.target.checked) handleCheckAll();
+                                else handleUncheckAll();
+                                }}
+                            />
+                            </th>
+                            <th className={styles.th}>Titre</th>
+                            <th className={styles.th}>Date de création</th>
+                            <th className={styles.th}>Dernière mise à jour</th>
+                            <th className={styles.th}>Nombre de réponses</th>
+                            <th className={styles.th}>Groupe</th>
+                        </tr>
                         </thead>
+
                         <tbody>
-                            {forms.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6">Aucun formulaire</td>
-                                </tr> 
-                            ) : (
-                                filteredForms.map(form => (
-                                    <tr key={form.id}>
-                                        <td className={styles.td}> 
-                                            <input
-                                                type="checkbox"
-                                                className={styles.checkbox}
-                                                checked={selectedForms.includes(form.id)}
-                                                onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
-                                            />
-                                        </td>
-                                        <td className={styles.td}>{form.title}</td>
-                                        <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
-                                        <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
-                                        <td className={styles.td}>{form.responseCount}</td>
-                                        <td className={styles.td}>{form.group_name || "-"}</td>
-                                    </tr>
-                                ))
-                            ) }
+                        {forms.length === 0 ? (
+                            <tr>
+                            <td colSpan="7">Aucun formulaire</td>
+                            </tr>
+                        ) : (
+                            filteredForms.map(form => (
+                            <tr key={form.id}>
+                                <td className={styles.td}>
+                                <input
+                                    type="checkbox"
+                                    className={styles.checkbox}
+                                    checked={selectedForms.includes(form.id)}
+                                    onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
+                                />
+                                </td>
+                                <td className={styles.td}>{form.title}</td>
+                                <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
+                                <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
+                                <td className={styles.td}>{form.responseCount}</td>
+                                <td className={styles.td}>{form.group_name || "-"}</td>
+                            </tr>
+                            ))
+                        )}
                         </tbody>
                     </table>
                 </div>
+
                 <div className={styles.actionBar}>
                     <span>{selectedForms.length} sélectionné(s)</span>
 
@@ -467,10 +420,10 @@ const Accueil = () => {
                                     setMoveModal({ open: true, item: { id: selectedForms } });
                                     break;
                                 case "duplicate":
-                                    isMultiple ? handleDuplicateSelected() : handleDuplicateForm(id);
+                                    handleDuplicateForm(id);
                                     break;
                                 case "delete":
-                                    isMultiple ? handleDeleteSelected() : handleDeleteForm(id);
+                                    handleDeleteForm(id);
                                     break;
                                 default:
                                     break;

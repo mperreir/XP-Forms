@@ -41,6 +41,31 @@
     overflow: hidden;
 }
 
+/* ligne de filtres dans le thead */
+.filterRow th {
+  padding: 8px;
+  background: #f7f7f7;
+  vertical-align: middle;
+}
+
+/* input de recherche dans l'en-tête */
+.headerSearchInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+/* select de filtre groupe dans l'en-tête */
+.headerSelect {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
 .th,
 .td {
     text-align: center;
@@ -261,6 +286,8 @@ button:disabled {
 }
 
 .filters {
+    display: flex;
+    flex-direction: row;
     margin-bottom: 12px;
 }
 
