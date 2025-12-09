@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Form } from "@bpmn-io/form-js-viewer";
 import Modal from "../../components/Modal";
@@ -19,12 +19,19 @@ const FormViewer = () => {
   const [componentMapping, setComponentMapping] = useState({});
   const [formData, setFormData] = useState({});
   const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
+  const [isNextPageDisabled, setIsNextPageDisabled] = useState(true);
 
   const dataInitialized = useRef(false);
+  const formRef = useRef(null);
 
-  const showModal = (title, message, onConfirm = null) => {
-    setModal({ isOpen: true, title, message, onConfirm });
+const showModal = (title, message, onConfirm = null) => {
+  const handleClose = () => {
+    setModal({ isOpen: false, title: "", message: "", onConfirm: null });
+    if (onConfirm) onConfirm();
   };
+  setModal({ isOpen: true, title, message, onConfirm: handleClose });
+};
+
 
 
 
@@ -73,7 +80,7 @@ const FormViewer = () => {
     navigate("/");
   };
 
-  const fetchSavedData = async () => {
+  const fetchSavedData = useCallback(async () => {
     try {
       const response = await fetch(`/api/form-responses-participant/${id}/${id_participant}`);
       if (!response.ok) throw new Error("Erreur lors du chargement des réponses sauvegardées");
@@ -89,7 +96,79 @@ const FormViewer = () => {
       console.error("Erreur de récupération des données:", error);
       return {};
     }
+  }, [id, id_participant]);
+
+const validateCurrentPage = useCallback(() => {
+  if (!schema || !pages[currentPage - 1]) return false;
+
+  const currentComponents = pages[currentPage - 1] || [];
+
+  // flatten nested components in the page (useful if components contain child components)
+  const flatten = (components) => {
+    const flat = [];
+    components.forEach((c) => {
+      flat.push(c);
+      if (Array.isArray(c.components) && c.components.length > 0) {
+        flat.push(...flatten(c.components));
+      }
+    });
+    return flat;
   };
+
+  const isEmptyValue = (value, comp) => {
+    // undefined or null -> empty
+    if (value === undefined || value === null) return true;
+
+    // strings -> trim and check
+    if (typeof value === 'string' && value.trim() === '') return true;
+
+    // arrays -> empty if zero length
+    if (Array.isArray(value) && value.length === 0) return true;
+
+    // plain objects -> empty if no keys
+    if (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0) return true;
+
+    // booleans -> for required fields, boolean 'true' is expected / false is considered empty/incomplete
+    if (typeof value === 'boolean') return value !== true;
+
+    // numbers -> 0 is allowed
+    return false;
+  };
+
+  const currentFlat = flatten(currentComponents);
+  let isValid = true;
+    const currentKeys = currentFlat.map(c => c.key).filter(Boolean);
+    // If the form instance is available, prefer using its validation
+    if (formRef.current) {
+      const errors = formRef.current.validate();
+      // If any error key belongs to current page, page is not valid
+      const errorKeys = Object.keys(errors);
+      // currentKeys are component keys (e.g. select_92cfpb), but form.validate may return ids (e.g. Field_1a6wxb4)
+      const currentIds = currentFlat.map(c => c.id).filter(Boolean);
+      const hasErrorOnPage = errorKeys.some((k) => currentKeys.includes(k) || currentIds.includes(k));
+      isValid = !hasErrorOnPage;
+      if (!isValid) {
+        console.debug('Validation via form.validate found errors on page. Errors:', errors);
+      }
+      console.log("Résultat validation page (via form.validate)", currentPage, ":", isValid, "errorKeys:", errorKeys, "currentIds:", currentIds, "currentKeys:", currentKeys);
+      return isValid;
+    }
+  currentFlat.forEach((comp) => {
+    // only check components that have a key (skips layout containers)
+    if (!comp.key) return;
+
+    if (comp.validate?.required) {
+      const value = formData[comp.key];
+      if (isEmptyValue(value, comp)) {
+        console.debug('Champ requis non rempli sur la page', currentPage, '- key:', comp.key, 'value:', value, 'type:', typeof value, 'comp:', comp);
+        isValid = false;
+      }
+    }
+  });
+
+    console.log("Résultat validation page (manual check)", currentPage, ":", isValid, "formData keys:", Object.keys(formData));
+  return isValid;
+}, [schema, pages, currentPage, formData]);
 
   useEffect(() => {
     const flattenComponents = (components) => {
@@ -150,6 +229,7 @@ const FormViewer = () => {
     const form = new Form({
       container: containerRef.current,
     });
+    formRef.current = form;
 
     const loadAndRender = async () => {
       let loadedData = {};
@@ -184,9 +264,10 @@ const FormViewer = () => {
       });
 
       form.on("changed", (event) => {
-        if (!id_participant || !dataInitialized.current) return;
+        if (!dataInitialized.current) return;
 
         const newData = event.data;
+        console.debug('Form changed:', newData);
 
         Object.entries(newData).forEach(([key, value]) => {
           setFormData((prevData) => {
@@ -196,8 +277,9 @@ const FormViewer = () => {
 
             const updated = { ...prevData, [key]: value };
 
+            // Save to backend only when a participant is present.
             const component_id = componentMapping[key];
-            if (component_id) {
+            if (id_participant && component_id) {
               fetch("/api/save-response", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -226,9 +308,25 @@ const FormViewer = () => {
     loadAndRender();
 
     return () => {
+      formRef.current = null;
       form.destroy();
     };
-  }, [schema, pages, currentPage, componentMapping, id_participant, navigate]);
+  }, [schema, pages, currentPage, componentMapping, id_participant, navigate, fetchSavedData, id]);
+
+  // Recalculer la validité de la page courante à chaque changement de formData
+  useEffect(() => {
+    if (!schema || pages.length === 0 || !pages[currentPage - 1]) {
+      setIsNextPageDisabled(true);
+      return;
+    }
+    // Petit délai pour s'assurer que le Form est rendu
+    const timeoutId = setTimeout(() => {
+      const isValid = validateCurrentPage();
+      setIsNextPageDisabled(!isValid);
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [formData, currentPage, schema, pages, validateCurrentPage]);
 
   return (
     <>
@@ -288,15 +386,22 @@ const FormViewer = () => {
             <div className={styles.navButtonWrapper}>
               {currentPage < pages.length ? (
                 <button
-                  onClick={() =>
+                  disabled={isNextPageDisabled}
+                  onClick={() => {
+                    const ok = validateCurrentPage();
+                    console.debug('Next page clicked - validateCurrentPage:', ok, 'page', currentPage, 'formData:', formData);
+                    if (!ok) {
+                      showModal("Erreur", "Veuillez remplir tous les champs obligatoires avant de passer à la page suivante.");
+                      return;
+                    }
                     navigate(
                       !id_participant
                         ? `/form-viewer/${id}/${currentPage + 1}?navigation=True`
                         : `/form-viewer/${id}/${currentPage + 1}/${id_participant}?navigation=True`
-                    )
-                  }
+                    );
+                  }}
                 >
-                  Page suivante
+                Page suivante
                 </button>
               ) : (
                 <div className={styles.placeholder}></div>
