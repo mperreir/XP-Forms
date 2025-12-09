@@ -358,14 +358,19 @@ const exportForm = async (formId, withResponses) => {
       const formJson = JSON.parse(form.json_data);
 
       if (withResponses === 'true') {
-        console.log(withResponses);
 
         db.all("SELECT * FROM responses WHERE form_id = ?", [formId], (err, resp) => {
           if (err) {
             return reject({ success: false, error: err ? err.message : "Formulaire introuvable" });
           }
 
-          const responsesJson = resp;
+          const data = resp;
+          const responsesJson = {};
+          data.forEach((item) => {
+            const user_id = item.user_id;
+            if (!responsesJson[user_id]) responsesJson[user_id] = [];
+            responsesJson[user_id].push(item);
+          });
 
           resolve({ "json_data": formJson, "title": formName, "responses": responsesJson });
         });
