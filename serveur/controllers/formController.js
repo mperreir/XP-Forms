@@ -103,10 +103,11 @@ const duplicateForm = async (req, res) => {
 
 const exportForm = async (req, res) => {
   const { id } = req.params; // Get the form ID from request parameters
+  const { responses } = req.params;
 
   try {
     // Call the service to export the form
-    const result = await formService.exportForm(id);
+    const result = await formService.exportForm(id, responses);
 
     res.json(result);
   } catch (error) {

@@ -346,7 +346,7 @@ const duplicateForm = async (formId) => {
   });
 };
 
-const exportForm = async (formId) => {
+const exportForm = async (formId, withResponses) => {
   return new Promise((resolve, reject) => {
 
     db.get("SELECT * FROM forms WHERE id = ?", [formId], (err, form) => {
@@ -357,7 +357,26 @@ const exportForm = async (formId) => {
       const formName = form.title;
       const formJson = JSON.parse(form.json_data);
 
-      resolve({ "json_data": formJson, "title": formName });
+      if (withResponses === 'true') {
+        console.log(withResponses);
+
+        db.all("SELECT * FROM responses WHERE form_id = ?", [formId], (err, resp) => {
+          if (err) {
+            return reject({ success: false, error: err ? err.message : "Formulaire introuvable" });
+          }
+
+          const responsesJson = resp;
+
+          resolve({ "json_data": formJson, "title": formName, "responses": responsesJson });
+        });
+
+      }
+      else {
+
+        resolve({ "json_data": formJson, "title": formName, "responses": [] });
+
+      }
+
     });
   });
 };

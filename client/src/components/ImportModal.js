@@ -69,21 +69,27 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
         >
           Glissez un fichier ici.
         </div>
-        <div className={styles.closeImportModal}
-          id="importSuccess"
-          onClick={() => {
-            if (onConfirm) onConfirm();
-          }}></div>
-        <div className={styles.closeImportModal}
-          id="formatError"
-          onClick={() => {
-            if (onFormatError) onFormatError();
-          }}></div>
-        <div className={styles.closeImportModal}
-          id="error"
-          onClick={() => {
-            if (onError) onError();
-          }}></div>
+        {onConfirm && (
+          <div className={styles.closeImportModal}
+            id="importSuccess"
+            onClick={() => {
+              if (onConfirm) onConfirm();
+            }}></div>
+        )}
+        {onFormatError && (
+          <div className={styles.closeImportModal}
+            id="formatError"
+            onClick={() => {
+              if (onFormatError) onFormatError();
+            }}></div>
+        )}
+        {onError && (
+          <div className={styles.closeImportModal}
+            id="error"
+            onClick={() => {
+              if (onError) onError();
+            }}></div>
+        )}
         {onClose && (
           <button
             onClick={onClose} // Call the onClose callback

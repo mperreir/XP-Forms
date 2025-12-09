@@ -8,16 +8,16 @@ import ImportModal from '../../components/ImportModal';
 const Accueil = () => {
     const [forms, setForms] = useState([]);
     const [newUserId, setNewUserId] = useState(localStorage.getItem('defaultUserId') || ""); // Utiliser la valeur du localStorage ou une valeur vide
-    const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
+    const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null, confirm: '', close: '', onClose: null });
     const [importModal, setImportModal] = useState({ isOpen: false, onConfirm: null, onFormatError: null, onError: null });
     const navigate = useNavigate(); // Permet de gérer la navigation
 
-    const showModal = (title, message, onConfirm = null) => {
-        setModal({ isOpen: true, title, message, onConfirm });
+    const showModal = (title, message, onConfirm = null, confirm = 'Confirmer', close = 'Fermer', onClose = closeModal) => {
+        setModal({ isOpen: true, title, message, onConfirm, confirm, close, onClose });
     };
 
     const closeModal = () => {
-        setModal({ isOpen: false, title: "", message: "", onConfirm: null });
+        setModal({ isOpen: false, title: "", message: "", onConfirm: null, confirm: '', close: '', onClose: null });
     };
 
     const showImportModal = (onConfirm = null, onFormatError = null, onError = null) => {
@@ -115,32 +115,37 @@ const Accueil = () => {
     };
 
     const handleExportForm = async (formId) => {
-        try {
-            const response = await fetch(`/api/forms/${formId}/export`);
+        const exportForm = async (formId, resp = false) => {
+            try {
+                const response = await fetch(`/api/forms/${formId}/export/${resp}`);
 
-            if (response.ok) {
-                const formJson = await response.json();
+                if (response.ok) {
+                    const formJson = await response.json();
 
-                // Téléchargement du fichier exporté
-                let element = document.createElement('a');
-                element.setAttribute('href',
-                    'data:text/plain;charset=utf-8, '
-                    + encodeURIComponent(JSON.stringify(formJson)));
-                element.setAttribute('download', formJson.title);
+                    // Téléchargement du fichier exporté
+                    let element = document.createElement('a');
+                    element.setAttribute('href',
+                        'data:text/plain;charset=utf-8, '
+                        + encodeURIComponent(JSON.stringify(formJson)));
+                    element.setAttribute('download', formJson.title);
 
-                document.body.appendChild(element);
-                element.click();
-                document.body.removeChild(element);
+                    document.body.appendChild(element);
+                    element.click();
+                    document.body.removeChild(element);
 
-                showModal("Succès", "Formulaire exporté !");
-            } else {
-                const errorData = await response.json();
-                showModal("Erreur", "Erreur : " + errorData.error);
+                    showModal("Succès", "Formulaire exporté !");
+                } else {
+                    const errorData = await response.json();
+                    showModal("Erreur", "Erreur : " + errorData.error);
+                }
+            } catch (error) {
+                console.error("Erreur :", error);
+                showModal("Erreur", "Impossible de contacter le serveur.");
             }
-        } catch (error) {
-            console.error("Erreur :", error);
-            showModal("Erreur", "Impossible de contacter le serveur.");
-        }
+        };
+
+
+        showModal('Import', 'Voulez-vous également exporter les réponses ?', () => { exportForm(formId, true) }, 'Oui', 'Non', () => { exportForm(formId) });
     };
 
     // Pour mettre à jour ce que tape l'utilisateur dans l'input
@@ -276,8 +281,10 @@ const Accueil = () => {
                 isOpen={modal.isOpen}
                 title={modal.title}
                 message={modal.message}
-                onClose={closeModal}
+                onClose={modal.onClose}
                 onConfirm={modal.onConfirm}
+                confirm={modal.confirm}
+                close={modal.close}
             />
             <ImportModal
                 isOpen={importModal.isOpen}
