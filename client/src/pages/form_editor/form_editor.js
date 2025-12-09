@@ -53,80 +53,117 @@ const FormEditor = () => {
       setIsModified(true);
     });
 
+    // Fonction utilitaire : recherche récursive d'un composant par ID
+    const findComponentById = (components, targetId) => {
+      for (const component of components) {
+        if (component.id === targetId) return component;
+        if (component.components) {
+          const found = findComponentById(component.components, targetId);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    // Fonction utilitaire : trouver la position d'un composant dans le schéma
+    const findComponentLocation = (components, targetId, parentComponent = null) => {
+      for (let i = 0; i < components.length; i++) {
+        if (components[i].id === targetId) {
+          return { parent: parentComponent, index: i };
+        }
+        if (components[i].components) {
+          const result = findComponentLocation(components[i].components, targetId, components[i]);
+          if (result) return result;
+        }
+      }
+      return null;
+    };
+
+    // Fonction utilitaire : générer un ID unique pour un composant
+    const generateUniqueId = (componentType) => {
+      return `${componentType}_${Math.random().toString(36).substr(2, 9)}`;
+    };
+
+    // Fonction utilitaire : régénérer tous les IDs d'un composant et ses enfants
+    const regenerateComponentIds = (component, componentType) => {
+      component.id = generateUniqueId(componentType);
+      if (component.key) {
+        component.key = generateUniqueId(componentType);
+      }
+      if (component.components) {
+        component.components.forEach(child => {
+          regenerateComponentIds(child, child.type);
+        });
+      }
+    };
+
+    // Copier un composant et l'insérer juste après l'original
     const copyComponent = async (fieldId) => {
       const schema = editor.getSchema();
+      const originalComponent = findComponentById(schema.components, fieldId);
+      if (!originalComponent) return;
+
+      // Cloner le composant (deep copy)
+      const clonedComponent = JSON.parse(JSON.stringify(originalComponent));
       
-      const findComponent = (components, id) => {
-        for (const comp of components) {
-          if (comp.id === id) return comp;
-          if (comp.components) {
-            const found = findComponent(comp.components, id);
-            if (found) return found;
-          }
-        }
-      };
+      // Régénérer tous les IDs pour éviter les conflits
+      regenerateComponentIds(clonedComponent, clonedComponent.type);
       
-      const original = findComponent(schema.components, fieldId);
-      const clone = JSON.parse(JSON.stringify(original));
-      const newId = () => `${clone.type}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      clone.id = newId();
-      clone.key = newId();
-      
-      const regenerateIds = (comp) => {
-        comp.components?.forEach(child => {
-          child.id = newId();
-          child.key = newId();
-          regenerateIds(child);
-        });
-      };
-      regenerateIds(clone);
-      
-      const findLocation = (components, id, parent = null) => {
-        for (let i = 0; i < components.length; i++) {
-          if (components[i].id === id) return { parent, index: i };
-          if (components[i].components) {
-            const result = findLocation(components[i].components, id, components[i]);
-            if (result) return result;
-          }
-        }
-      };
-      
-      const location = findLocation(schema.components, fieldId);
+      // Trouver où insérer le clone (juste après l'original)
+      const location = findComponentLocation(schema.components, fieldId);
+      if (!location) return;
+
       const targetArray = location.parent ? location.parent.components : schema.components;
-      targetArray.splice(location.index + 1, 0, clone);
+      targetArray.splice(location.index + 1, 0, clonedComponent);
+      
       await editor.importSchema(schema);
       setIsModified(true);
     };
 
+    // Note technique : Form.js ne fournit pas d'API pour étendre le context-pad.
+    // On utilise un MutationObserver pour détecter l'apparition dynamique du context-pad
+    // et y injecter notre bouton "Copy" de manière cohérente avec l'UI existante.
+    const injectCopyButtonIntoContextPad = (contextPadNode) => {
+      // Éviter les doublons
+      if (contextPadNode.querySelector('.custom-copy-btn')) return;
+
+      const removeButton = contextPadNode.querySelector('button[title^="Remove"]');
+      const selectedElement = contextPadNode.closest('[data-id]');
+      if (!removeButton || !selectedElement) return;
+
+      const fieldId = selectedElement.getAttribute('data-id');
+      const componentType = removeButton.title.replace('Remove ', '');
+
+      // Créer le bouton Copy avec le même style que les boutons natifs
+      const copyButton = document.createElement('button');
+      copyButton.className = 'custom-copy-btn fjs-context-pad-item';
+      copyButton.type = 'button';
+      copyButton.title = `Copy ${componentType}`;
+      copyButton.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none">
+          <rect width="16" height="16" fill="#fff" rx="3" style="mix-blend-mode: multiply;"></rect>
+          <path fill="currentcolor" d="M4 2h6v2H4V2zm8 0v2h2V2h-2zM2 6h2V4H2v2zm10 0h2V4h-2v2zM4 12H2v2h2v-2zm8 0v2h2v-2h-2zM2 8h2V6H2v2zm10 0h2V6h-2v2zM4 10H2v2h2v-2zm4-8h2v2H8V2zM6 14h2v-2H6v2zm2-4h2V8H8v2z"/>
+        </svg>
+      `;
+      copyButton.onclick = () => copyComponent(fieldId);
+      
+      contextPadNode.appendChild(copyButton);
+    };
+
+    // Observer DOM pour détecter l'apparition du context-pad
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         mutation.addedNodes.forEach((node) => {
-          if (node.classList?.contains('fjs-context-pad') && !node.querySelector('.custom-copy-btn')) {
-            const removeBtn = node.querySelector('button[title^="Remove"]');
-            const fieldId = node.closest('[data-id]').getAttribute('data-id');
-            
-            const copyBtn = document.createElement('button');
-            copyBtn.className = 'custom-copy-btn fjs-context-pad-item';
-            copyBtn.type = 'button';
-            copyBtn.title = removeBtn.title.replace('Remove', 'Copy');
-            copyBtn.innerHTML = `
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none">
-                <rect width="16" height="16" fill="#fff" rx="3" style="mix-blend-mode: multiply;"></rect>
-                <path fill="currentcolor" d="M4 2h6v2H4V2zm8 0v2h2V2h-2zM2 6h2V4H2v2zm10 0h2V4h-2v2zM4 12H2v2h2v-2zm8 0v2h2v-2h-2zM2 8h2V6H2v2zm10 0h2V6h-2v2zM4 10H2v2h2v-2zm4-8h2v2H8V2zM6 14h2v-2H6v2zm2-4h2V8H8v2z"/>
-              </svg>
-            `;
-            copyBtn.onclick = () => copyComponent(fieldId);
-            node.appendChild(copyBtn);
+          if (node.classList?.contains('fjs-context-pad')) {
+            injectCopyButtonIntoContextPad(node);
           }
         });
       });
     });
 
-    // Démarrer la surveillance du DOM
     observer.observe(editorContainerRef.current, {
-      childList: true,  // Surveiller les ajouts/suppressions d'éléments
-      subtree: true     // Surveiller aussi les sous-éléments
+      childList: true,
+      subtree: true
     });
 
     return () => {

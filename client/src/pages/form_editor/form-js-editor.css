@@ -2334,3 +2334,30 @@ textarea.bio-properties-panel-input {
 .fjs-powered-by {
   display: none !important;
 }
+
+.custom-copy-btn {
+  background: var(--color-context-pad-item-background, transparent);
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.custom-copy-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: var(--color-context-pad-item-fill, currentColor);
+}
+
+.custom-copy-btn:hover svg {
+  fill: var(--color-context-pad-item-hover-fill, var(--color-blue-219-100-53));
+}
+
+.custom-copy-btn:focus {
+  outline: 2px solid var(--cds-focus, var(--color-blue-205-100-50));
+  outline-offset: 2px;
+}
