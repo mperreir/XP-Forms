@@ -70,7 +70,19 @@ const Accueil = () => {
             const response = await fetch('/api/groups');
             if (!response.ok) throw new Error('Erreur lors du chargement des groupes');
             const data = await response.json();
-            setgroups(data);
+            const groupsWithCounts = await Promise.all(
+                data.map(async (group) => {
+                    try {
+                        const res = await fetch(`/api/groups/${group.id}/count`);
+                        const result = res.ok ? await res.json() : { count: 0 };
+                        return { ...group, formsCount: result.count };
+                    } catch (e) {
+                        console.error("Erreur chargement forms pour group", group.id, e);
+                        return { ...group, formsCount: 0 };
+                    }
+                })
+            );
+            setgroups(groupsWithCounts);
         } catch (error) {
             console.error("Erreur reloadgroups :", error);
         }
@@ -178,6 +190,7 @@ const Accueil = () => {
                     showModal("Succès", "Tous les formulaires sélectionnés ont été dupliqués !");
 
                     await reloadForms();
+                    await reloadgroups();
                     setSelectedForms([]); // Réinitialise la sélection
 
                 } catch (error) {
@@ -207,6 +220,7 @@ const Accueil = () => {
                     showModal("Succès", "Tous les formulaires sélectionnés ont été supprimés !");
 
                     await reloadForms();
+                    await reloadgroups();
                     setSelectedForms([]); // Nettoyage
                 } catch (error) {
                     console.error(error);
@@ -248,6 +262,7 @@ const Accueil = () => {
         setSelectedForms([]);
 
         await reloadForms();
+        await reloadgroups();
     };
 
     const handleDeletegroup = (groupId) => {
@@ -328,14 +343,14 @@ const Accueil = () => {
             <div className={styles.displayType}>
                 <button 
                     onClick={() => setViewMode("forms")}
-                    className={`${styles.viewButton} ${viewMode === "forms" ? styles.activeViewButton : ""}`}
+                    className={`${styles.viewButton} ${viewMode === "forms" ? styles.activeViewButton : ""} ${styles.switchToViewForms}`}
                 >
                     Formulaires
                 </button>
 
                 <button 
                     onClick={() => setViewMode("groups")}
-                    className={`${styles.viewButton} ${viewMode === "groups" ? styles.activeViewButton : ""}`}
+                    className={`${styles.viewButton} ${viewMode === "groups" ? styles.activeViewButton : ""} ${styles.switchToViewGroups}`}
                 >
                     Groupes
                 </button>

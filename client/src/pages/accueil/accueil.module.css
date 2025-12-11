@@ -404,7 +404,6 @@ button:disabled {
     background: #f0f0f0;
     cursor: pointer;
     margin: 0;
-    border-radius: 0;
 }
 
 .viewButton:hover {
@@ -415,6 +414,14 @@ button:disabled {
     background: #007bff;
     color: white;
     border-color: #007bff;
+}
+
+.switchToViewForms {
+    border-radius: 6px 0 0 6px;
+}
+
+.switchToViewGroups{
+    border-radius: 0 6px 6px 0;
 }
 
 

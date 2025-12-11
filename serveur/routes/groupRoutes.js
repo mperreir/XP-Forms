@@ -8,5 +8,6 @@ router.get("/groups/:id", groupController.getgroupById);
 router.put("/groups/:id", groupController.renamegroup);
 router.delete("/groups/:id", groupController.deletegroup);
 router.put("/forms/:id/move-to-group/:groupId", groupController.moveFormTogroup);
+router.get("/groups/:id/count", groupController.getNumberOfForms);
 
 module.exports = router;

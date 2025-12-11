@@ -84,6 +84,18 @@ const moveFormTogroup = (formId, groupId) => {
   });
 };
 
+const getNumberOfForms = (id) => {
+  return new Promise((resolve, reject) => {
+    db.get(
+      'SELECT COUNT(*) as count FROM forms WHERE group_id = ?',
+      [id],
+      (err, row) => {
+        if (err) return reject(err);
+        resolve(row.count);
+      }
+    )
+  })
+}
 
 module.exports = {
   creategroup,
@@ -92,4 +104,5 @@ module.exports = {
   renamegroup,
   deletegroup,
   moveFormTogroup,
+  getNumberOfForms,
 };
