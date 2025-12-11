@@ -26,15 +26,11 @@
 .scrollableTable {
     max-height: 500px;
     overflow-y: auto;
-    margin-bottom: 50px;
-}
-
-.scrollableTable table {
-    width: 100%;
 }
 
 .table {
     width: 90%;
+    margin: 0 auto;
     border-collapse: collapse;
     margin-top: 20px;
     border-radius: 8px;
@@ -75,6 +71,30 @@
 .th {
     background-color: #007bff;
     color: white;
+    position: sticky;
+}
+
+.table thead {
+    display: table;
+    position: sticky;
+    width: calc(100% - 15px);
+    top: 0;
+    z-index: 20;
+    background: white;
+    table-layout: fixed;
+}
+
+.table tbody {
+    display: block;
+    max-height: 500px;
+    overflow-y: scroll;
+    width: 100%;
+}
+
+.table tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
 }
 
 .td {
@@ -185,6 +205,7 @@ button:disabled {
     transform: scale(1.5);
     -webkit-transform: scale(1.5);
     margin: 6px;
+    cursor: pointer;
 }
 
 /* Save button styling */
@@ -291,6 +312,10 @@ button:disabled {
     margin-bottom: 12px;
 }
 
+.thFilter {
+    border: 0;
+}
+
 .select {
     padding: 6px 10px;
     border-radius: 6px;
@@ -323,6 +348,7 @@ button:disabled {
     border-radius: 10px;
     border: 1px solid #d1d5db;
     background: #f9fafb;
+    cursor: pointer;
 }
 
 .actionSelect:hover {
@@ -363,3 +389,32 @@ button:disabled {
     top: auto !important;
     bottom: 100% !important;
 }
+
+.displayType {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.viewButton {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 2px solid #ccc;
+    background: #f0f0f0;
+    cursor: pointer;
+    margin: 0;
+    border-radius: 0;
+}
+
+.viewButton:hover {
+    background-color: #0056b3;
+}
+
+.activeViewButton {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+

@@ -19,6 +19,7 @@ const Accueil = () => {
     const [menuDirection, setMenuDirection] = useState("down");
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
     const [openFrom, setOpenFrom] = useState(null);
+    const [viewMode, setViewMode] = useState("forms");
     const menuRef = useRef(null);
 
     const filteredForms = forms
@@ -244,6 +245,7 @@ const Accueil = () => {
 
         setMoveModal({ open: false, item: null });
         setSelectedGroup("");
+        setSelectedForms([]);
 
         await reloadForms();
     };
@@ -323,232 +325,22 @@ const Accueil = () => {
                 </button>
             </div>
 
-            <div className={styles.groupContainer}>
-                <h2>groupes</h2>
+            <div className={styles.displayType}>
+                <button 
+                    onClick={() => setViewMode("forms")}
+                    className={`${styles.viewButton} ${viewMode === "forms" ? styles.activeViewButton : ""}`}
+                >
+                    Formulaires
+                </button>
 
-                {groups.length === 0 ? (
-                    <p>Aucun groupe pour le moment</p>
-                ) : (
-                    <div className={styles.groupGrid}>
-                        {groups.map((group) => (
-                            <div 
-                                key={group.id} 
-                                className={styles.groupItem}
-                            >
-                                📁 {group.name}
-                                <button 
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeletegroup(group.id);
-                                    }}
-                                    className={styles.deletegroupButton}
-                                >
-                                    🗑️
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                <button 
+                    onClick={() => setViewMode("groups")}
+                    className={`${styles.viewButton} ${viewMode === "groups" ? styles.activeViewButton : ""}`}
+                >
+                    Groupes
+                </button>
             </div>
 
-            <div className={styles.tableContainer}>
-                <h2>Liste des formulaires enregistrés</h2>
-
-                <div className={styles.scrollableTable}>
-                    <table className={styles.table}>
-                        <thead>
-                        <tr className={styles.filterRow}>
-                            <th className={styles.thFilter}>
-                            </th>
-                            <th className={styles.thFilter}>
-                            <input
-                                type="text"
-                                placeholder="Rechercher un formulaire..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className={styles.headerSearchInput}
-                            />
-                            </th>
-                            <th className={styles.thFilter}></th>
-                            <th className={styles.thFilter}></th>
-                            <th className={styles.thFilter}></th>
-                            <th className={styles.thFilter}>
-                            <select
-                                value={selectedGroup}
-                                onChange={(e) => setSelectedGroup(e.target.value)}
-                                className={styles.headerSelect}
-                            >
-                                <option value="">Tous les groupes</option>
-                                {groups.map((g) => (
-                                <option key={g.id} value={g.id}>
-                                    {g.name}
-                                </option>
-                                ))}
-                            </select>
-                            </th>
-                            <th className={styles.thFilter}></th>
-                        </tr>
-                        <tr>
-                            <th className={styles.th}>
-                            <input
-                                type="checkbox"
-                                className={styles.checkbox}
-                                checked={selectedForms.length === forms.length && forms.length > 0}
-                                onChange={(e) => {
-                                if (e.target.checked) handleCheckAll();
-                                else handleUncheckAll();
-                                }}
-                            />
-                            </th>
-                            <th className={styles.th}>Titre</th>
-                            <th className={styles.th}>Date de création</th>
-                            <th className={styles.th}>Dernière mise à jour</th>
-                            <th className={styles.th}>Nombre de réponses</th>
-                            <th className={styles.th}>Groupe</th>
-                            <th className={styles.th}>Actions</th>
-                        </tr>
-                        </thead>
-
-                        <tbody>
-                        {forms.length === 0 ? (
-                            <tr>
-                            <td colSpan="7">Aucun formulaire</td>
-                            </tr>
-                        ) : (
-                            filteredForms.map(form => (
-                            <tr 
-                                key={form.id}
-                                onContextMenu={(e) => {
-                                    handleRightClick(e, form.id)
-                                    setOpenFrom("context")
-                                }}
-                            >
-                                <td className={styles.td}>
-                                <input
-                                    type="checkbox"
-                                    className={styles.checkbox}
-                                    checked={selectedForms.includes(form.id)}
-                                    onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
-                                />
-                                </td>
-                                <td className={styles.td}>{form.title}</td>
-                                <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
-                                <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
-                                <td className={styles.td}>{form.responseCount}</td>
-                                <td className={styles.td}>{form.group_name || "-"}</td>
-                                <td className={styles.td}>
-                                    <div className={styles.actionWrapper}>
-                                        <button
-                                            className={styles.actionButton}
-                                            onClick={(e) => {
-                                                const rect = e.target.getBoundingClientRect();
-                                                const menuHeight = 380;
-
-                                                const shouldOpenUp = rect.bottom + menuHeight > window.innerHeight;
-                                                setMenuDirection(shouldOpenUp ? "up" : "down");
-                                                setMenuPosition({x: rect.left, y: rect.bottom,});
-                                                setOpenFrom("dots");
-                                                setOpenMenuId(openMenuId === form.id ? null : form.id);
-                                            }}
-                                        >
-                                            ...
-                                        </button>
-
-                                        {openMenuId === form.id && (
-                                        <div
-                                            ref={menuRef}
-                                            className={`${styles.actionMenu} ${menuDirection === "up" ? styles.menuUp : ""}`}
-                                            style={
-                                                openFrom === "context" ? {
-                                                        position: "fixed",
-                                                        top: menuPosition.y,
-                                                        left: menuPosition.x,
-                                                    } : {}
-                                            }
-                                        >
-                                                <div onClick={() => navigate(`/form-viewer/${form.id}/1?navigation=True`)}>Voir</div>
-                                                <div onClick={() => handleEditForm(form.id)}>Modifier</div>
-                                                <div onClick={() => navigate(`/form-responses/${form.id}`)}>Réponses</div>
-                                                <div onClick={() => setMoveModal({ open: true, item: { id: [form.id] } })}>Déplacer</div>
-                                                <div onClick={() => handleDuplicateForm(form.id)}>Dupliquer</div>
-                                                <div onClick={() => handleDeleteForm(form.id)}>Supprimer</div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                </td>
-                            </tr>
-                            ))
-                        )}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className={styles.actionBar}>
-                    <span>{selectedForms.length} sélectionné(s)</span>
-
-                    <select
-                        value=""
-                        disabled={selectedForms.length === 0}
-                        onChange={(e) => {
-                            const action = e.target.value;
-                            e.target.value = ""; 
-
-                            if (!action) return;
-
-                            const isMultiple = selectedForms.length > 1;
-                            const id = selectedForms[0];
-
-                            switch (action) {
-                                case "view":
-                                    if (!isMultiple) navigate(`/form-viewer/${id}/1?navigation=True`);
-                                    break;
-                                case "edit":
-                                    if (!isMultiple) handleEditForm(id);
-                                    break;
-                                case "responses":
-                                    if (!isMultiple) navigate(`/form-responses/${id}`);
-                                    break;
-                                case "move":
-                                    setMoveModal({ open: true, item: { id: selectedForms } });
-                                    break;
-                                case "duplicate":
-                                    handleDuplicateForm(id);
-                                    break;
-                                case "delete":
-                                    handleDeleteForm(id);
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }}
-                        className={styles.actionSelect}
-                    >
-                        
-                        <option value="">— Actions —</option>
-
-                        {selectedForms.length === 1 && (
-                            <>
-                                <option value="view">Voir</option>
-                                <option value="edit">Modifier</option>
-                                <option value="responses">Voir réponses</option>
-                            </>
-                        )}
-
-                        {selectedForms.length > 0 && (
-                            <>
-                                <option value="move">Déplacer</option>
-                                <option value="duplicate">
-                                    {selectedForms.length > 1 ? "Dupliquer sélection" : "Dupliquer"}
-                                </option>
-                                <option value="delete">
-                                    {selectedForms.length > 1 ? "Supprimer sélection" : "Supprimer"}
-                                </option>
-                            </>
-                        )}
-                    </select>
-                </div>
-            </div >
             <Modal
                 isOpen={modal.isOpen}
                 title={modal.title}
@@ -589,6 +381,241 @@ const Accueil = () => {
                     </div>
                 </div>
             )}
+            {viewMode === "forms" ? (
+                <div className={styles.tableContainer}>
+                    <h2>Liste des formulaires enregistrés</h2>
+
+                    <div>
+                        <table className={styles.table}>
+                            <thead className='thead'>
+                                <tr className={styles.filtrers}>
+                                    <th className={styles.thFilter}>
+                                    </th>
+                                    <th className={styles.thFilter}>
+                                    <input
+                                        type="text"
+                                        placeholder="Rechercher un formulaire..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className={styles.headerSearchInput}
+                                    />
+                                    </th>
+                                    <th className={styles.thFilter}></th>
+                                    <th className={styles.thFilter}></th>
+                                    <th className={styles.thFilter}></th>
+                                    <th className={styles.thFilter}>
+                                    <select
+                                        value={selectedGroup}
+                                        onChange={(e) => setSelectedGroup(e.target.value)}
+                                        className={styles.headerSelect}
+                                    >
+                                        <option value="">Tous les groupes</option>
+                                        {groups.map((g) => (
+                                        <option key={g.id} value={g.id}>
+                                            {g.name}
+                                        </option>
+                                        ))}
+                                    </select>
+                                    </th>
+                                    <th className={styles.thFilter}></th>
+                                </tr>
+                                <tr>
+                                    <th className={styles.th}>
+                                    <input
+                                        type="checkbox"
+                                        className={styles.checkbox}
+                                        checked={selectedForms.length === forms.length && forms.length > 0}
+                                        onChange={(e) => {
+                                        if (e.target.checked) handleCheckAll();
+                                        else handleUncheckAll();
+                                        }}
+                                    />
+                                    </th>
+                                    <th className={styles.th}>Titre</th>
+                                    <th className={styles.th}>Date de création</th>
+                                    <th className={styles.th}>Dernière mise à jour</th>
+                                    <th className={styles.th}>Nombre de réponses</th>
+                                    <th className={styles.th}>Groupe</th>
+                                    <th className={styles.th}>Actions</th>
+                                </tr>
+                            </thead>
+
+                            <tbody className={styles.scrollableTable}>
+                            {forms.length === 0 ? (
+                                <tr>
+                                <td colSpan="7">Aucun formulaire</td>
+                                </tr>
+                            ) : (
+                                filteredForms.map(form => (
+                                <tr 
+                                    key={form.id}
+                                    onContextMenu={(e) => {
+                                        handleRightClick(e, form.id)
+                                        setOpenFrom("context")
+                                    }}
+                                >
+                                    <td className={styles.td}>
+                                    <input
+                                        type="checkbox"
+                                        className={styles.checkbox}
+                                        checked={selectedForms.includes(form.id)}
+                                        onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
+                                    />
+                                    </td>
+                                    <td className={styles.td}>{form.title}</td>
+                                    <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
+                                    <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
+                                    <td className={styles.td}>{form.responseCount}</td>
+                                    <td className={styles.td}>{form.group_name || "-"}</td>
+                                    <td className={styles.td}>
+                                        <div className={styles.actionWrapper}>
+                                            <button
+                                                className={styles.actionButton}
+                                                onClick={(e) => {
+                                                    const rect = e.target.getBoundingClientRect();
+                                                    const menuHeight = 380;
+
+                                                    const shouldOpenUp = rect.bottom + menuHeight > window.innerHeight;
+                                                    setMenuDirection(shouldOpenUp ? "up" : "down");
+                                                    setMenuPosition({x: rect.left, y: rect.bottom,});
+                                                    setOpenFrom("dots");
+                                                    setOpenMenuId(openMenuId === form.id ? null : form.id);
+                                                }}
+                                            >
+                                                ...
+                                            </button>
+
+                                            {openMenuId === form.id && (
+                                            <div
+                                                ref={menuRef}
+                                                className={`${styles.actionMenu} ${menuDirection === "up" ? styles.menuUp : ""}`}
+                                                style={
+                                                    openFrom === "context" ? {
+                                                            position: "fixed",
+                                                            top: menuPosition.y,
+                                                            left: menuPosition.x,
+                                                        } : {}
+                                                }
+                                            >
+                                                    <div onClick={() => navigate(`/form-viewer/${form.id}/1?navigation=True`)}>Voir</div>
+                                                    <div onClick={() => handleEditForm(form.id)}>Modifier</div>
+                                                    <div onClick={() => navigate(`/form-responses/${form.id}`)}>Réponses</div>
+                                                    <div onClick={() => setMoveModal({ open: true, item: { id: [form.id] } })}>Déplacer</div>
+                                                    <div onClick={() => handleDuplicateForm(form.id)}>Dupliquer</div>
+                                                    <div onClick={() => handleDeleteForm(form.id)}>Supprimer</div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                    </td>
+                                </tr>
+                                ))
+                            )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className={styles.actionBar}>
+                        <span>{selectedForms.length} sélectionné(s)</span>
+
+                        <select
+                            value=""
+                            disabled={selectedForms.length === 0}
+                            onChange={(e) => {
+                                const action = e.target.value;
+                                e.target.value = ""; 
+
+                                if (!action) return;
+
+                                const isMultiple = selectedForms.length > 1;
+                                const id = selectedForms;
+
+                                switch (action) {
+                                    case "view":
+                                        if (!isMultiple) navigate(`/form-viewer/${id}/1?navigation=True`);
+                                        break;
+                                    case "edit":
+                                        if (!isMultiple) handleEditForm(id);
+                                        break;
+                                    case "responses":
+                                        if (!isMultiple) navigate(`/form-responses/${id}`);
+                                        break;
+                                    case "move":
+                                        setMoveModal({ open: true, item: { id: selectedForms } });
+                                        break;
+                                    case "duplicate":
+                                        handleDuplicateForm(id);
+                                        break;
+                                    case "delete":
+                                        handleDeleteForm(id);
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }}
+                            className={styles.actionSelect}
+                        >
+                            
+                            <option value="">— Actions —</option>
+
+                            {selectedForms.length === 1 && (
+                                <>
+                                    <option value="view">Voir</option>
+                                    <option value="edit">Modifier</option>
+                                    <option value="responses">Voir réponses</option>
+                                </>
+                            )}
+
+                            {selectedForms.length > 0 && (
+                                <>
+                                    <option value="move">Déplacer</option>
+                                    <option value="duplicate">
+                                        Dupliquer
+                                    </option>
+                                    <option value="delete">
+                                        Supprimer
+                                    </option>
+                                </>
+                            )}
+                        </select>
+                    </div>
+                </div >
+            ) : (
+                <div className={styles.tableContainer}>
+                    <h2>Liste des groupes enregistrés</h2>
+                    <table className={styles.table}>
+                        <thead>
+                            <tr>
+                                <th>Nom du groupe</th>
+                                <th>Date de création</th>
+                                <th>Dernière mise à jour</th>
+                                <th>Nombre de formulaires</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className={styles.scrollableTable}>
+                            {groups.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5">Aucun groupe</td>
+                                </tr>
+                            ) : (
+                                groups.map(group => (
+                                    <tr key={group.id}>
+                                        <td>{group.name}</td>
+                                        <td>{new Date(group.created_at).toLocaleString()}</td>
+                                        <td>{new Date(group.updated_at).toLocaleString()}</td>
+                                        <td>{group.formsCount || 0}</td>
+                                        <td>
+                                            <button onClick={() => handleDeletegroup(group.id)}>🗑️ Supprimer</button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
         </>
     );
 };
