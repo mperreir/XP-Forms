@@ -23,11 +23,15 @@ const Accueil = () => {
     const [openGroupMenuId, setOpenGroupMenuId] = useState(null);
     const [groupMenuPosition, setGroupMenuPosition] = useState({ x: 0, y: 0 });
     const groupMenuRef = useRef(null);
+    const [groupSearchQuery, setGroupSearchQuery] = useState("");
 
 
     const filteredForms = forms
         .filter(f => selectedGroup ? f.group_id === Number(selectedGroup) : true)
         .filter(f => f.title.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const filteredGroups = groups
+        .filter(g => g.name.toLowerCase().includes(groupSearchQuery.toLowerCase()));
 
     const showModal = (title, message, onConfirm = null) => {
         setModal({ isOpen: true, title, message, onConfirm });
@@ -175,6 +179,15 @@ const Accueil = () => {
     const handleUncheckAll = () => {
         setSelectedForms([]);
     };
+
+    const handleCheckAllGroups = () => {
+        const allIds = filteredGroups.map(group => group.id);
+        setSelectedGroups(allIds);
+    };
+
+    const handleUncheckAllGroups = () => {
+        setSelectedGroups([]);
+    }
 
     // Duplication de tous les formulaires cochés
     const handleDuplicateForm = async (formId = null) => {
@@ -341,13 +354,6 @@ const Accueil = () => {
         else setSelectedGroups(prev => prev.filter(id => id !== groupId));
     };
 
-    const handleCheckAllGroups = () => {
-        const allIds = groups.map(group => group.id);
-        setSelectedGroups(allIds);
-    };
-
-    const handleUncheckAllGroups = () => setSelectedGroups([]);
-
     const handleRightClickGroup = (e, id) => {
         e.preventDefault();
         e.stopPropagation();
@@ -460,34 +466,33 @@ const Accueil = () => {
                         <table className={styles.table}>
                             <thead className='thead'>
                                 <tr className={styles.filtrers}>
+                                    <th className={styles.thFilter}></th>
                                     <th className={styles.thFilter}>
+                                        <input
+                                            type="text"
+                                            placeholder="Rechercher un formulaire..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className={styles.headerSearchInput}
+                                        />
                                     </th>
                                     <th className={styles.thFilter}>
-                                    <input
-                                        type="text"
-                                        placeholder="Rechercher un formulaire..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className={styles.headerSearchInput}
-                                    />
+                                        <select
+                                            value={selectedGroup}
+                                            onChange={(e) => setSelectedGroup(e.target.value)}
+                                            className={styles.headerSelect}
+                                        >
+                                            <option value="">Tous les groupes</option>
+                                            {groups.map((g) => (
+                                            <option key={g.id} value={g.id}>
+                                                {g.name}
+                                            </option>
+                                            ))}
+                                        </select>
                                     </th>
                                     <th className={styles.thFilter}></th>
                                     <th className={styles.thFilter}></th>
                                     <th className={styles.thFilter}></th>
-                                    <th className={styles.thFilter}>
-                                    <select
-                                        value={selectedGroup}
-                                        onChange={(e) => setSelectedGroup(e.target.value)}
-                                        className={styles.headerSelect}
-                                    >
-                                        <option value="">Tous les groupes</option>
-                                        {groups.map((g) => (
-                                        <option key={g.id} value={g.id}>
-                                            {g.name}
-                                        </option>
-                                        ))}
-                                    </select>
-                                    </th>
                                     <th className={styles.thFilter}></th>
                                 </tr>
                                 <tr>
@@ -503,10 +508,10 @@ const Accueil = () => {
                                     />
                                     </th>
                                     <th className={styles.th}>Titre</th>
+                                    <th className={styles.th}>Groupe</th>
                                     <th className={styles.th}>Date de création</th>
                                     <th className={styles.th}>Dernière mise à jour</th>
                                     <th className={styles.th}>Nombre de réponses</th>
-                                    <th className={styles.th}>Groupe</th>
                                     <th className={styles.th}>Actions</th>
                                 </tr>
                             </thead>
@@ -533,10 +538,10 @@ const Accueil = () => {
                                         />
                                         </td>
                                         <td className={styles.td}>{form.title}</td>
+                                        <td className={styles.td}>{form.group_name || "-"}</td>
                                         <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
                                         <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
                                         <td className={styles.td}>{form.responseCount}</td>
-                                        <td className={styles.td}>{form.group_name || "-"}</td>
                                         <td className={styles.td}>
                                             <div className={styles.actionWrapper}>
                                                 <button
@@ -644,24 +649,40 @@ const Accueil = () => {
                     <h2>Liste des groupes enregistrés</h2>
                     <table className={styles.table}>
                         <thead>
-                            <tr className={styles.filtrers}>
-                                <th>
+                            <tr className={styles.filter}>
+                                <th className={styles.thFilter}></th>
+                                <th className={styles.thFilter}>
+                                    <input
+                                        type="text"
+                                        placeholder="Rechercher un groupe..."
+                                        value={groupSearchQuery}
+                                        onChange={(e) => setGroupSearchQuery(e.target.value)}
+                                        className={styles.headerSearchInput}
+                                    />
+                                </th>
+                                <th className={styles.thFilter}></th>
+                                <th className={styles.thFilter}></th>
+                                <th className={styles.thFilter}></th>
+                                <th className={styles.thFilter}></th>
+                            </tr>
+                            <tr>
+                                <th className={styles.th}>
                                     <input
                                         type="checkbox"
                                         className={styles.checkbox}
-                                        checked={selectedGroups.length === groups.length && groups.length > 0}
+                                        checked={selectedGroups.length === filteredGroups.length && filteredGroups.length > 0}
                                         onChange={(e) => e.target.checked ? handleCheckAllGroups() : handleUncheckAllGroups()}
                                     />
                                 </th>
-                                <th>Nom du groupe</th>
-                                <th>Date de création</th>
-                                <th>Dernière mise à jour</th>
-                                <th>Nombre de formulaires</th>
-                                <th>Actions</th>
+                                <th className={styles.th}>Nom du groupe</th>
+                                <th className={styles.th}>Date de création</th>
+                                <th className={styles.th}>Dernière mise à jour</th>
+                                <th className={styles.th}>Nombre de formulaires</th>
+                                <th className={styles.th}>Actions</th>
                             </tr>
                         </thead>
                         <tbody className={styles.scrollableTable}>
-                            {groups.map(group => (
+                            {filteredGroups.map(group => (
                                 <tr
                                     key={group.id}
                                     onContextMenu={(e) => handleRightClickGroup(e, group.id)}
