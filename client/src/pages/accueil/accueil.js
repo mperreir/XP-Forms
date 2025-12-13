@@ -16,9 +16,7 @@ const Accueil = () => {
     const [selectedGroup, setSelectedGroup] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [openMenuId, setOpenMenuId] = useState(null);
-    const [menuDirection, setMenuDirection] = useState("down");
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
-    const [openFrom, setOpenFrom] = useState(null);
     const [viewMode, setViewMode] = useState("forms");
     const menuRef = useRef(null);
 
@@ -106,7 +104,6 @@ const Accueil = () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [openMenuId]);
-
 
     const handleEditForm = async (formId) => {
         try {
@@ -288,16 +285,20 @@ const Accueil = () => {
     };
 
     const handleRightClick = (e, id) => {
-        e.preventDefault(); 
+        e.preventDefault();
+        e.stopPropagation();
 
-        const menuHeight = 180;
-        const shouldOpenUp = e.clientY + menuHeight > window.innerHeight;
+        const MENU_HEIGHT = 220;
 
-        setMenuDirection(shouldOpenUp ? "up" : "down");
+        let y = e.clientY;
+
+        if (y + MENU_HEIGHT > window.innerHeight) {
+            y = y - MENU_HEIGHT + 38;
+        }
 
         setMenuPosition({
             x: e.clientX,
-            y: e.clientY,
+            y,
         });
 
         setOpenMenuId(id);
@@ -466,7 +467,6 @@ const Accueil = () => {
                                     key={form.id}
                                     onContextMenu={(e) => {
                                         handleRightClick(e, form.id)
-                                        setOpenFrom("context")
                                     }}
                                 >
                                     <td className={styles.td}>
@@ -487,39 +487,28 @@ const Accueil = () => {
                                             <button
                                                 className={styles.actionButton}
                                                 onClick={(e) => {
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const menuHeight = 380;
+                                                    e.stopPropagation();
 
-                                                    const shouldOpenUp = rect.bottom + menuHeight > window.innerHeight;
-                                                    setMenuDirection(shouldOpenUp ? "up" : "down");
-                                                    setMenuPosition({x: rect.left, y: rect.bottom,});
-                                                    setOpenFrom("dots");
+                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                    const MENU_HEIGHT = 220;
+
+                                                    let y = rect.bottom;
+
+                                                    if (y + MENU_HEIGHT > window.innerHeight) {
+                                                        y = rect.top - MENU_HEIGHT + 38;
+                                                    }
+
+                                                    setMenuPosition({
+                                                        x: rect.left,
+                                                        y,
+                                                    });
+
                                                     setOpenMenuId(openMenuId === form.id ? null : form.id);
                                                 }}
                                             >
                                                 ...
                                             </button>
-
-                                            {openMenuId === form.id && (
-                                            <div
-                                                ref={menuRef}
-                                                className={`${styles.actionMenu} ${menuDirection === "up" ? styles.menuUp : ""}`}
-                                                style={
-                                                    openFrom === "context" ? {
-                                                            position: "fixed",
-                                                            top: menuPosition.y,
-                                                            left: menuPosition.x,
-                                                        } : {}
-                                                }
-                                            >
-                                                    <div onClick={() => navigate(`/form-viewer/${form.id}/1?navigation=True`)}>Voir</div>
-                                                    <div onClick={() => handleEditForm(form.id)}>Modifier</div>
-                                                    <div onClick={() => navigate(`/form-responses/${form.id}`)}>Réponses</div>
-                                                    <div onClick={() => setMoveModal({ open: true, item: { id: [form.id] } })}>Déplacer</div>
-                                                    <div onClick={() => handleDuplicateForm(form.id)}>Dupliquer</div>
-                                                    <div onClick={() => handleDeleteForm(form.id)}>Supprimer</div>
-                                                </div>
-                                            )}
+                                            
                                         </div>
 
                                     </td>
@@ -630,6 +619,24 @@ const Accueil = () => {
                     </table>
                 </div>
             )}
+            {openMenuId && (
+                <div
+                    ref={menuRef}
+                    className={styles.actionMenu}
+                    style={{
+                        top: menuPosition.y,
+                        left: menuPosition.x,
+                    }}
+                >
+                    <div onClick={() => navigate(`/form-viewer/${openMenuId}/1?navigation=True`)}>Voir</div>
+                    <div onClick={() => handleEditForm(openMenuId)}>Modifier</div>
+                    <div onClick={() => navigate(`/form-responses/${openMenuId}`)}>Réponses</div>
+                    <div onClick={() => setMoveModal({ open: true, item: { id: [openMenuId] } })}>Déplacer</div>
+                    <div onClick={() => handleDuplicateForm(openMenuId)}>Dupliquer</div>
+                    <div onClick={() => handleDeleteForm(openMenuId)}>Supprimer</div>
+                </div>
+            )}
+
 
         </>
     );

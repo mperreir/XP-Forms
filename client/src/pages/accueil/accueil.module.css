@@ -361,34 +361,30 @@ button:disabled {
 }
 
 .actionMenu {
-    position: absolute;
+    position: fixed;
     top: 100%;
     right: 0;
-    background-color: white;
+    background-color: #f9fafb;
     border: 1px solid #ccc;
     border-radius: 6px;
     padding: 6px 0;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     z-index: 1000;
-    min-width: 150px;
+    min-width: 120px;
     width: max-content;   
-    max-width: 250px;  
+    max-width: 200px;  
     white-space: nowrap;  
 }
 
 .actionMenu div {
-    padding: 8px 12px;
+    padding: 2px 12px;
     cursor: pointer;
 }
 
 .actionMenu div:hover {
-    background-color: #f0f0f0;
+    background-color: #f3f4f6;
 }
 
-.menuUp {
-    top: auto !important;
-    bottom: 100% !important;
-}
 
 .displayType {
     display: flex;
