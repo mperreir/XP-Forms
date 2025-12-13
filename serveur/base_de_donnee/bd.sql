@@ -5,6 +5,7 @@ CREATE TABLE forms (
     json_data TEXT,  -- Stocke le JSON complet sous forme de texte
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    group_id INTEGER,
     FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
 );
 
@@ -17,7 +18,7 @@ BEGIN
 END;
 
 -- Table components (clé primaire = id + form_id)
-CREATE TABLE cosmponents (
+CREATE TABLE components (
     id TEXT NOT NULL,          -- Component ID (non unique globalement)
     form_id TEXT NOT NULL,     -- Formulaire auquel le composant appartient
     label TEXT NOT NULL,
@@ -50,7 +51,8 @@ CREATE TABLE IF NOT EXISTS settings (
 CREATE TABLE IF NOT EXISTS groups (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TRIGGER trigger_update_groups_updated_at

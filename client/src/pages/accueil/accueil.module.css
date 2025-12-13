@@ -20,24 +20,48 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding-bottom: 80px;
 }
 
 .scrollableTable {
-    max-height: 600px;
+    max-height: 500px;
     overflow-y: auto;
-    margin-bottom: 50px;
-}
-
-.scrollableTable table {
-    width: 100%;
 }
 
 .table {
     width: 90%;
+    margin: 0 auto;
     border-collapse: collapse;
     margin-top: 20px;
     border-radius: 8px;
     overflow: hidden;
+}
+
+/* ligne de filtres dans le thead */
+.filterRow th {
+  padding: 8px;
+  background: #f7f7f7;
+  vertical-align: middle;
+}
+
+/* input de recherche dans l'en-tête */
+.headerSearchInput {
+  width: 100%;
+  height: 50px;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+/* select de filtre groupe dans l'en-tête */
+.headerSelect {
+  width: 100%;
+  height: 50px;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
 }
 
 .th,
@@ -49,6 +73,30 @@
 .th {
     background-color: #007bff;
     color: white;
+    position: sticky;
+}
+
+.table thead {
+    display: table;
+    position: sticky;
+    width: calc(100% - 15px);
+    top: 0;
+    z-index: 20;
+    background: white;
+    table-layout: fixed;
+}
+
+.table tbody {
+    display: block;
+    max-height: 500px;
+    overflow-y: scroll;
+    width: 100%;
+}
+
+.table tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
 }
 
 .td {
@@ -84,63 +132,6 @@ tbody tr:hover {
     text-align: center;
 }
 
-.createFormButton {
-    background-color: #28a745;
-    /* Green color */
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 15px;
-}
-
-.createFormButton:hover {
-    background-color: #218838;
-    /* Darker green on hover */
-}
-
-/* Color scheme for action buttons */
-.viewButton {
-    background-color: #0057f9;
-    /* blue */
-    color: white;
-}
-
-.viewButton:hover {
-    background-color: #0b3e5d;
-}
-
-.editButton {
-    background-color: #17b8a0;
-    /* Blue */
-    color: white;
-}
-
-.editButton:hover {
-    background-color: #138496;
-}
-
-.deleteButton {
-    background-color: #da0505;
-    /* Red */
-    color: white;
-}
-
-.deleteButton:hover {
-    background-color: #810c17;
-}
-
-.responsesButton {
-    background-color: #ffc107;
-    /* Yellow */
-    color: white;
-}
-
-.responsesButton:hover {
-    background-color: #a47f12;
-}
-
 /* Ensure the layout is responsive */
 @media (max-width: 768px) {
     .table {
@@ -156,16 +147,6 @@ tbody tr:hover {
         font-size: 14px;
         padding: 10px 20px;
     }
-}
-
-.duplicateButton {
-    background-color: #5911e0;
-    /* Purple */
-    color: white;
-}
-
-.duplicateButton:hover {
-    background-color: #341077;
 }
 
 .defaultUserIdContainer {
@@ -188,21 +169,6 @@ tbody tr:hover {
     width: 250px;
 }
 
-.saveButton {
-    padding: 8px 16px;
-    font-size: 14px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-
-.saveButton:hover {
-    background-color: #0056b3;
-}
-
 /* Align "Créer un nouveau formulaire" button to the left */
 .createFormButton {
     margin: 20px 0;
@@ -221,89 +187,10 @@ tbody tr:hover {
     /* Darker green on hover */
 }
 
-/* General button styles */
-.button {
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    border: none;
-    margin: 5px;
-    transition: all 0.3s ease;
-    min-width: 120px;
-    height: 40px;
-    text-align: center;
-}
-
 button:disabled {
     opacity: 0.4;
     cursor: not-allowed;
     pointer-events: none;
-}
-
-/* Specific button color schemes */
-.viewButton {
-    background-color: #0057f9;
-    /* Blue */
-    color: white;
-}
-
-.viewButton:hover {
-    background-color: #0b3e5d;
-}
-
-.editButton {
-    background-color: #17b8a0;
-    /* Blue */
-    color: white;
-}
-
-.editButton:hover {
-    background-color: #138496;
-}
-
-.deleteButton {
-    background-color: #da0505;
-    /* Red */
-    color: white;
-}
-
-.deleteButton:hover {
-    background-color: #810c17;
-}
-
-.responsesButton {
-    background-color: #ffc107;
-    /* Yellow */
-    color: white;
-}
-
-.responsesButton:hover {
-    background-color: #a47f12;
-}
-
-.duplicateButton {
-    background-color: #5911e0;
-    /* Purple */
-    color: white;
-}
-
-.duplicateButtonCheck, .deleteButtonCheck {
-    position: absolute;
-}
-
-.duplicateButtonCheck {
-    right: 140px;
-    top: 180px;
-}
-
-.deleteButtonCheck {
-    right: 10px;
-    top: 180px;
-}
-
-.duplicateButton:hover {
-    background-color: #341077;
 }
 
 .checkButton {
@@ -320,6 +207,7 @@ button:disabled {
     transform: scale(1.5);
     -webkit-transform: scale(1.5);
     margin: 6px;
+    cursor: pointer;
 }
 
 /* Save button styling */
@@ -421,7 +309,13 @@ button:disabled {
 }
 
 .filters {
+    display: flex;
+    flex-direction: row;
     margin-bottom: 12px;
+}
+
+.thFilter {
+    border: 0;
 }
 
 .select {
@@ -429,3 +323,103 @@ button:disabled {
     border-radius: 6px;
     border: 1px solid #ccc;
 }
+
+.actionBar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    background: #fff;
+    padding: 14px 26px;
+
+    display: flex;
+    gap: 20px;
+    align-items: center;
+
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+
+    z-index: 999;
+    border: 1px solid #e5e7eb;
+}
+
+.actionSelect {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    cursor: pointer;
+}
+
+.actionSelect:hover {
+    background: #f3f4f6;
+}
+
+.actionWrapper {
+    position: relative; /* Important pour positionner le menu par rapport au bouton */
+    display: inline-block;
+}
+
+.actionMenu {
+    position: fixed;
+    top: 100%;
+    right: 0;
+    background-color: #f9fafb;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 6px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 120px;
+    width: max-content;   
+    max-width: 200px;  
+    white-space: nowrap;  
+}
+
+.actionMenu div {
+    padding: 2px 12px;
+    cursor: pointer;
+}
+
+.actionMenu div:hover {
+    background-color: #f3f4f6;
+}
+
+
+.displayType {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.viewButton {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 2px solid #ccc;
+    background: #f0f0f0;
+    cursor: pointer;
+    margin: 0;
+}
+
+.viewButton:hover {
+    background-color: #0056b3;
+}
+
+.activeViewButton {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.switchToViewForms {
+    border-radius: 6px 0 0 6px;
+}
+
+.switchToViewGroups{
+    border-radius: 0 6px 6px 0;
+}
+
+

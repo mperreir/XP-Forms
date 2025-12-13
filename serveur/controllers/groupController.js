@@ -56,5 +56,13 @@ exports.moveFormTogroup = async (req, res) => {
   }
 };
 
+exports.getNumberOfForms = async (req, res) => {
+  try {
+    const ok = await groupServices.getNumberOfForms(req.params.id);
+    res.json({ count: ok });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+};
 
 
