@@ -167,7 +167,7 @@ const Accueil = () => {
 
     // Tout cocher
     const handleCheckAll = () => {
-        const allIds = forms.map(form => form.id);
+        const allIds = filteredForms.map(form => form.id);
         setSelectedForms(allIds);
     };
 
@@ -495,7 +495,7 @@ const Accueil = () => {
                                     <input
                                         type="checkbox"
                                         className={styles.checkbox}
-                                        checked={selectedForms.length === forms.length && forms.length > 0}
+                                        checked={selectedForms.length === filteredForms.length && filteredForms.length > 0}
                                         onChange={(e) => {
                                         if (e.target.checked) handleCheckAll();
                                         else handleUncheckAll();
