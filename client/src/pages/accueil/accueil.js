@@ -19,6 +19,11 @@ const Accueil = () => {
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
     const [viewMode, setViewMode] = useState("forms");
     const menuRef = useRef(null);
+    const [selectedGroups, setSelectedGroups] = useState([]);
+    const [openGroupMenuId, setOpenGroupMenuId] = useState(null);
+    const [groupMenuPosition, setGroupMenuPosition] = useState({ x: 0, y: 0 });
+    const groupMenuRef = useRef(null);
+
 
     const filteredForms = forms
         .filter(f => selectedGroup ? f.group_id === Number(selectedGroup) : true)
@@ -96,6 +101,9 @@ const Accueil = () => {
             if (openMenuId && menuRef.current && !menuRef.current.contains(e.target)) {
                 setOpenMenuId(null);
             }
+            if (openGroupMenuId && groupMenuRef.current && !groupMenuRef.current.contains(e.target)) {
+                setOpenGroupMenuId(null);
+            }
         };
 
         document.addEventListener("mousedown", handleClickOutside);
@@ -103,7 +111,7 @@ const Accueil = () => {
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [openMenuId]);
+    }, [openMenuId, openGroupMenuId]);
 
     const handleEditForm = async (formId) => {
         try {
@@ -262,6 +270,30 @@ const Accueil = () => {
         await reloadgroups();
     };
 
+    const handleRenameGroup = async (groupId, currentName) => {
+        const newName = prompt("Nouveau nom du groupe :", currentName);
+        if (!newName || newName.trim() === "") return;
+
+        try {
+            const response = await fetch(`/api/groups/${groupId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: newName }),
+            });
+
+            if (!response.ok) throw new Error("Erreur lors du renommage du groupe");
+
+            await reloadgroups();
+            await reloadForms();
+            showNotification(`Groupe renommé en "${newName}"`, "success");
+
+        } catch (err) {
+            console.error(err);
+            showNotification("Impossible de renommer le groupe", "error");
+        }
+    };
+
+
     const handleDeletegroup = (groupId) => {
         showModal(
             "Supprimer le groupe",
@@ -304,6 +336,29 @@ const Accueil = () => {
         setOpenMenuId(id);
     };
 
+    const handleGroupCheckboxChange = (groupId, checked) => {
+        if (checked) setSelectedGroups(prev => [...prev, groupId]);
+        else setSelectedGroups(prev => prev.filter(id => id !== groupId));
+    };
+
+    const handleCheckAllGroups = () => {
+        const allIds = groups.map(group => group.id);
+        setSelectedGroups(allIds);
+    };
+
+    const handleUncheckAllGroups = () => setSelectedGroups([]);
+
+    const handleRightClickGroup = (e, id) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const MENU_HEIGHT = 100; // Hauteur du menu actions groupes
+        let y = e.clientY;
+        if (y + MENU_HEIGHT > window.innerHeight) y = y - MENU_HEIGHT + 32;
+
+        setGroupMenuPosition({ x: e.clientX, y });
+        setOpenGroupMenuId(id);
+    };
 
 
     return (
@@ -457,64 +512,64 @@ const Accueil = () => {
                             </thead>
 
                             <tbody className={styles.scrollableTable}>
-                            {forms.length === 0 ? (
-                                <tr>
-                                <td colSpan="7">Aucun formulaire</td>
-                                </tr>
-                            ) : (
-                                filteredForms.map(form => (
-                                <tr 
-                                    key={form.id}
-                                    onContextMenu={(e) => {
-                                        handleRightClick(e, form.id)
-                                    }}
-                                >
-                                    <td className={styles.td}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={selectedForms.includes(form.id)}
-                                        onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
-                                    />
-                                    </td>
-                                    <td className={styles.td}>{form.title}</td>
-                                    <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
-                                    <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
-                                    <td className={styles.td}>{form.responseCount}</td>
-                                    <td className={styles.td}>{form.group_name || "-"}</td>
-                                    <td className={styles.td}>
-                                        <div className={styles.actionWrapper}>
-                                            <button
-                                                className={styles.actionButton}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
+                                {forms.length === 0 ? (
+                                    <tr>
+                                    <td colSpan="7">Aucun formulaire</td>
+                                    </tr>
+                                ) : (
+                                    filteredForms.map(form => (
+                                    <tr 
+                                        key={form.id}
+                                        onContextMenu={(e) => {
+                                            handleRightClick(e, form.id)
+                                        }}
+                                    >
+                                        <td className={styles.td}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={selectedForms.includes(form.id)}
+                                            onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
+                                        />
+                                        </td>
+                                        <td className={styles.td}>{form.title}</td>
+                                        <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
+                                        <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
+                                        <td className={styles.td}>{form.responseCount}</td>
+                                        <td className={styles.td}>{form.group_name || "-"}</td>
+                                        <td className={styles.td}>
+                                            <div className={styles.actionWrapper}>
+                                                <button
+                                                    className={styles.actionButton}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
 
-                                                    const rect = e.currentTarget.getBoundingClientRect();
-                                                    const MENU_HEIGHT = 220;
+                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                        const MENU_HEIGHT = 220;
 
-                                                    let y = rect.bottom;
+                                                        let y = rect.bottom;
 
-                                                    if (y + MENU_HEIGHT > window.innerHeight) {
-                                                        y = rect.top - MENU_HEIGHT + 38;
-                                                    }
+                                                        if (y + MENU_HEIGHT > window.innerHeight) {
+                                                            y = rect.top - MENU_HEIGHT + 38;
+                                                        }
 
-                                                    setMenuPosition({
-                                                        x: rect.left,
-                                                        y,
-                                                    });
+                                                        setMenuPosition({
+                                                            x: rect.left,
+                                                            y,
+                                                        });
 
-                                                    setOpenMenuId(openMenuId === form.id ? null : form.id);
-                                                }}
-                                            >
-                                                ...
-                                            </button>
-                                            
-                                        </div>
+                                                        setOpenMenuId(openMenuId === form.id ? null : form.id);
+                                                    }}
+                                                >
+                                                    ...
+                                                </button>
+                                                
+                                            </div>
 
-                                    </td>
-                                </tr>
-                                ))
-                            )}
+                                        </td>
+                                    </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -589,7 +644,15 @@ const Accueil = () => {
                     <h2>Liste des groupes enregistrés</h2>
                     <table className={styles.table}>
                         <thead>
-                            <tr>
+                            <tr className={styles.filtrers}>
+                                <th>
+                                    <input
+                                        type="checkbox"
+                                        className={styles.checkbox}
+                                        checked={selectedGroups.length === groups.length && groups.length > 0}
+                                        onChange={(e) => e.target.checked ? handleCheckAllGroups() : handleUncheckAllGroups()}
+                                    />
+                                </th>
                                 <th>Nom du groupe</th>
                                 <th>Date de création</th>
                                 <th>Dernière mise à jour</th>
@@ -598,25 +661,89 @@ const Accueil = () => {
                             </tr>
                         </thead>
                         <tbody className={styles.scrollableTable}>
-                            {groups.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5">Aucun groupe</td>
+                            {groups.map(group => (
+                                <tr
+                                    key={group.id}
+                                    onContextMenu={(e) => handleRightClickGroup(e, group.id)}
+                                >
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={selectedGroups.includes(group.id)}
+                                            onChange={(e) => handleGroupCheckboxChange(group.id, e.target.checked)}
+                                        />
+                                    </td>
+                                    <td>{group.name}</td>
+                                    <td>{new Date(group.created_at).toLocaleString()}</td>
+                                    <td>{new Date(group.updated_at).toLocaleString()}</td>
+                                    <td>{group.formsCount || 0}</td>
+                                    <td>
+                                        <button
+                                            className={styles.actionButton}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                const MENU_HEIGHT = 100;
+                                                let y = rect.bottom;
+                                                if (y + MENU_HEIGHT > window.innerHeight) y = rect.top - MENU_HEIGHT + 38;
+                                                setGroupMenuPosition({ x: rect.left, y });
+                                                setOpenGroupMenuId(openGroupMenuId === group.id ? null : group.id);
+                                            }}
+                                        >
+                                            ...
+                                        </button>
+                                    </td>
                                 </tr>
-                            ) : (
-                                groups.map(group => (
-                                    <tr key={group.id}>
-                                        <td>{group.name}</td>
-                                        <td>{new Date(group.created_at).toLocaleString()}</td>
-                                        <td>{new Date(group.updated_at).toLocaleString()}</td>
-                                        <td>{group.formsCount || 0}</td>
-                                        <td>
-                                            <button onClick={() => handleDeletegroup(group.id)}>🗑️ Supprimer</button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
+                            ))}
                         </tbody>
                     </table>
+                    <div className={styles.actionBar}>
+                        <span>{selectedGroups.length} sélectionné(s)</span>
+
+                        <select
+                            value=""
+                            disabled={selectedGroups.length === 0}
+                            onChange={(e) => {
+                                const action = e.target.value;
+                                e.target.value = ""; 
+
+                                if (!action) return;
+
+                                const isMultiple = selectedGroups.length > 1;
+                                const id = selectedGroups;
+
+                                switch (action) {
+                                    case "rename":
+                                        if (!isMultiple) handleRenameGroup(id);
+                                        break;
+                                    case "delete":
+                                        handleDeletegroup(id);
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }}
+                            className={styles.actionSelect}
+                        >
+                            
+                            <option value="">— Actions —</option>
+
+                            {selectedGroups.length === 1 && (
+                                <>
+                                    <option value="rename">Renommer</option>
+                                </>
+                            )}
+
+                            {selectedGroups.length > 0 && (
+                                <>
+                                    <option value="delete">
+                                        Supprimer
+                                    </option>
+                                </>
+                            )}
+                        </select>
+                    </div>
                 </div>
             )}
             {openMenuId && (
@@ -636,8 +763,16 @@ const Accueil = () => {
                     <div onClick={() => handleDeleteForm(openMenuId)}>Supprimer</div>
                 </div>
             )}
-
-
+            {openGroupMenuId && (
+                <div
+                    ref={groupMenuRef}
+                    className={styles.actionMenu}
+                    style={{ top: groupMenuPosition.y, left: groupMenuPosition.x }}
+                >
+                    <div onClick={() => handleRenameGroup(openGroupMenuId, groups.find(g => g.id === openGroupMenuId)?.name)}>Renommer</div>
+                    <div onClick={() => handleDeletegroup(openGroupMenuId)}>Supprimer</div>
+                </div>
+            )}
         </>
     );
 };
