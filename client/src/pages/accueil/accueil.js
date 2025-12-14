@@ -123,13 +123,13 @@ const Accueil = () => {
             const data = await response.json();
 
             if (data.hasResponses) {
-                showModal("Attention", "Ce formulaire contient déjà des réponses et ne peut pas être modifié.");
+                showNotification("Attention, ce formulaire contient déjà des réponses et ne peut pas être modifié." , "error");
             } else {
                 navigate(`/form-editor2/${formId}`);
             }
         } catch (error) {
             console.error("Erreur lors de la vérification des réponses :", error);
-            showModal("Erreur", "Erreur lors de la vérification des réponses.");
+            showNotification("Erreur lors de la vérification des réponses.", "error");
         }
     };
 
@@ -153,10 +153,10 @@ const Accueil = () => {
 
             if (!response.ok) throw new Error("Erreur lors de l'enregistrement de l'ID utilisateur par défaut.");
 
-            showModal("Succès", "ID utilisateur par défaut enregistré !");
+            showNotification("ID utilisateur par défaut enregistré !" , "success");
         } catch (error) {
             console.error(error);
-            showModal("Erreur", "Impossible d'enregistrer l'ID utilisateur par défaut.");
+            showNotification("Impossible d'enregistrer l'ID utilisateur par défaut.", "error");
         }
     };
 
@@ -195,28 +195,21 @@ const Accueil = () => {
         const ids = formId ? (Array.isArray(formId) ? formId : [formId]) : selectedForms;
 
         if (!ids || ids.length === 0) return;
-
-        showModal(
-            "Duplication",
-            `Dupliquer ${ids.length} formulaire(s) ?`,
-            async () => {
-                try {
-                    for (const id of ids) {
-                        await fetch(`/api/forms/${id}/duplicate`, { method: "POST" });
-                    }
-
-                    showModal("Succès", "Tous les formulaires sélectionnés ont été dupliqués !");
-
-                    await reloadForms();
-                    await reloadgroups();
-                    setSelectedForms([]); // Réinitialise la sélection
-
-                } catch (error) {
-                    console.error(error);
-                    showModal("Erreur", "Impossible de dupliquer certains formulaires.");
+            try {
+                for (const id of ids) {
+                    await fetch(`/api/forms/${id}/duplicate`, { method: "POST" });
                 }
+
+                showNotification("Tous les formulaires sélectionnés ont été dupliqués !", "success");
+
+                await reloadForms();
+                await reloadgroups();
+                setSelectedForms([]); // Réinitialise la sélection
+
+            } catch (error) {
+                console.error(error);
+                showNotification("Impossible de dupliquer certains formulaires.", "error");
             }
-        );
     };
 
     // Suppression de tous les formulaires cochés
@@ -231,18 +224,18 @@ const Accueil = () => {
             `Supprimer ${ids.length} formulaire(s) ? Cette action est irréversible.`,
             async () => {
                 try {
+                    closeModal();
                     for (const id of ids) {
                         await fetch(`/api/forms/${id}`, { method: "DELETE" });
                     }
-
-                    showModal("Succès", "Tous les formulaires sélectionnés ont été supprimés !");
+                    showNotification("Tous les formulaires sélectionnés ont été supprimés !", "success");
 
                     await reloadForms();
                     await reloadgroups();
                     setSelectedForms([]); // Nettoyage
                 } catch (error) {
                     console.error(error);
-                    showModal("Erreur", "Impossible de supprimer certains formulaires.");
+                    showNotification("Impossible de supprimer certains formulaires.", "error");
                 }
             }
         );

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Modal from "../../components/Modal";
-import DeleteResponsesSuccessModal from "../../components/DeleteResponsesSuccessModal";
 import styles from "./FormResponsesList.module.css";
 
 const FormResponsesList = () => {
@@ -10,8 +9,8 @@ const FormResponsesList = () => {
   const [responses, setResponses] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
-  const [successModal, setSuccessModal] = useState({ isOpen: false, title: "", message: "" });
   const navigate = useNavigate();
+  const [notification, setNotification] = useState({ message: "", type: "" });
 
   const handleGoHome = () => {
     navigate("/");
@@ -25,14 +24,13 @@ const FormResponsesList = () => {
     setModal({ isOpen: false, title: "", message: "", onConfirm: null, onClose: null });
   };
 
-  const showSuccessModal = (title, message) => {
-    setSuccessModal({ isOpen: true, title, message });
+  const showNotification = (message, type = "success", duration = 3000) => {
+    setNotification({ message, type });
+    setTimeout(() => {
+        setNotification({ message: "", type: "" });
+    }, duration);
   };
-
-  const closeSuccessModal = () => {
-    setSuccessModal({ isOpen: false, title: "", message: "" });
-  };
-
+  
   useEffect(() => {
     const fetchFormInfo = async () => {
       try {
@@ -113,15 +111,15 @@ const FormResponsesList = () => {
           });
           if (response.ok) {
             closeModal();
-            showSuccessModal("Succès", "Toutes les réponses ont été supprimées.");
+            showNotification("Toutes les réponses ont été supprimées.", "success");
             setResponses([]);
           } else {
             const errorData = await response.json();
-            showModal("Erreur", "Erreur : " + errorData.error);
+            showNotification("Erreur : " + errorData.error, "error");
           }
         } catch (error) {
           console.error("Erreur lors de la suppression :", error);
-          showModal("Erreur", "Impossible de contacter le serveur.");
+          showNotification("Impossible de contacter le serveur.", "error");
         }
       },
       closeModal
@@ -176,12 +174,11 @@ const FormResponsesList = () => {
         onClose={modal.onClose}
       />
 
-      <DeleteResponsesSuccessModal
-        isOpen={successModal.isOpen}
-        title={successModal.title}
-        message={successModal.message}
-        onClose={closeSuccessModal}
-      />
+      {notification.message && (
+        <div className={`${styles.notification} ${styles[notification.type]}`}>
+            {notification.message}
+        </div>
+      )}
     </div>
   );
 };

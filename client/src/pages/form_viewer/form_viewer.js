@@ -20,18 +20,25 @@ const FormViewer = () => {
   const [formData, setFormData] = useState({});
   const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
   const [isNextPageDisabled, setIsNextPageDisabled] = useState(true);
+  const [notification, setNotification] = useState({ message: "", type: "" });
 
   const dataInitialized = useRef(false);
   const formRef = useRef(null);
 
-const showModal = (title, message, onConfirm = null) => {
-  const handleClose = () => {
-    setModal({ isOpen: false, title: "", message: "", onConfirm: null });
-    if (onConfirm) onConfirm();
+  const showModal = (title, message, onConfirm = null) => {
+    const handleClose = () => {
+      setModal({ isOpen: false, title: "", message: "", onConfirm: null });
+      if (onConfirm) onConfirm();
+    };
+    setModal({ isOpen: true, title, message, onConfirm: handleClose });
   };
-  setModal({ isOpen: true, title, message, onConfirm: handleClose });
-};
 
+  const showNotification = (message, type = "success", duration = 3000) => {
+    setNotification({ message, type });
+    setTimeout(() => {
+        setNotification({ message: "", type: "" });
+    }, duration);
+  };
 
 
 
@@ -51,11 +58,11 @@ const showModal = (title, message, onConfirm = null) => {
             const newPath = `/form-viewer/${id}/${page}/${defaultUserId}${location.search}`;
             navigate(newPath, { replace: true });
           } else {
-            showModal("Erreur", "Aucun ID utilisateur par défaut enregistré.");
+            showNotification("Aucun ID utilisateur par défaut enregistré.", "error");
           }
         } catch (error) {
           console.error(error);
-          showModal("Erreur", "Impossible de récupérer l'ID utilisateur par défaut.");
+          showNotification("Impossible de récupérer l'ID utilisateur par défaut.", "error");
         }
       }
     };
@@ -211,7 +218,7 @@ const validateCurrentPage = useCallback(() => {
 
       } catch (error) {
         console.error("Erreur lors du chargement du schéma du formulaire:", error);
-        showModal("Erreur", "Erreur lors du chargement du formulaire");
+        showNotification("Erreur lors du chargement du formulaire", "error");
       }
     };
 
@@ -391,7 +398,7 @@ const validateCurrentPage = useCallback(() => {
                     const ok = validateCurrentPage();
                     console.debug('Next page clicked - validateCurrentPage:', ok, 'page', currentPage, 'formData:', formData);
                     if (!ok) {
-                      showModal("Erreur", "Veuillez remplir tous les champs obligatoires avant de passer à la page suivante.");
+                      showNotification("Veuillez remplir tous les champs obligatoires avant de passer à la page suivante.", "error");
                       return;
                     }
                     navigate(
@@ -423,6 +430,11 @@ const validateCurrentPage = useCallback(() => {
         message={modal.message}
         onConfirm={modal.onConfirm} // Correctly pass the onConfirm callback
       />
+      {notification.message && (
+        <div className={`${styles.notification} ${styles[notification.type]}`}>
+            {notification.message}
+        </div>
+      )}
     </>
   );
 };

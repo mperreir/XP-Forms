@@ -27,3 +27,22 @@
   font-size: 16px;
   cursor: pointer;
 }
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    color: rgb(0, 0, 0);
+    z-index: 1000;
+    opacity: 0.9;
+}
+
+.success {
+    background-color: #67e46b;
+}
+
+.error {
+    background-color: #f44336;
+}

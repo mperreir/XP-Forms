@@ -16,6 +16,7 @@ const FormEditor = () => {
   const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
   const params = new URLSearchParams(window.location.search);
   const groupId = params.get("group_id");
+  const [notification, setNotification] = useState({ message: "", type: "" });
 
   const showModal = (title, message, onConfirm = null) => {
     setModal({ isOpen: true, title, message, onConfirm });
@@ -23,6 +24,13 @@ const FormEditor = () => {
 
   const closeModal = () => {
     setModal({ isOpen: false, title: "", message: "", onConfirm: null });
+  };
+
+  const showNotification = (message, type = "success", duration = 3000) => {
+    setNotification({ message, type });
+    setTimeout(() => {
+        setNotification({ message: "", type: "" });
+    }, duration);
   };
 
   useEffect(() => {
@@ -198,16 +206,14 @@ const FormEditor = () => {
 
       if (response.ok) {
         setIsModified(false); // Les modifications sont enregistrées
-        showModal("Succès", isEditing ? "Formulaire mis à jour !" : "Formulaire enregistré !", () => {
-          navigate("/accueil");
-        });
+        showNotification(isEditing ? "Formulaire mis à jour !" : "Formulaire enregistré !", "success")
       } else {
         console.error("Erreur serveur :", await response.json());
-        showModal("Erreur", "Erreur lors de l'enregistrement.");
+        showNotification("Erreur lors de l'enregistrement.", "error");
       }
     } catch (error) {
       console.error("Erreur :", error);
-      showModal("Erreur", "Impossible de contacter le serveur.");
+      showNotification("Impossible de contacter le serveur.", "error");
     }
   };
 
@@ -269,6 +275,11 @@ const FormEditor = () => {
         onClose={closeModal}
         onConfirm={modal.onConfirm}
       />
+      {notification.message && (
+        <div className={`${styles.notification} ${styles[notification.type]}`}>
+            {notification.message}
+        </div>
+      )}
     </div>
   );
 }; 
