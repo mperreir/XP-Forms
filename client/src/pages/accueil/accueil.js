@@ -311,6 +311,7 @@ const Accueil = () => {
 
                     reloadgroups();
                     reloadForms();
+                    setSelectedForms([]);
                     showNotification(`groupe supprimé`, "success");
 
                 } catch(err) {
