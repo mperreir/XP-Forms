@@ -214,3 +214,28 @@ button:disabled:hover {
 .error {
     background-color: #f44336;
 }
+
+.toggleExtraInfo {
+  margin-top: 10px;
+  padding: 6px 0;
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: bold;
+  color: #007bff;
+  user-select: none;
+}
+
+.toggleExtraInfo:hover {
+  color: #0056b3;
+}
+
+.extraInfo {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+}
+
+.extraInfo p {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
