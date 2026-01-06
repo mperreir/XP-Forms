@@ -12,6 +12,14 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
 
       if (response.ok) {
 
+        // for (const response in result.responses) {
+
+        //   const responsesJson = { "formId": result.json_data.id, "user_id": result.user_id, "response": responsesJson };
+
+        //   const response = await fetch(`/api/import-form`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(responsesJson) });
+
+        // }
+
         document.querySelector("#importSuccess").click();
 
       } else {

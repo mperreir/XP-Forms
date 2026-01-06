@@ -125,9 +125,9 @@ const Accueil = () => {
                     // Téléchargement du fichier exporté
                     let element = document.createElement('a');
                     element.setAttribute('href',
-                        'data:text/plain;charset=utf-8, '
-                        + encodeURIComponent(JSON.stringify(formJson)));
-                    element.setAttribute('download', formJson.title);
+                        'data:text/json;charset=utf-8, '
+                        + encodeURIComponent(JSON.stringify(formJson, null, 2)));
+                    element.setAttribute('download', formJson.title + '.json');
 
                     document.body.appendChild(element);
                     element.click();
