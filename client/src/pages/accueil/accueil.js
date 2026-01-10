@@ -318,11 +318,11 @@ const Accueil = () => {
                     reloadgroups();
                     reloadForms();
                     setSelectedForms([]);
-                    showNotification(`Groupe supprimé`, "success");
+                    showNotification(`Groupe(s) supprimé(s)`, "success");
 
                 } catch(err) {
                     console.error(err);
-                    showNotification("Impossible de dupliquer le groupe.", "error");
+                    showNotification("Impossible de supprimer le(s) groupe(s).", "error");
                 }
                 
             }
