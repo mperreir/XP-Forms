@@ -251,9 +251,15 @@ const Accueil = () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: groupName })
         })
-            .then(res => res.json())
+            .then(res => {
+                res.json();
+                showNotification("Groupe créé.", "success")
+            })
             .then(() => reloadgroups())
-            .catch(err => console.error("Erreur création groupe :", err));
+            .catch(err => {
+                console.log(err);
+                showNotification("Impossible de contacter le serveur.", "error");
+            })
     };
 
     const handleMove = async () => {
@@ -312,7 +318,7 @@ const Accueil = () => {
                     reloadgroups();
                     reloadForms();
                     setSelectedForms([]);
-                    showNotification(`groupe supprimé`, "success");
+                    showNotification(`Groupe supprimé`, "success");
 
                 } catch(err) {
                     console.error(err);
