@@ -21,6 +21,7 @@ const FormViewer = () => {
   const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
   const [isNextPageDisabled, setIsNextPageDisabled] = useState(true);
   const [notification, setNotification] = useState({ message: "", type: "" });
+  const [showExtraInfo, setShowExtraInfo] = useState(false);
 
   const dataInitialized = useRef(false);
   const formRef = useRef(null);
@@ -352,12 +353,28 @@ const validateCurrentPage = useCallback(() => {
           <div className={styles.formDetails}>
             <p><strong>ID du Formulaire :</strong> {formDetails.id}</p>
             <p><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
-            <p><strong>Pour intégrer dans un scénario Tobii utilisez :</strong> http://localhost:3000/form-viewer/{id}/{page}/id_participant</p>
-            <p>Ajoutez <strong>@</strong> comme ID participant pour utiliser l'ID utilisateur par défaut.</p>
-            <p>Ajoutez <strong>?navigation=True</strong> à la fin si vous voulez permettre la navigation entre pages.</p>
+            <div
+              className={styles.toggleExtraInfo}
+              onClick={() => setShowExtraInfo(prev => !prev)}
+            >
+              {showExtraInfo ? "−" : "+"}
+            </div>
+            {showExtraInfo && (
+              <div className={styles.extraInfo}>
+                <p>
+                  <strong>Pour intégrer dans un scénario Tobii utilisez :</strong><br />
+                  http://localhost:3000/form-viewer/{id}/{page}/id_participant
+                </p>
+                <p>
+                  Ajoutez <strong>@</strong> comme ID participant pour utiliser l'ID utilisateur par défaut.
+                </p>
+                <p>
+                  Ajoutez <strong>?navigation=True</strong> à la fin si vous voulez permettre la navigation entre pages.
+                </p>
+              </div>
+            )}
           </div>
         )}
-
         {/* Info Participant */}
         {id_participant && (
           <div>

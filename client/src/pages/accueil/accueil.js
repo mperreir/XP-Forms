@@ -12,8 +12,8 @@ const Accueil = () => {
     const [notification, setNotification] = useState({ message: "", type: "" });
     const navigate = useNavigate(); // Permet de gérer la navigation
     const [groups, setgroups] = useState([]);
-    const [moveModal, setMoveModal] = useState({open: false, type: null, item: null,});
-    const [selectedGroup, setSelectedGroup] = useState("");
+    const [tableSelectedGroup, setTableSelectedGroup] = useState("");
+    const [moveModal, setMoveModal] = useState({ open: false, type: null, item: null, selectedGroup: "" });
     const [searchQuery, setSearchQuery] = useState("");
     const [openMenuId, setOpenMenuId] = useState(null);
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -27,7 +27,7 @@ const Accueil = () => {
 
 
     const filteredForms = forms
-        .filter(f => selectedGroup ? f.group_id === Number(selectedGroup) : true)
+        .filter(f => tableSelectedGroup ? f.group_id === Number(tableSelectedGroup) : true)
         .filter(f => f.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const filteredGroups = groups
@@ -263,19 +263,19 @@ const Accueil = () => {
     };
 
     const handleMove = async () => {
-        if (!selectedGroup) return;
+        if (!moveModal.selectedGroup) return;
 
         const itemsToMove = Array.isArray(moveModal.item.id) ? moveModal.item.id : [moveModal.item.id];
 
         for (const id of itemsToMove) {
-            await fetch(`/api/forms/${id}/move-to-group/${selectedGroup}`, {
+            await fetch(`/api/forms/${id}/move-to-group/${moveModal.selectedGroup}`, {
                 method: "PUT",
             });
         }
         showNotification(`Formulaire(s) déplacé(s)`, "success");
 
-        setMoveModal({ open: false, item: null });
-        setSelectedGroup("");
+        setMoveModal({ open: false, item: null, selectedGroup: "" });
+        setMoveModal({ open: false, item: null, selectedGroup: "" });
         setSelectedForms([]);
 
         await reloadForms();
@@ -308,8 +308,8 @@ const Accueil = () => {
 
     const handleDeletegroup = (groupId) => {
         showModal(
-            "Supprimer le groupe",
-            "ATTENTION : cela supprimera aussi tous les sous-groupes et tous les formulaires qu'il contient. Voulez-vous continuer ?",
+            "Suppression",
+            "Supprimer le(s) groupe(s) ? Cette action est irréversible.",
             async () => {
                 try {
                     closeModal();
@@ -387,19 +387,6 @@ const Accueil = () => {
                         Sauvegarder
                     </button>
                 </div>
-                <button
-                    className={styles.createFormButton}
-                    onClick={() => navigate("/form-editor2")}
-                >
-                    Créer un nouveau formulaire
-                </button>
-
-                <button
-                    className={styles.createFormButton}
-                    onClick={() => creategroup()}
-                >
-                    Créer un nouveau groupe
-                </button>
             </div>
 
             <div className={styles.displayType}>
@@ -436,8 +423,8 @@ const Accueil = () => {
                         <h3>Déplacer vers…</h3>
 
                         <select
-                            value={selectedGroup}
-                            onChange={(e) => setSelectedGroup(e.target.value)}
+                            value={moveModal.selectedGroup}
+                            onChange={(e) => setMoveModal(prev => ({ ...prev, selectedGroup: e.target.value }))}
                         >
                             <option value="">Sélectionner un groupe</option>
                             {groups.map(group => (
@@ -448,7 +435,7 @@ const Accueil = () => {
                         </select>
 
                         <div className={styles.buttonsRow}>
-                            <button onClick={handleMove} disabled={!selectedGroup}>
+                            <button onClick={handleMove} disabled={!moveModal.selectedGroup}>
                                 Confirmer
                             </button>
                             <button onClick={() => setMoveModal({ open: false, item: null })}>
@@ -459,311 +446,323 @@ const Accueil = () => {
                 </div>
             )}
             {viewMode === "forms" ? (
-                <div className={styles.tableContainer}>
-                    <h2>Liste des formulaires enregistrés</h2>
+                <div>
+                    <div className={styles.tableHeader}>
+                        <button
+                            className={styles.createButton}
+                            onClick={() => creategroup()}
+                        >
+                            Créer un nouveau formulaire
+                        </button>
+                        <h2 className={styles.tableTitle}>Liste des formulaires enregistrés</h2>
+                    </div>
+                    <div className={styles.tableContainer}>
+                        <div>
+                            <table className={styles.table}>
+                                <thead className='thead'>
+                                    <tr className={styles.filtrers}>
+                                        <th className={styles.thFilter}></th>
+                                        <th className={styles.thFilter}>
+                                            <input
+                                                type="text"
+                                                placeholder="Rechercher un formulaire..."
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                className={styles.headerSearchInput}
+                                            />
+                                        </th>
+                                        <th className={styles.thFilter}>
+                                            <select
+                                                value={tableSelectedGroup}
+                                                onChange={(e) => setTableSelectedGroup(e.target.value)}
+                                            >
+                                                <option value="">Tous les groupes</option>
+                                                {groups.map((g) => (
+                                                <option key={g.id} value={g.id}>
+                                                    {g.name}
+                                                </option>
+                                                ))}
+                                            </select>
+                                        </th>
+                                        <th className={styles.thFilter}></th>
+                                        <th className={styles.thFilter}></th>
+                                        <th className={styles.thFilter}></th>
+                                        <th className={styles.thFilter}>
+                                            <select
+                                                value=""
+                                                disabled={selectedForms.length === 0}
+                                                onChange={(e) => {
+                                                    const action = e.target.value;
+                                                    e.target.value = "";
+                                                    if (!action) return;
 
-                    <div>
+                                                    const isMultiple = selectedForms.length > 1;
+                                                    const id = selectedForms;
+
+                                                    switch (action) {
+                                                        case "view":
+                                                            if (!isMultiple) navigate(`/form-viewer/${id}/1?navigation=True`);
+                                                            break;
+                                                        case "edit":
+                                                            if (!isMultiple) handleEditForm(id);
+                                                            break;
+                                                        case "responses":
+                                                            if (!isMultiple) navigate(`/form-responses/${id}`);
+                                                            break;
+                                                        case "move":
+                                                            setMoveModal({ open: true, item: { id: selectedForms } });
+                                                            break;
+                                                        case "duplicate":
+                                                            handleDuplicateForm(id);
+                                                            break;
+                                                        case "delete":
+                                                            handleDeleteForm(id);
+                                                            break;
+                                                        default:
+                                                            break;
+                                                    }
+                                                }}
+                                                className={`${styles.headerSelect} ${
+                                                    selectedForms.length === 0 ? styles.selectDisabled : styles.selectEnabled
+                                                }`}
+                                            >
+                                                <option value="">— Actions —</option>
+
+                                                {selectedForms.length === 1 && (
+                                                    <>
+                                                        <option value="view">Voir</option>
+                                                        <option
+                                                            value="edit"
+                                                            disabled={
+                                                                forms.find(f => f.id === selectedForms[0])?.responseCount > 0
+                                                            }
+                                                        >
+                                                            Modifier
+                                                        </option>
+                                                        <option value="responses">Voir réponses</option>
+                                                    </>
+                                                )}
+
+                                                {selectedForms.length > 0 && (
+                                                    <>
+                                                        <option value="move">Déplacer</option>
+                                                        <option value="duplicate">Dupliquer</option>
+                                                        <option value="delete">Supprimer</option>
+                                                    </>
+                                                )}
+                                            </select>
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th className={styles.th}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={selectedForms.length === filteredForms.length && filteredForms.length > 0}
+                                            onChange={(e) => {
+                                            if (e.target.checked) handleCheckAll();
+                                            else handleUncheckAll();
+                                            }}
+                                        />
+                                        </th>
+                                        <th className={styles.th}>Titre</th>
+                                        <th className={styles.th}>Groupe</th>
+                                        <th className={styles.th}>Date de création</th>
+                                        <th className={styles.th}>Dernière mise à jour</th>
+                                        <th className={styles.th}>Nombre de réponses</th>
+                                        <th className={styles.th}>Actions</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody className={styles.scrollableTable}>
+                                    {forms.length === 0 ? (
+                                        <tr>
+                                        <td colSpan="7">Aucun formulaire</td>
+                                        </tr>
+                                    ) : (
+                                        filteredForms.map(form => (
+                                        <tr 
+                                            key={form.id}
+                                            onContextMenu={(e) => {
+                                                handleRightClick(e, form.id)
+                                            }}
+                                        >
+                                            <td className={styles.td}>
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                checked={selectedForms.includes(form.id)}
+                                                onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
+                                            />
+                                            </td>
+                                            <td className={styles.td}>{form.title}</td>
+                                            <td className={styles.td}>{form.group_name || "-"}</td>
+                                            <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
+                                            <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
+                                            <td className={styles.td}>{form.responseCount}</td>
+                                            <td className={styles.td}>
+                                                <div className={styles.actionWrapper}>
+                                                    <button
+                                                        className={styles.actionButton}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+
+                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                            const MENU_HEIGHT = 220;
+
+                                                            let y = rect.bottom;
+
+                                                            if (y + MENU_HEIGHT > window.innerHeight) {
+                                                                y = rect.top - MENU_HEIGHT + 38;
+                                                            }
+
+                                                            setMenuPosition({
+                                                                x: rect.left,
+                                                                y,
+                                                            });
+
+                                                            setOpenMenuId(openMenuId === form.id ? null : form.id);
+                                                        }}
+                                                    >
+                                                        ...
+                                                    </button>
+                                                    
+                                                </div>
+
+                                            </td>
+                                        </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div >
+                </div>
+            ) : (
+                <div>
+                    <div className={styles.tableHeader}>
+                        <button
+                            className={styles.createButton}
+                            onClick={() => creategroup()}
+                        >
+                            Créer un nouveau groupe
+                        </button>
+                        <h2 className={styles.tableTitle}>Liste des groupes enregistrés</h2>
+                    </div>
+                    <div className={styles.tableContainer}>
                         <table className={styles.table}>
-                            <thead className='thead'>
-                                <tr className={styles.filtrers}>
+                            <thead>
+                                <tr className={styles.filter}>
                                     <th className={styles.thFilter}></th>
                                     <th className={styles.thFilter}>
                                         <input
                                             type="text"
-                                            placeholder="Rechercher un formulaire..."
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="Rechercher un groupe..."
+                                            value={groupSearchQuery}
+                                            onChange={(e) => setGroupSearchQuery(e.target.value)}
                                             className={styles.headerSearchInput}
                                         />
                                     </th>
+                                    <th className={styles.thFilter}></th>
+                                    <th className={styles.thFilter}></th>
+                                    <th className={styles.thFilter}></th>
                                     <th className={styles.thFilter}>
                                         <select
-                                            value={selectedGroup}
-                                            onChange={(e) => setSelectedGroup(e.target.value)}
-                                            className={styles.headerSelect}
+                                            value=""
+                                            onChange={(e) => {
+                                                const action = e.target.value;
+                                                e.target.value = ""; 
+
+                                                if (!action) return;
+
+                                                const isMultiple = selectedGroups.length > 1;
+                                                const id = selectedGroups;
+
+                                                switch (action) {
+                                                    case "rename":
+                                                        if (!isMultiple) handleRenameGroup(id);
+                                                        break;
+                                                    case "delete":
+                                                        handleDeletegroup(id);
+                                                        break;
+                                                    default:
+                                                        break;
+                                                }
+                                            }}
+                                            className={`${styles.headerSelect} ${
+                                                selectedGroups.length === 0 ? styles.selectDisabled : styles.selectEnabled
+                                            }`}
                                         >
-                                            <option value="">Tous les groupes</option>
-                                            {groups.map((g) => (
-                                            <option key={g.id} value={g.id}>
-                                                {g.name}
-                                            </option>
-                                            ))}
+                                            <option value="">— Actions —</option>
+                                            {selectedGroups.length === 1 && (
+                                                <>
+                                                    <option value="rename">Renommer</option>
+                                                </>
+                                            )}
+                                            {selectedGroups.length > 0 && (
+                                                <>
+                                                    <option value="delete">
+                                                        Supprimer
+                                                    </option>
+                                                </>
+                                            )}
                                         </select>
                                     </th>
-                                    <th className={styles.thFilter}></th>
-                                    <th className={styles.thFilter}></th>
-                                    <th className={styles.thFilter}></th>
-                                    <th className={styles.thFilter}></th>
                                 </tr>
                                 <tr>
                                     <th className={styles.th}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={selectedForms.length === filteredForms.length && filteredForms.length > 0}
-                                        onChange={(e) => {
-                                        if (e.target.checked) handleCheckAll();
-                                        else handleUncheckAll();
-                                        }}
-                                    />
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={selectedGroups.length === filteredGroups.length && filteredGroups.length > 0}
+                                            onChange={(e) => e.target.checked ? handleCheckAllGroups() : handleUncheckAllGroups()}
+                                        />
                                     </th>
-                                    <th className={styles.th}>Titre</th>
-                                    <th className={styles.th}>Groupe</th>
+                                    <th className={styles.th}>Nom du groupe</th>
                                     <th className={styles.th}>Date de création</th>
                                     <th className={styles.th}>Dernière mise à jour</th>
-                                    <th className={styles.th}>Nombre de réponses</th>
+                                    <th className={styles.th}>Nombre de formulaires</th>
                                     <th className={styles.th}>Actions</th>
                                 </tr>
                             </thead>
-
                             <tbody className={styles.scrollableTable}>
-                                {forms.length === 0 ? (
-                                    <tr>
-                                    <td colSpan="7">Aucun formulaire</td>
-                                    </tr>
-                                ) : (
-                                    filteredForms.map(form => (
-                                    <tr 
-                                        key={form.id}
-                                        onContextMenu={(e) => {
-                                            handleRightClick(e, form.id)
-                                        }}
+                                {filteredGroups.map(group => (
+                                    <tr
+                                        key={group.id}
+                                        onContextMenu={(e) => handleRightClickGroup(e, group.id)}
                                     >
                                         <td className={styles.td}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            checked={selectedForms.includes(form.id)}
-                                            onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
-                                        />
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                checked={selectedGroups.includes(group.id)}
+                                                onChange={(e) => handleGroupCheckboxChange(group.id, e.target.checked)}
+                                            />
                                         </td>
-                                        <td className={styles.td}>{form.title}</td>
-                                        <td className={styles.td}>{form.group_name || "-"}</td>
-                                        <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
-                                        <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
-                                        <td className={styles.td}>{form.responseCount}</td>
+                                        <td className={styles.td}>{group.name}</td>
+                                        <td className={styles.td}>{new Date(group.created_at).toLocaleString()}</td>
+                                        <td className={styles.td}>{new Date(group.updated_at).toLocaleString()}</td>
+                                        <td className={styles.td}>{group.formsCount || 0}</td>
                                         <td className={styles.td}>
-                                            <div className={styles.actionWrapper}>
-                                                <button
-                                                    className={styles.actionButton}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-
-                                                        const rect = e.currentTarget.getBoundingClientRect();
-                                                        const MENU_HEIGHT = 220;
-
-                                                        let y = rect.bottom;
-
-                                                        if (y + MENU_HEIGHT > window.innerHeight) {
-                                                            y = rect.top - MENU_HEIGHT + 38;
-                                                        }
-
-                                                        setMenuPosition({
-                                                            x: rect.left,
-                                                            y,
-                                                        });
-
-                                                        setOpenMenuId(openMenuId === form.id ? null : form.id);
-                                                    }}
-                                                >
-                                                    ...
-                                                </button>
-                                                
-                                            </div>
-
+                                            <button
+                                                className={styles.actionButton}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                    const MENU_HEIGHT = 100;
+                                                    let y = rect.bottom;
+                                                    if (y + MENU_HEIGHT > window.innerHeight) y = rect.top - MENU_HEIGHT + 38;
+                                                    setGroupMenuPosition({ x: rect.left, y });
+                                                    setOpenGroupMenuId(openGroupMenuId === group.id ? null : group.id);
+                                                }}
+                                            >
+                                                ...
+                                            </button>
                                         </td>
                                     </tr>
-                                    ))
-                                )}
+                                ))}
                             </tbody>
                         </table>
-                    </div>
-
-                    <div className={styles.actionBar}>
-                        <span>{selectedForms.length} sélectionné(s)</span>
-
-                        <select
-                            value=""
-                            disabled={selectedForms.length === 0}
-                            onChange={(e) => {
-                                const action = e.target.value;
-                                e.target.value = ""; 
-
-                                if (!action) return;
-
-                                const isMultiple = selectedForms.length > 1;
-                                const id = selectedForms;
-
-                                switch (action) {
-                                    case "view":
-                                        if (!isMultiple) navigate(`/form-viewer/${id}/1?navigation=True`);
-                                        break;
-                                    case "edit":
-                                        if (!isMultiple) handleEditForm(id);
-                                        break;
-                                    case "responses":
-                                        if (!isMultiple) navigate(`/form-responses/${id}`);
-                                        break;
-                                    case "move":
-                                        setMoveModal({ open: true, item: { id: selectedForms } });
-                                        break;
-                                    case "duplicate":
-                                        handleDuplicateForm(id);
-                                        break;
-                                    case "delete":
-                                        handleDeleteForm(id);
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }}
-                            className={styles.actionSelect}
-                        >
-                            
-                            <option value="">— Actions —</option>
-
-                            {selectedForms.length === 1 && (
-                                <>
-                                    <option value="view">Voir</option>
-                                    <option value="edit">Modifier</option>
-                                    <option value="responses">Voir réponses</option>
-                                </>
-                            )}
-
-                            {selectedForms.length > 0 && (
-                                <>
-                                    <option value="move">Déplacer</option>
-                                    <option value="duplicate">
-                                        Dupliquer
-                                    </option>
-                                    <option value="delete">
-                                        Supprimer
-                                    </option>
-                                </>
-                            )}
-                        </select>
-                    </div>
-                </div >
-            ) : (
-                <div className={styles.tableContainer}>
-                    <h2>Liste des groupes enregistrés</h2>
-                    <table className={styles.table}>
-                        <thead>
-                            <tr className={styles.filter}>
-                                <th className={styles.thFilter}></th>
-                                <th className={styles.thFilter}>
-                                    <input
-                                        type="text"
-                                        placeholder="Rechercher un groupe..."
-                                        value={groupSearchQuery}
-                                        onChange={(e) => setGroupSearchQuery(e.target.value)}
-                                        className={styles.headerSearchInput}
-                                    />
-                                </th>
-                                <th className={styles.thFilter}></th>
-                                <th className={styles.thFilter}></th>
-                                <th className={styles.thFilter}></th>
-                                <th className={styles.thFilter}></th>
-                            </tr>
-                            <tr>
-                                <th className={styles.th}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={selectedGroups.length === filteredGroups.length && filteredGroups.length > 0}
-                                        onChange={(e) => e.target.checked ? handleCheckAllGroups() : handleUncheckAllGroups()}
-                                    />
-                                </th>
-                                <th className={styles.th}>Nom du groupe</th>
-                                <th className={styles.th}>Date de création</th>
-                                <th className={styles.th}>Dernière mise à jour</th>
-                                <th className={styles.th}>Nombre de formulaires</th>
-                                <th className={styles.th}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className={styles.scrollableTable}>
-                            {filteredGroups.map(group => (
-                                <tr
-                                    key={group.id}
-                                    onContextMenu={(e) => handleRightClickGroup(e, group.id)}
-                                >
-                                    <td>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            checked={selectedGroups.includes(group.id)}
-                                            onChange={(e) => handleGroupCheckboxChange(group.id, e.target.checked)}
-                                        />
-                                    </td>
-                                    <td>{group.name}</td>
-                                    <td>{new Date(group.created_at).toLocaleString()}</td>
-                                    <td>{new Date(group.updated_at).toLocaleString()}</td>
-                                    <td>{group.formsCount || 0}</td>
-                                    <td>
-                                        <button
-                                            className={styles.actionButton}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                const rect = e.currentTarget.getBoundingClientRect();
-                                                const MENU_HEIGHT = 100;
-                                                let y = rect.bottom;
-                                                if (y + MENU_HEIGHT > window.innerHeight) y = rect.top - MENU_HEIGHT + 38;
-                                                setGroupMenuPosition({ x: rect.left, y });
-                                                setOpenGroupMenuId(openGroupMenuId === group.id ? null : group.id);
-                                            }}
-                                        >
-                                            ...
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    <div className={styles.actionBar}>
-                        <span>{selectedGroups.length} sélectionné(s)</span>
-
-                        <select
-                            value=""
-                            disabled={selectedGroups.length === 0}
-                            onChange={(e) => {
-                                const action = e.target.value;
-                                e.target.value = ""; 
-
-                                if (!action) return;
-
-                                const isMultiple = selectedGroups.length > 1;
-                                const id = selectedGroups;
-
-                                switch (action) {
-                                    case "rename":
-                                        if (!isMultiple) handleRenameGroup(id);
-                                        break;
-                                    case "delete":
-                                        handleDeletegroup(id);
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }}
-                            className={styles.actionSelect}
-                        >
-                            
-                            <option value="">— Actions —</option>
-
-                            {selectedGroups.length === 1 && (
-                                <>
-                                    <option value="rename">Renommer</option>
-                                </>
-                            )}
-
-                            {selectedGroups.length > 0 && (
-                                <>
-                                    <option value="delete">
-                                        Supprimer
-                                    </option>
-                                </>
-                            )}
-                        </select>
                     </div>
                 </div>
             )}
@@ -777,7 +776,21 @@ const Accueil = () => {
                     }}
                 >
                     <div onClick={() => navigate(`/form-viewer/${openMenuId}/1?navigation=True`)}>Voir</div>
-                    <div onClick={() => handleEditForm(openMenuId)}>Modifier</div>
+                    {(() => {
+                        const form = forms.find(f => f.id === openMenuId);
+                        const disabled = form?.responseCount > 0;
+
+                        return (
+                            <div
+                                className={disabled ? styles.disabledAction : ""}
+                                onClick={() => {
+                                    if (!disabled) handleEditForm(openMenuId);
+                                }}
+                            >
+                                Modifier
+                            </div>
+                        );
+                    })()}
                     <div onClick={() => navigate(`/form-responses/${openMenuId}`)}>Réponses</div>
                     <div onClick={() => setMoveModal({ open: true, item: { id: [openMenuId] } })}>Déplacer</div>
                     <div onClick={() => handleDuplicateForm(openMenuId)}>Dupliquer</div>
