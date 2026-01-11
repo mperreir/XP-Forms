@@ -350,6 +350,46 @@ const duplicateForm = async (formId, newgroupId = null) => {
   });
 };
 
+const exportForm = async (formId, withResponses) => {
+  return new Promise((resolve, reject) => {
+
+    db.get("SELECT * FROM forms WHERE id = ?", [formId], (err, form) => {
+      if (err) {
+        return reject({ success: false, error: err ? err.message : "Formulaire introuvable" });
+      }
+
+      const formName = form.title;
+      const formJson = JSON.parse(form.json_data);
+
+      if (withResponses === 'true') {
+
+        db.all("SELECT * FROM responses WHERE form_id = ?", [formId], (err, resp) => {
+          if (err) {
+            return reject({ success: false, error: err ? err.message : "Formulaire introuvable" });
+          }
+
+          const data = resp;
+          const responsesJson = {};
+          data.forEach((item) => {
+            const user_id = item.user_id;
+            if (!responsesJson[user_id]) responsesJson[user_id] = [];
+            responsesJson[user_id].push(item);
+          });
+
+          resolve({ "json_data": formJson, "title": formName, "responses": responsesJson });
+        });
+
+      }
+      else {
+
+        resolve({ "json_data": formJson, "title": formName, "responses": [] });
+
+      }
+
+    });
+  });
+};
+
 const moveForm = (id, group_id) => {
   return new Promise((resolve, reject) => {
     db.run(
@@ -402,4 +442,5 @@ module.exports = {
   deleteForm,
   duplicateForm,
   moveForm,
+  exportForm,
 };

@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "./Modal.module.css";
 
-const Modal = ({ isOpen, title, message, onConfirm, onClose }) => {
+const Modal = ({ isOpen, title, message, onConfirm, confirm = 'Confirmer', close = 'Fermer', onClose }) => {
   if (!isOpen) return null;
 
   return (
@@ -17,7 +17,7 @@ const Modal = ({ isOpen, title, message, onConfirm, onClose }) => {
               }}
               className={styles.confirmButton}
             >
-              Confirmer
+              {confirm}
             </button>
           )}
           {onClose && (
@@ -25,7 +25,7 @@ const Modal = ({ isOpen, title, message, onConfirm, onClose }) => {
               onClick={onClose} // Call the onClose callback
               className={styles.closeButton}
             >
-              Fermer
+              {close}
             </button>
           )}
         </div>

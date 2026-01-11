@@ -2,17 +2,18 @@ import React, { useEffect, useState, useRef } from 'react';
 import styles from './accueil.module.css'; // Import CSS Module
 import { useNavigate } from "react-router-dom";
 import Modal from "../../components/Modal";
-
+import ImportModal from '../../components/ImportModal';
 
 const Accueil = () => {
     const [forms, setForms] = useState([]);
     const [selectedForms, setSelectedForms] = useState([]);
     const [newUserId, setNewUserId] = useState(localStorage.getItem('defaultUserId') || ""); // Utiliser la valeur du localStorage ou une valeur vide
-    const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
+    const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null, confirm: '', close: '', onClose: null });
+    const [importModal, setImportModal] = useState({ isOpen: false, onConfirm: null, onFormatError: null, onError: null });
     const [notification, setNotification] = useState({ message: "", type: "" });
     const navigate = useNavigate(); // Permet de gérer la navigation
     const [groups, setgroups] = useState([]);
-    const [moveModal, setMoveModal] = useState({open: false, type: null, item: null,});
+    const [moveModal, setMoveModal] = useState({ open: false, type: null, item: null, });
     const [selectedGroup, setSelectedGroup] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [openMenuId, setOpenMenuId] = useState(null);
@@ -33,27 +34,27 @@ const Accueil = () => {
     const filteredGroups = groups
         .filter(g => g.name.toLowerCase().includes(groupSearchQuery.toLowerCase()));
 
-    const showModal = (title, message, onConfirm = null) => {
-        setModal({ isOpen: true, title, message, onConfirm });
+    const showModal = (title, message, onConfirm = null, confirm = 'Confirmer', close = 'Fermer', onClose = closeModal) => {
+        setModal({ isOpen: true, title, message, onConfirm, confirm, close, onClose });
     };
 
     const closeModal = () => {
-        setModal({ isOpen: false, title: "", message: "", onConfirm: null });
+        setModal({ isOpen: false, title: "", message: "", onConfirm: null, confirm: '', close: '', onClose: null });
     };
 
-    const showNotification = (message, type = "success", duration = 3000) => {
-        setNotification({ message, type });
-        setTimeout(() => {
-            setNotification({ message: "", type: "" });
-        }, duration);
+    const showImportModal = (onConfirm = null, onFormatError = null, onError = null) => {
+        setImportModal({ isOpen: true, onConfirm, onFormatError, onError });
     };
 
-    const reloadForms = async () => {
+    const closeImportModal = () => {
+        setImportModal({ isOpen: false, onConfirm: null, onFormatError: null, onError: null });
+    };
+
+    const fetchForms = async () => {
         try {
             const response = await fetch('/api/forms');
             if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
             const data = await response.json();
-
             const formsWithCounts = await Promise.all(
                 data.map(async (form) => {
                     try {
@@ -71,6 +72,42 @@ const Accueil = () => {
             console.error(error);
         }
     };
+
+    useEffect(() => {
+        const showNotification = (message, type = "success", duration = 3000) => {
+            setNotification({ message, type });
+            setTimeout(() => {
+                setNotification({ message: "", type: "" });
+            }, duration);
+        };
+
+        const reloadForms = async () => {
+            try {
+                const response = await fetch('/api/forms');
+                if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
+                const data = await response.json();
+
+                const formsWithCounts = await Promise.all(
+                    data.map(async (form) => {
+                        try {
+                            const res = await fetch(`/api/forms/${form.id}/responses`);
+                            const responses = res.ok ? await res.json() : [];
+                            return { ...form, responseCount: responses.length };
+                        } catch (e) {
+                            console.error("Erreur chargement réponses pour form", form.id, e);
+                            return { ...form, responseCount: 0 };
+                        }
+                    })
+                );
+                setForms(formsWithCounts);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        fetchForms();
+
+    }, []);
 
     const reloadgroups = async () => {
         try {
@@ -123,7 +160,7 @@ const Accueil = () => {
             const data = await response.json();
 
             if (data.hasResponses) {
-                showNotification("Attention, ce formulaire contient déjà des réponses et ne peut pas être modifié." , "error");
+                showNotification("Attention, ce formulaire contient déjà des réponses et ne peut pas être modifié.", "error");
             } else {
                 navigate(`/form-editor2/${formId}`);
             }
@@ -131,6 +168,40 @@ const Accueil = () => {
             console.error("Erreur lors de la vérification des réponses :", error);
             showNotification("Erreur lors de la vérification des réponses.", "error");
         }
+    };
+
+    const handleExportForm = async (formId) => {
+        const exportForm = async (formId, resp = false) => {
+            try {
+                const response = await fetch(`/api/forms/${formId}/export/${resp}`);
+
+                if (response.ok) {
+                    const formJson = await response.json();
+
+                    // Téléchargement du fichier exporté
+                    let element = document.createElement('a');
+                    element.setAttribute('href',
+                        'data:text/json;charset=utf-8, '
+                        + encodeURIComponent(JSON.stringify(formJson, null, 2)));
+                    element.setAttribute('download', formJson.title + '.json');
+
+                    document.body.appendChild(element);
+                    element.click();
+                    document.body.removeChild(element);
+
+                    showModal("Succès", "Formulaire exporté !");
+                } else {
+                    const errorData = await response.json();
+                    showModal("Erreur", "Erreur : " + errorData.error);
+                }
+            } catch (error) {
+                console.error("Erreur :", error);
+                showModal("Erreur", "Impossible de contacter le serveur.");
+            }
+        };
+
+
+        showModal('Import', 'Voulez-vous également exporter les réponses ?', () => { exportForm(formId, true) }, 'Oui', 'Non', () => { exportForm(formId) });
     };
 
     // Pour mettre à jour ce que tape l'utilisateur dans l'input
@@ -153,7 +224,7 @@ const Accueil = () => {
 
             if (!response.ok) throw new Error("Erreur lors de l'enregistrement de l'ID utilisateur par défaut.");
 
-            showNotification("ID utilisateur par défaut enregistré !" , "success");
+            showNotification("ID utilisateur par défaut enregistré !", "success");
         } catch (error) {
             console.error(error);
             showNotification("Impossible d'enregistrer l'ID utilisateur par défaut.", "error");
@@ -195,21 +266,21 @@ const Accueil = () => {
         const ids = formId ? (Array.isArray(formId) ? formId : [formId]) : selectedForms;
 
         if (!ids || ids.length === 0) return;
-            try {
-                for (const id of ids) {
-                    await fetch(`/api/forms/${id}/duplicate`, { method: "POST" });
-                }
-
-                showNotification("Tous les formulaires sélectionnés ont été dupliqués !", "success");
-
-                await reloadForms();
-                await reloadgroups();
-                setSelectedForms([]); // Réinitialise la sélection
-
-            } catch (error) {
-                console.error(error);
-                showNotification("Impossible de dupliquer certains formulaires.", "error");
+        try {
+            for (const id of ids) {
+                await fetch(`/api/forms/${id}/duplicate`, { method: "POST" });
             }
+
+            showNotification("Tous les formulaires sélectionnés ont été dupliqués !", "success");
+
+            await reloadForms();
+            await reloadgroups();
+            setSelectedForms([]); // Réinitialise la sélection
+
+        } catch (error) {
+            console.error(error);
+            showNotification("Impossible de dupliquer certains formulaires.", "error");
+        }
     };
 
     // Suppression de tous les formulaires cochés
@@ -320,11 +391,11 @@ const Accueil = () => {
                     setSelectedForms([]);
                     showNotification(`Groupe supprimé`, "success");
 
-                } catch(err) {
+                } catch (err) {
                     console.error(err);
                     showNotification("Impossible de dupliquer le groupe.", "error");
                 }
-                
+
             }
         );
     };
@@ -367,6 +438,25 @@ const Accueil = () => {
     };
 
 
+    const handleImportButton = () => {
+        showImportModal(() => {
+            closeImportModal();
+            fetchForms();
+            showModal("Succès", "Formulaire importé !");
+        },
+            () => {
+                closeImportModal();
+                fetchForms();
+                showModal("Erreur", "Contenu du fichier incompatible.");
+            },
+            () => {
+                closeImportModal();
+                fetchForms();
+                showModal("Erreur", "Impossible de contacter le serveur.");
+            });
+    }
+
+
     return (
         <>
             <div>
@@ -403,14 +493,14 @@ const Accueil = () => {
             </div>
 
             <div className={styles.displayType}>
-                <button 
+                <button
                     onClick={() => setViewMode("forms")}
                     className={`${styles.viewButton} ${viewMode === "forms" ? styles.activeViewButton : ""} ${styles.switchToViewForms}`}
                 >
                     Formulaires
                 </button>
 
-                <button 
+                <button
                     onClick={() => setViewMode("groups")}
                     className={`${styles.viewButton} ${viewMode === "groups" ? styles.activeViewButton : ""} ${styles.switchToViewGroups}`}
                 >
@@ -422,8 +512,17 @@ const Accueil = () => {
                 isOpen={modal.isOpen}
                 title={modal.title}
                 message={modal.message}
-                onClose={closeModal}
+                onClose={modal.onClose}
                 onConfirm={modal.onConfirm}
+                confirm={modal.confirm}
+                close={modal.close}
+            />
+            <ImportModal
+                isOpen={importModal.isOpen}
+                onConfirm={importModal.onConfirm}
+                onClose={closeImportModal}
+                onFormatError={importModal.onFormatError}
+                onError={importModal.onError}
             />
             {notification.message && (
                 <div className={`${styles.notification} ${styles[notification.type]}`}>
@@ -442,7 +541,7 @@ const Accueil = () => {
                             <option value="">Sélectionner un groupe</option>
                             {groups.map(group => (
                                 <option key={group.id} value={group.id}>
-                                   📁 {group.name}
+                                    📁 {group.name}
                                 </option>
                             ))}
                         </select>
@@ -484,9 +583,9 @@ const Accueil = () => {
                                         >
                                             <option value="">Tous les groupes</option>
                                             {groups.map((g) => (
-                                            <option key={g.id} value={g.id}>
-                                                {g.name}
-                                            </option>
+                                                <option key={g.id} value={g.id}>
+                                                    {g.name}
+                                                </option>
                                             ))}
                                         </select>
                                     </th>
@@ -497,15 +596,15 @@ const Accueil = () => {
                                 </tr>
                                 <tr>
                                     <th className={styles.th}>
-                                    <input
-                                        type="checkbox"
-                                        className={styles.checkbox}
-                                        checked={selectedForms.length === filteredForms.length && filteredForms.length > 0}
-                                        onChange={(e) => {
-                                        if (e.target.checked) handleCheckAll();
-                                        else handleUncheckAll();
-                                        }}
-                                    />
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            checked={selectedForms.length === filteredForms.length && filteredForms.length > 0}
+                                            onChange={(e) => {
+                                                if (e.target.checked) handleCheckAll();
+                                                else handleUncheckAll();
+                                            }}
+                                        />
                                     </th>
                                     <th className={styles.th}>Titre</th>
                                     <th className={styles.th}>Groupe</th>
@@ -519,60 +618,60 @@ const Accueil = () => {
                             <tbody className={styles.scrollableTable}>
                                 {forms.length === 0 ? (
                                     <tr>
-                                    <td colSpan="7">Aucun formulaire</td>
+                                        <td colSpan="7">Aucun formulaire</td>
                                     </tr>
                                 ) : (
                                     filteredForms.map(form => (
-                                    <tr 
-                                        key={form.id}
-                                        onContextMenu={(e) => {
-                                            handleRightClick(e, form.id)
-                                        }}
-                                    >
-                                        <td className={styles.td}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            checked={selectedForms.includes(form.id)}
-                                            onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
-                                        />
-                                        </td>
-                                        <td className={styles.td}>{form.title}</td>
-                                        <td className={styles.td}>{form.group_name || "-"}</td>
-                                        <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
-                                        <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
-                                        <td className={styles.td}>{form.responseCount}</td>
-                                        <td className={styles.td}>
-                                            <div className={styles.actionWrapper}>
-                                                <button
-                                                    className={styles.actionButton}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
+                                        <tr
+                                            key={form.id}
+                                            onContextMenu={(e) => {
+                                                handleRightClick(e, form.id)
+                                            }}
+                                        >
+                                            <td className={styles.td}>
+                                                <input
+                                                    type="checkbox"
+                                                    className={styles.checkbox}
+                                                    checked={selectedForms.includes(form.id)}
+                                                    onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
+                                                />
+                                            </td>
+                                            <td className={styles.td}>{form.title}</td>
+                                            <td className={styles.td}>{form.group_name || "-"}</td>
+                                            <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
+                                            <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
+                                            <td className={styles.td}>{form.responseCount}</td>
+                                            <td className={styles.td}>
+                                                <div className={styles.actionWrapper}>
+                                                    <button
+                                                        className={styles.actionButton}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
 
-                                                        const rect = e.currentTarget.getBoundingClientRect();
-                                                        const MENU_HEIGHT = 220;
+                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                            const MENU_HEIGHT = 220;
 
-                                                        let y = rect.bottom;
+                                                            let y = rect.bottom;
 
-                                                        if (y + MENU_HEIGHT > window.innerHeight) {
-                                                            y = rect.top - MENU_HEIGHT + 38;
-                                                        }
+                                                            if (y + MENU_HEIGHT > window.innerHeight) {
+                                                                y = rect.top - MENU_HEIGHT + 38;
+                                                            }
 
-                                                        setMenuPosition({
-                                                            x: rect.left,
-                                                            y,
-                                                        });
+                                                            setMenuPosition({
+                                                                x: rect.left,
+                                                                y,
+                                                            });
 
-                                                        setOpenMenuId(openMenuId === form.id ? null : form.id);
-                                                    }}
-                                                >
-                                                    ...
-                                                </button>
-                                                
-                                            </div>
+                                                            setOpenMenuId(openMenuId === form.id ? null : form.id);
+                                                        }}
+                                                    >
+                                                        ...
+                                                    </button>
 
-                                        </td>
-                                    </tr>
+                                                </div>
+
+                                            </td>
+                                        </tr>
                                     ))
                                 )}
                             </tbody>
@@ -587,7 +686,7 @@ const Accueil = () => {
                             disabled={selectedForms.length === 0}
                             onChange={(e) => {
                                 const action = e.target.value;
-                                e.target.value = ""; 
+                                e.target.value = "";
 
                                 if (!action) return;
 
@@ -619,7 +718,7 @@ const Accueil = () => {
                             }}
                             className={styles.actionSelect}
                         >
-                            
+
                             <option value="">— Actions —</option>
 
                             {selectedForms.length === 1 && (
@@ -714,6 +813,9 @@ const Accueil = () => {
                                         >
                                             ...
                                         </button>
+                                        <button className={`${styles.button} ${styles.exportButton}`} onClick={() => handleExportForm(form.id)}>
+                                            Exporter
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -727,7 +829,7 @@ const Accueil = () => {
                             disabled={selectedGroups.length === 0}
                             onChange={(e) => {
                                 const action = e.target.value;
-                                e.target.value = ""; 
+                                e.target.value = "";
 
                                 if (!action) return;
 
@@ -747,7 +849,7 @@ const Accueil = () => {
                             }}
                             className={styles.actionSelect}
                         >
-                            
+
                             <option value="">— Actions —</option>
 
                             {selectedGroups.length === 1 && (
@@ -782,6 +884,7 @@ const Accueil = () => {
                     <div onClick={() => setMoveModal({ open: true, item: { id: [openMenuId] } })}>Déplacer</div>
                     <div onClick={() => handleDuplicateForm(openMenuId)}>Dupliquer</div>
                     <div onClick={() => handleDeleteForm(openMenuId)}>Supprimer</div>
+                    <div onClick={() => handleExportForm(openMenuId)}></div>
                 </div>
             )}
             {openGroupMenuId && (

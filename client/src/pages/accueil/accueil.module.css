@@ -39,29 +39,29 @@
 
 /* ligne de filtres dans le thead */
 .filterRow th {
-  padding: 8px;
-  background: #f7f7f7;
-  vertical-align: middle;
+    padding: 8px;
+    background: #f7f7f7;
+    vertical-align: middle;
 }
 
 /* input de recherche dans l'en-tête */
 .headerSearchInput {
-  width: 100%;
-  height: 50px;
-  box-sizing: border-box;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
+    width: 100%;
+    height: 50px;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
 }
 
 /* select de filtre groupe dans l'en-tête */
 .headerSelect {
-  width: 100%;
-  height: 50px;
-  box-sizing: border-box;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
+    width: 100%;
+    height: 50px;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
 }
 
 .th,
@@ -203,7 +203,7 @@ button:disabled {
     right: 75px;
 }
 
-.checkbox{
+.checkbox {
     transform: scale(1.5);
     -webkit-transform: scale(1.5);
     margin: 6px;
@@ -268,7 +268,7 @@ button:disabled {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -283,7 +283,7 @@ button:disabled {
 }
 
 .deletegroupButton {
-    margin-left : 30px;
+    margin-left: 30px;
     margin-bottom: 0;
     margin-top: 0;
     padding: 0;
@@ -338,7 +338,7 @@ button:disabled {
     align-items: center;
 
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 
     z-index: 999;
     border: 1px solid #e5e7eb;
@@ -358,7 +358,8 @@ button:disabled {
 }
 
 .actionWrapper {
-    position: relative; /* Important pour positionner le menu par rapport au bouton */
+    position: relative;
+    /* Important pour positionner le menu par rapport au bouton */
     display: inline-block;
 }
 
@@ -370,12 +371,12 @@ button:disabled {
     border: 1px solid #ccc;
     border-radius: 6px;
     padding: 6px 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 1000;
     min-width: 120px;
-    width: max-content;   
-    max-width: 200px;  
-    white-space: nowrap;  
+    width: max-content;
+    max-width: 200px;
+    white-space: nowrap;
 }
 
 .actionMenu div {
@@ -418,8 +419,6 @@ button:disabled {
     border-radius: 6px 0 0 6px;
 }
 
-.switchToViewGroups{
+.switchToViewGroups {
     border-radius: 0 6px 6px 0;
 }
-
-
