@@ -424,6 +424,9 @@ const validateCurrentPage = useCallback(() => {
                   Ajoutez <strong>@</strong> comme ID participant pour utiliser l'ID utilisateur par défaut.
                 </p>
                 <p>
+                  Ajoutez <strong>/numéroPageDebut-numéroPageFin</strong> à la suite du numéro de page pour parcourir un intervalle de pages
+                </p>
+                <p>
                   Ajoutez <strong>?navigation=True</strong> à la fin si vous voulez permettre la navigation entre pages.
                 </p>
               </div>
