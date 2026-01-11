@@ -73,41 +73,36 @@ const Accueil = () => {
         }
     };
 
-    useEffect(() => {
-        const showNotification = (message, type = "success", duration = 3000) => {
-            setNotification({ message, type });
-            setTimeout(() => {
-                setNotification({ message: "", type: "" });
-            }, duration);
-        };
+    const showNotification = (message, type = "success", duration = 3000) => {
+        setNotification({ message, type });
+        setTimeout(() => {
+            setNotification({ message: "", type: "" });
+        }, duration);
+    };
 
-        const reloadForms = async () => {
-            try {
-                const response = await fetch('/api/forms');
-                if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
-                const data = await response.json();
+    const reloadForms = async () => {
+        try {
+            const response = await fetch('/api/forms');
+            if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
+            const data = await response.json();
 
-                const formsWithCounts = await Promise.all(
-                    data.map(async (form) => {
-                        try {
-                            const res = await fetch(`/api/forms/${form.id}/responses`);
-                            const responses = res.ok ? await res.json() : [];
-                            return { ...form, responseCount: responses.length };
-                        } catch (e) {
-                            console.error("Erreur chargement réponses pour form", form.id, e);
-                            return { ...form, responseCount: 0 };
-                        }
-                    })
-                );
-                setForms(formsWithCounts);
-            } catch (error) {
-                console.error(error);
-            }
-        };
-
-        fetchForms();
-
-    }, []);
+            const formsWithCounts = await Promise.all(
+                data.map(async (form) => {
+                    try {
+                        const res = await fetch(`/api/forms/${form.id}/responses`);
+                        const responses = res.ok ? await res.json() : [];
+                        return { ...form, responseCount: responses.length };
+                    } catch (e) {
+                        console.error("Erreur chargement réponses pour form", form.id, e);
+                        return { ...form, responseCount: 0 };
+                    }
+                })
+            );
+            setForms(formsWithCounts);
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const reloadgroups = async () => {
         try {
@@ -189,19 +184,20 @@ const Accueil = () => {
                     element.click();
                     document.body.removeChild(element);
 
-                    showModal("Succès", "Formulaire exporté !");
+                    closeModal();
+                    showNotification("Formulaire exporté !", "success");
                 } else {
                     const errorData = await response.json();
-                    showModal("Erreur", "Erreur : " + errorData.error);
+                    showNotification("Erreur : " + errorData.error, "error");
                 }
             } catch (error) {
                 console.error("Erreur :", error);
-                showModal("Erreur", "Impossible de contacter le serveur.");
+                showNotification("Impossible de contacter le serveur.", "error");
             }
         };
 
 
-        showModal('Import', 'Voulez-vous également exporter les réponses ?', () => { exportForm(formId, true) }, 'Oui', 'Non', () => { exportForm(formId) });
+        showModal('Export', 'Voulez-vous également exporter les réponses ?', () => { exportForm(formId, true) }, 'Oui', 'Non', () => { exportForm(formId) });
     };
 
     // Pour mettre à jour ce que tape l'utilisateur dans l'input
@@ -442,17 +438,17 @@ const Accueil = () => {
         showImportModal(() => {
             closeImportModal();
             fetchForms();
-            showModal("Succès", "Formulaire importé !");
+            showNotification("Formulaire importé !", "success");
         },
             () => {
                 closeImportModal();
                 fetchForms();
-                showModal("Erreur", "Contenu du fichier incompatible.");
+                showNotification("Contenu du fichier incompatible.", "error");
             },
             () => {
                 closeImportModal();
                 fetchForms();
-                showModal("Erreur", "Impossible de contacter le serveur.");
+                showNotification("Impossible de contacter le serveur.", "error");
             });
     }
 
@@ -489,6 +485,13 @@ const Accueil = () => {
                     onClick={() => creategroup()}
                 >
                     Créer un nouveau groupe
+                </button>
+
+                <button
+                    className={styles.ImportButton}
+                    onClick={() => handleImportButton()}
+                >
+                    Importer un formulaire
                 </button>
             </div>
 
@@ -712,6 +715,9 @@ const Accueil = () => {
                                     case "delete":
                                         handleDeleteForm(id);
                                         break;
+                                    case "export":
+                                        handleExportForm(id);
+                                        break;
                                     default:
                                         break;
                                 }
@@ -726,6 +732,9 @@ const Accueil = () => {
                                     <option value="view">Voir</option>
                                     <option value="edit">Modifier</option>
                                     <option value="responses">Voir réponses</option>
+                                    <option value="export">
+                                        Exporter
+                                    </option>
                                 </>
                             )}
 
@@ -813,9 +822,6 @@ const Accueil = () => {
                                         >
                                             ...
                                         </button>
-                                        <button className={`${styles.button} ${styles.exportButton}`} onClick={() => handleExportForm(form.id)}>
-                                            Exporter
-                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -884,7 +890,7 @@ const Accueil = () => {
                     <div onClick={() => setMoveModal({ open: true, item: { id: [openMenuId] } })}>Déplacer</div>
                     <div onClick={() => handleDuplicateForm(openMenuId)}>Dupliquer</div>
                     <div onClick={() => handleDeleteForm(openMenuId)}>Supprimer</div>
-                    <div onClick={() => handleExportForm(openMenuId)}></div>
+                    <div onClick={() => handleExportForm(openMenuId)}>Exporter</div>
                 </div>
             )}
             {openGroupMenuId && (
