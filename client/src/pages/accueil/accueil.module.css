@@ -46,28 +46,45 @@
 
 /* input de recherche dans l'en-tête */
 .headerSearchInput {
-    width: 100%;
-    height: 50px;
-    box-sizing: border-box;
-    padding: 6px 8px;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
+  width: 100%;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
 }
 
 /* select de filtre groupe dans l'en-tête */
 .headerSelect {
-    width: 100%;
-    height: 50px;
-    box-sizing: border-box;
-    padding: 6px 8px;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
+  width: 100%;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+}
+
+.selectEnabled {
+    cursor: pointer;
+    background: #f9fafb;
+}
+
+.selectDisabled {
+    cursor: default;
+    opacity: 0.5;
+    pointer-events: none;
 }
 
 .th,
 .td {
     text-align: center;
     padding: 12px;
+}
+
+.td {
+    padding: 0px 2px;
+    line-height: 1;
 }
 
 .th {
@@ -184,7 +201,7 @@ tbody tr:hover {
 }
 
 /* Align "Créer un nouveau formulaire" button to the left */
-.createFormButton {
+.createButton {
     margin: 20px 0;
     /* Remove auto centering */
     padding: 12px 24px;
@@ -196,7 +213,7 @@ tbody tr:hover {
     cursor: pointer;
 }
 
-.createFormButton:hover {
+.createButton:hover {
     background-color: #218838;
     /* Darker green on hover */
 }
@@ -330,6 +347,8 @@ button:disabled {
 
 .thFilter {
     border: 0;
+    padding: 4px;
+    height: 36px;
 }
 
 .select {
@@ -338,24 +357,20 @@ button:disabled {
     border: 1px solid #ccc;
 }
 
-.actionBar {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+.thFilter select {
+    width: 100%;
+    height: 36px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: white;
+    text-align: center;
+    font-size: 14px;
+}
 
-    background: #fff;
-    padding: 14px 26px;
-
-    display: flex;
-    gap: 20px;
-    align-items: center;
-
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-
-    z-index: 999;
-    border: 1px solid #e5e7eb;
+.thFilter input {
+    height: 36px;
+    font-size: 14px;
 }
 
 .actionSelect {
@@ -388,9 +403,11 @@ button:disabled {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 1000;
     min-width: 120px;
-    width: max-content;
-    max-width: 200px;
-    white-space: nowrap;
+    width: max-content;   
+    max-width: 200px;  
+    white-space: nowrap;  
+    font-size: 14px;
+    text-align: center;
 }
 
 .actionMenu div {
@@ -435,4 +452,26 @@ button:disabled {
 
 .switchToViewGroups {
     border-radius: 0 6px 6px 0;
+}
+
+.disabledAction {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.tableHeader {
+    position: relative;
+    width: 90%;
+    margin: 15px auto 0;
+    height: 48px;
+    display: flex;
+    align-items: center;
+}
+
+.tableTitle {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
 }
