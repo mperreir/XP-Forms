@@ -162,9 +162,9 @@ const FormViewer = () => {
   }, [id, id_participant]);
 
 const validateCurrentPage = useCallback(() => {
-  if (!schema || !pages[currentPage - 1]) return false;
+  if (!schema || !effectivePages[effectiveCurrentPage - 1]) return false;
 
-  const currentComponents = pages[currentPage - 1] || [];
+  const currentComponents = effectivePages[effectiveCurrentPage - 1] || [];
 
   // flatten nested components in the page (useful if components contain child components)
   const flatten = (components) => {
@@ -231,7 +231,7 @@ const validateCurrentPage = useCallback(() => {
 
     console.log("Résultat validation page (manual check)", currentPage, ":", isValid, "formData keys:", Object.keys(formData));
   return isValid;
-}, [schema, pages, currentPage, formData]);
+}, [schema, effectivePages, effectiveCurrentPage, formData]);
 
   useEffect(() => {
     const flattenComponents = (components) => {
@@ -284,7 +284,7 @@ const validateCurrentPage = useCallback(() => {
 
   useEffect(() => {
     if (!schema || effectivePages.length === 0) return;
-    if (!pages[currentPage - 1]) {
+    if (!effectivePages[effectiveCurrentPage - 1]) {
       console.error("Page invalide");
       return;
     }
