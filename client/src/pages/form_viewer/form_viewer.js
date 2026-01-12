@@ -374,7 +374,7 @@ const validateCurrentPage = useCallback(() => {
       formRef.current = null;
       form.destroy();
     };
-  }, [schema, pages, currentPage, componentMapping, id_participant, navigate, fetchSavedData, id, effectiveCurrentPage, effectivePages]);
+  }, [schema, pages, currentPage, componentMapping, id_participant, navigate, fetchSavedData, id]);
 
   // Recalculer la validité de la page courante à chaque changement de formData
   useEffect(() => {
@@ -389,7 +389,7 @@ const validateCurrentPage = useCallback(() => {
     }, 100);
     
     return () => clearTimeout(timeoutId);
-  }, [formData, currentPage, schema, pages, validateCurrentPage, effectivePages.length]);
+  }, [formData, currentPage, schema, pages, validateCurrentPage]);
 
   return (
     <>
