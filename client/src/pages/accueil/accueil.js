@@ -166,38 +166,59 @@ const Accueil = () => {
     };
 
     const handleExportForm = async (formId) => {
-        const exportForm = async (formId, resp = false) => {
-            try {
-                const response = await fetch(`/api/forms/${formId}/export/${resp}`);
 
-                if (response.ok) {
-                    const formJson = await response.json();
+        const ids = formId ? (Array.isArray(formId) ? formId : [formId]) : selectedForms;
 
-                    // Téléchargement du fichier exporté
-                    let element = document.createElement('a');
-                    element.setAttribute('href',
-                        'data:text/json;charset=utf-8, '
-                        + encodeURIComponent(JSON.stringify(formJson, null, 2)));
-                    element.setAttribute('download', formJson.title + '.json');
+        if (!ids || ids.length === 0) return;
 
-                    document.body.appendChild(element);
-                    element.click();
-                    document.body.removeChild(element);
+        const DownloadExport = async (jsonExport) => {
 
-                    closeModal();
-                    showNotification("Formulaire exporté !", "success");
-                } else {
-                    const errorData = await response.json();
-                    showNotification("Erreur : " + errorData.error, "error");
-                }
-            } catch (error) {
-                console.error("Erreur :", error);
-                showNotification("Impossible de contacter le serveur.", "error");
-            }
+            // Téléchargement du fichier exporté
+            let element = document.createElement('a');
+            element.setAttribute('href',
+                'data:text/json;charset=utf-8, '
+                + encodeURIComponent(JSON.stringify(jsonExport, null, 2)));
+            element.setAttribute('download', jsonExport.title + '.json');
+
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+
+            closeModal();
+            showNotification("Formulaire exporté !", "success");
+
         };
 
+        const exportForm = async (ids, resp = false) => {
 
-        showModal('Export', 'Voulez-vous également exporter les réponses ?', () => { exportForm(formId, true) }, 'Oui', 'Non', () => { exportForm(formId) });
+            console.log(ids);
+            let jsonExport = {};
+
+            for (let i = 0; i < ids.length; i++) {
+                let id = ids[i]
+                try {
+                    const response = await fetch(`/api/forms/${id}/export/${resp}`);
+
+                    if (response.ok) {
+
+                        const formJson = await response.json();
+
+                        jsonExport[i + 1] = formJson;
+
+                    } else {
+                        const errorData = await response.json();
+                        showNotification("Erreur : " + errorData.error, "error");
+                    }
+                } catch (error) {
+                    console.error("Erreur :", error);
+                    showNotification("Impossible de contacter le serveur.", "error");
+                }
+            }
+
+            DownloadExport(jsonExport);
+        }
+
+        showModal('Export', 'Voulez-vous également exporter les réponses ?', () => { exportForm(ids, true) }, 'Oui', 'Non', () => { exportForm(ids) });
     };
 
     // Pour mettre à jour ce que tape l'utilisateur dans l'input
@@ -746,6 +767,9 @@ const Accueil = () => {
                                     </option>
                                     <option value="delete">
                                         Supprimer
+                                    </option>
+                                    <option value="export">
+                                        Exporter
                                     </option>
                                 </>
                             )}
