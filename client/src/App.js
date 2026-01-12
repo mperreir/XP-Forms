@@ -17,6 +17,7 @@ function App() {
           <Route path="/form-editor2" element={<FormEditor2 />} />
           <Route path="/form-viewer/:id/:page" element={<FormViewer />} />
           <Route path="/form-viewer/:id/:page/:id_participant" element={<FormViewer />} />
+          <Route path="/form-viewer/:id/:page/:range/:id_participant" element={<FormViewer />} />
           <Route path="/form-responses/:id" element={<FormResponsesList />} />
           <Route path="/form-editor2/:id" element={<FormEditor2 />} />
           <Route path="/merci" element={<Merci />} />
