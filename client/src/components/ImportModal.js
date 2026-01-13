@@ -54,7 +54,7 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
     reader.onload = () => {
       try {
         const formJson = JSON.parse(reader.result);
-        handleImportForm(formJson);
+        handleImportForm(formJson[1]);
       }
       catch (err) {
         document.querySelector("#formatError").click();
