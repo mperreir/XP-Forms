@@ -15,7 +15,7 @@ const Modal = ({ isOpen, title, message, onConfirm, confirm = 'Confirmer', close
               onClick={onClose} // Call the onClose callback
               className={styles.closeButton}
             >
-              Fermer
+              {close}
             </button>
           )}
           {onConfirm && (
@@ -26,14 +26,6 @@ const Modal = ({ isOpen, title, message, onConfirm, confirm = 'Confirmer', close
               className={styles.confirmButton}
             >
               {confirm}
-            </button>
-          )}
-          {onClose && (
-            <button
-              onClick={onClose} // Call the onClose callback
-              className={styles.closeButton}
-            >
-              {close}
             </button>
           )}
         </div>
