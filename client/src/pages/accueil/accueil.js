@@ -567,7 +567,7 @@ const Accueil = () => {
                     <div className={styles.tableHeader}>
                         <button
                             className={styles.createButton}
-                            onClick={() => creategroup()}
+                            onClick={() => navigate("/form-editor2")}
                         >
                             Créer un nouveau formulaire
                         </button>
