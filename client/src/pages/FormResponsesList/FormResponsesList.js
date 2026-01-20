@@ -136,27 +136,29 @@ const FormResponsesList = () => {
       <button onClick={exportToCSV} style={{ marginBottom: "10px" }}>Exporter en CSV</button>
 
       {responses.length > 0 && questions.length > 0 ? (
-        <table>
-          <thead>
-            <tr>
-              <th>ID Utilisateur</th>
-              {questions.map((question, index) => (
-                <th key={index}>{question}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {responses.map((userResponse, index) => (
-              <tr key={index}>
-                <td>{userResponse.user_id}</td>
-                {questions.map((question, qIndex) => {
-                  const answerObj = userResponse.responses.find((resp) => resp.question === question);
-                  return <td key={qIndex}>{answerObj ? answerObj.answer || "N/A" : "N/A"}</td>;
-                })}
+        <div className={styles.tableWrapper}>
+          <table>
+            <thead>
+              <tr>
+                <th>ID Utilisateur</th>
+                {questions.map((question, index) => (
+                  <th key={index}>{question}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {responses.map((userResponse, index) => (
+                <tr key={index}>
+                  <td>{userResponse.user_id}</td>
+                  {questions.map((question, qIndex) => {
+                    const answerObj = userResponse.responses.find((resp) => resp.question === question);
+                    return <td key={qIndex}>{answerObj ? answerObj.answer || "N/A" : "N/A"}</td>;
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <p className={styles.message}>Chargement des données ou aucune réponse trouvée.</p>
       )}
