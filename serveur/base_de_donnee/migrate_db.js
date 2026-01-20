@@ -31,7 +31,7 @@ function all(db, sql, params = []) {
 
 async function mergeDatabases() {
   try {
-    // 1️⃣ Forms
+    // Forms
     const oldForms = await all(oldDb, 'SELECT * FROM forms');
     for (const form of oldForms) {
       await run(newDb,
@@ -41,7 +41,7 @@ async function mergeDatabases() {
       );
     }
 
-    // 2️⃣ Components
+    // Components
     const oldComponents = await all(oldDb, 'SELECT * FROM components');
     for (const comp of oldComponents) {
       await run(newDb,
@@ -51,7 +51,7 @@ async function mergeDatabases() {
       );
     }
 
-    // 3️⃣ Responses
+    // Responses
     const oldResponses = await all(oldDb, 'SELECT * FROM responses');
     for (const res of oldResponses) {
       await run(newDb,
