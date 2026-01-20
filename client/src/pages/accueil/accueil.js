@@ -27,6 +27,14 @@ const Accueil = () => {
     const groupMenuRef = useRef(null);
     const [groupSearchQuery, setGroupSearchQuery] = useState("");
 
+    document.onkeydown = function (evt) {
+        if (evt.keyCode == 27) {
+            // Escape key pressed
+            if (importModal.isOpen === true) {
+                closeImportModal();
+            }
+        }
+    };
 
     const filteredForms = forms
         .filter(f => tableSelectedGroup ? f.group_id === Number(tableSelectedGroup) : true)
@@ -474,7 +482,6 @@ const Accueil = () => {
             });
     }
 
-
     return (
         <>
             <div>
@@ -572,6 +579,12 @@ const Accueil = () => {
                             Créer un nouveau formulaire
                         </button>
                         <h2 className={styles.tableTitle}>Liste des formulaires enregistrés</h2>
+                        <button
+                            className={styles.importButton}
+                            onClick={() => handleImportButton()}
+                        >
+                            Importer un formulaire
+                        </button>
                     </div>
                     <div className={styles.tableContainer}>
                         <div>
@@ -595,9 +608,9 @@ const Accueil = () => {
                                             >
                                                 <option value="">Tous les groupes</option>
                                                 {groups.map((g) => (
-                                                <option key={g.id} value={g.id}>
-                                                    {g.name}
-                                                </option>
+                                                    <option key={g.id} value={g.id}>
+                                                        {g.name}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </th>
@@ -642,9 +655,8 @@ const Accueil = () => {
                                                             break;
                                                     }
                                                 }}
-                                                className={`${styles.headerSelect} ${
-                                                    selectedForms.length === 0 ? styles.selectDisabled : styles.selectEnabled
-                                                }`}
+                                                className={`${styles.headerSelect} ${selectedForms.length === 0 ? styles.selectDisabled : styles.selectEnabled
+                                                    }`}
                                             >
                                                 <option value="">— Actions —</option>
 
@@ -676,15 +688,15 @@ const Accueil = () => {
                                     </tr>
                                     <tr>
                                         <th className={styles.th}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            checked={selectedForms.length === filteredForms.length && filteredForms.length > 0}
-                                            onChange={(e) => {
-                                            if (e.target.checked) handleCheckAll();
-                                            else handleUncheckAll();
-                                            }}
-                                        />
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                checked={selectedForms.length === filteredForms.length && filteredForms.length > 0}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) handleCheckAll();
+                                                    else handleUncheckAll();
+                                                }}
+                                            />
                                         </th>
                                         <th className={styles.th}>Titre</th>
                                         <th className={styles.th}>Groupe</th>
@@ -698,60 +710,60 @@ const Accueil = () => {
                                 <tbody className={styles.scrollableTable}>
                                     {forms.length === 0 ? (
                                         <tr>
-                                        <td colSpan="7">Aucun formulaire</td>
+                                            <td colSpan="7">Aucun formulaire</td>
                                         </tr>
                                     ) : (
                                         filteredForms.map(form => (
-                                        <tr 
-                                            key={form.id}
-                                            onContextMenu={(e) => {
-                                                handleRightClick(e, form.id)
-                                            }}
-                                        >
-                                            <td className={styles.td}>
-                                            <input
-                                                type="checkbox"
-                                                className={styles.checkbox}
-                                                checked={selectedForms.includes(form.id)}
-                                                onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
-                                            />
-                                            </td>
-                                            <td className={styles.td}>{form.title}</td>
-                                            <td className={styles.td}>{form.group_name || "-"}</td>
-                                            <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
-                                            <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
-                                            <td className={styles.td}>{form.responseCount}</td>
-                                            <td className={styles.td}>
-                                                <div className={styles.actionWrapper}>
-                                                    <button
-                                                        className={styles.actionButton}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
+                                            <tr
+                                                key={form.id}
+                                                onContextMenu={(e) => {
+                                                    handleRightClick(e, form.id)
+                                                }}
+                                            >
+                                                <td className={styles.td}>
+                                                    <input
+                                                        type="checkbox"
+                                                        className={styles.checkbox}
+                                                        checked={selectedForms.includes(form.id)}
+                                                        onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
+                                                    />
+                                                </td>
+                                                <td className={styles.td}>{form.title}</td>
+                                                <td className={styles.td}>{form.group_name || "-"}</td>
+                                                <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
+                                                <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
+                                                <td className={styles.td}>{form.responseCount}</td>
+                                                <td className={styles.td}>
+                                                    <div className={styles.actionWrapper}>
+                                                        <button
+                                                            className={styles.actionButton}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
 
-                                                            const rect = e.currentTarget.getBoundingClientRect();
-                                                            const MENU_HEIGHT = 220;
+                                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                                const MENU_HEIGHT = 220;
 
-                                                            let y = rect.bottom;
+                                                                let y = rect.bottom;
 
-                                                            if (y + MENU_HEIGHT > window.innerHeight) {
-                                                                y = rect.top - MENU_HEIGHT + 38;
-                                                            }
+                                                                if (y + MENU_HEIGHT > window.innerHeight) {
+                                                                    y = rect.top - MENU_HEIGHT + 38;
+                                                                }
 
-                                                            setMenuPosition({
-                                                                x: rect.left,
-                                                                y,
-                                                            });
+                                                                setMenuPosition({
+                                                                    x: rect.left,
+                                                                    y,
+                                                                });
 
-                                                            setOpenMenuId(openMenuId === form.id ? null : form.id);
-                                                        }}
-                                                    >
-                                                        ...
-                                                    </button>
-                                                    
-                                                </div>
+                                                                setOpenMenuId(openMenuId === form.id ? null : form.id);
+                                                            }}
+                                                        >
+                                                            ...
+                                                        </button>
 
-                                            </td>
-                                        </tr>
+                                                    </div>
+
+                                                </td>
+                                            </tr>
                                         ))
                                     )}
                                 </tbody>
@@ -821,11 +833,10 @@ const Accueil = () => {
                                                         break;
                                                 }
                                             }}
-                                            className={`${styles.headerSelect} ${
-                                                selectedGroups.length === 0
-                                                    ? styles.selectDisabled
-                                                    : styles.selectEnabled
-                                            }`}
+                                            className={`${styles.headerSelect} ${selectedGroups.length === 0
+                                                ? styles.selectDisabled
+                                                : styles.selectEnabled
+                                                }`}
                                         >
                                             <option value="">— Actions —</option>
 

@@ -8,17 +8,25 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
   const handleImportForm = async (result) => {
     try {
 
-      const response = await fetch(`/api/import-form`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(result) });
+      //const response = await fetch(`/api/import-form`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(result) });
 
-      if (response.ok) {
+      let success = true;
 
-        // for (const response in result.responses) {
+      for (const form in result) {
 
-        //   const responsesJson = { "formId": result.json_data.id, "user_id": result.user_id, "response": responsesJson };
+        const response = await fetch(`/api/import-form`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(result[form]) });
 
-        //   const response = await fetch(`/api/import-form`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(responsesJson) });
+        if (response.ok) {
 
-        // }
+
+
+        } else {
+          success = false;
+
+        }
+      }
+
+      if (success) {
 
         document.querySelector("#importSuccess").click();
 
@@ -26,6 +34,7 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
         document.querySelector("#formatError").click();
 
       }
+
     } catch (error) {
       console.error("Erreur :", error);
       document.querySelector("#error").click();
@@ -77,6 +86,7 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
         >
           Glissez un fichier ici.
         </div>
+        <input className={styles.fileSelector} type='file' accept=".json" multiple ></input>
         {onConfirm && (
           <div className={styles.closeImportModal}
             id="importSuccess"
