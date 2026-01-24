@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import styles from './accueil.module.css'; // Import CSS Module
-import { useNavigate } from "react-router-dom";
+import { createBrowserRouter, useNavigate } from "react-router-dom";
 import Modal from "../../components/Modal";
 import ImportModal from '../../components/ImportModal';
 
@@ -13,7 +13,6 @@ const Accueil = () => {
     const [notification, setNotification] = useState({ message: "", type: "" });
     const navigate = useNavigate(); // Permet de gérer la navigation
     const [groups, setgroups] = useState([]);
-    const [selectedGroup, setSelectedGroup] = useState("");
     const [tableSelectedGroup, setTableSelectedGroup] = useState("");
     const [moveModal, setMoveModal] = useState({ open: false, type: null, item: null, selectedGroup: "" });
     const [searchQuery, setSearchQuery] = useState("");
@@ -480,33 +479,24 @@ const Accueil = () => {
             <div>
                 <h1>XP-Forms</h1>
                 {/* Champ pour entrer l'ID utilisateur par défaut */}
-                <div className={styles.defaultUserIdContainer}>
-                    <label htmlFor="defaultUserId" className={styles.defaultUserIdLabel}>
-                        ID participant par défaut :
-                    </label>
-                    <input
-                        id="defaultUserId"
-                        type="text"
-                        value={newUserId}
-                        onChange={handleDefaultUserIdChange}
-                        className={styles.defaultUserIdInput}
-                    />
-                    <button onClick={handleSaveDefaultUserId} className={styles.saveButton}>
-                        Sauvegarder
-                    </button>
-                </div>
             </div>
 
             <div className={styles.displayType}>
                 <button
-                    onClick={() => setViewMode("forms")}
+                    onClick={() => {
+                        setViewMode("forms"); 
+                        handleUncheckAll();
+                    }}
                     className={`${styles.viewButton} ${viewMode === "forms" ? styles.activeViewButton : ""} ${styles.switchToViewForms}`}
                 >
                     Formulaires
                 </button>
 
                 <button
-                    onClick={() => setViewMode("groups")}
+                    onClick={() => {
+                        setViewMode("groups");
+                        handleUncheckAllGroups();
+                    }}
                     className={`${styles.viewButton} ${viewMode === "groups" ? styles.activeViewButton : ""} ${styles.switchToViewGroups}`}
                 >
                     Groupes
@@ -565,13 +555,30 @@ const Accueil = () => {
             {viewMode === "forms" ? (
                 <div>
                     <div className={styles.tableHeader}>
-                        <button
-                            className={styles.createButton}
-                            onClick={() => navigate("/form-editor2")}
-                        >
-                            Créer un nouveau formulaire
-                        </button>
+                        <div className={styles.defaultUserIdContainer}>
+                            <label htmlFor="defaultUserId" className={styles.defaultUserIdLabel}>
+                                ID participant par défaut :
+                            </label>
+                            <input
+                                id="defaultUserId"
+                                type="text"
+                                value={newUserId}
+                                onChange={handleDefaultUserIdChange}
+                                className={styles.defaultUserIdInput}
+                            />
+                            <button onClick={handleSaveDefaultUserId} className={styles.saveButton}>
+                                Sauvegarder
+                            </button>
+                        </div>
                         <h2 className={styles.tableTitle}>Liste des formulaires enregistrés</h2>
+                        <div className={styles.createButtonContainer}>
+                            <button
+                                className={styles.createButton}
+                                onClick={() => navigate("/form-editor2")}
+                            >
+                                Créer un nouveau formulaire
+                            </button>
+                        </div>
                     </div>
                     <div className={styles.tableContainer}>
                         <div>
@@ -761,25 +768,38 @@ const Accueil = () => {
                 </div>
             ) : (
                 <div>
-                    {/* HEADER */}
                     <div className={styles.tableHeader}>
-                        <button
-                            className={styles.createButton}
-                            onClick={() => creategroup()}
-                        >
-                            Créer un nouveau groupe
-                        </button>
-
+                        <div className={styles.defaultUserIdContainer}>
+                            <label htmlFor="defaultUserId" className={styles.defaultUserIdLabel}>
+                                ID participant par défaut :
+                            </label>
+                            <input
+                                id="defaultUserId"
+                                type="text"
+                                value={newUserId}
+                                onChange={handleDefaultUserIdChange}
+                                className={styles.defaultUserIdInput}
+                            />
+                            <button onClick={handleSaveDefaultUserId} className={styles.saveButton}>
+                                Sauvegarder
+                            </button>
+                        </div>
                         <h2 className={styles.tableTitle}>
                             Liste des groupes enregistrés
                         </h2>
+                        <div className={styles.createButtonContainer}>
+                            <button
+                                className={styles.createButton}
+                                onClick={() => creategroup()}
+                            >
+                                Créer un nouveau groupe
+                            </button>
+                        </div>
                     </div>
 
-                    {/* TABLE */}
                     <div className={styles.tableContainer}>
                         <table className={styles.table}>
                             <thead>
-                                {/* FILTRES */}
                                 <tr className={styles.filtrers}>
                                     <th className={styles.thFilter}></th>
 

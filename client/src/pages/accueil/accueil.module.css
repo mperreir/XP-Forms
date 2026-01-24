@@ -200,9 +200,7 @@ tbody tr:hover {
     width: 250px;
 }
 
-/* Align "Créer un nouveau formulaire" button to the left */
 .createButton {
-    margin: 20px 0;
     /* Remove auto centering */
     padding: 12px 24px;
     background-color: #28a745;
@@ -211,6 +209,14 @@ tbody tr:hover {
     border-radius: 4px;
     font-size: 16px;
     cursor: pointer;
+}
+
+.createButtonContainer {
+    display: flex;
+    flex-direction: row;
+    position: absolute;
+    right: 5%;
+    gap: 20px;
 }
 
 .createButton:hover {
@@ -462,7 +468,7 @@ button:disabled {
 
 .tableHeader {
     position: relative;
-    width: 90%;
+    width: 100%;
     margin: 15px auto 0;
     height: 48px;
     display: flex;
