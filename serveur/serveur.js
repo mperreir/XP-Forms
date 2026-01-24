@@ -6,7 +6,6 @@ const responseRoutes = require("./routes/responseRoutes");
 const groupRoutes = require("./routes/groupRoutes");
 const defaultUserIdRoutes = require("./routes/settingsRoutes");
 
-
 const cors = require("cors");
 app.use(cors());
 
@@ -22,8 +21,16 @@ app.use("/api", responseRoutes);
 app.use("/api", groupRoutes);
 app.use('/api', defaultUserIdRoutes);
 
+// servir le build React
+app.use(express.static(path.join(__dirname, "../client/build")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/build/index.html"));
+});
+
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
