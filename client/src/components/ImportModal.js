@@ -6,39 +6,17 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
   const [highlight, setHighlight] = useState(false);
 
   const handleImportForm = async (result) => {
-    try {
 
-      //const response = await fetch(`/api/import-form`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(result) });
+    const response = await fetch(`/api/import-form`, {
+      method: 'POST',
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(result)
+    });
 
-      let success = true;
-
-      for (const form in result) {
-
-        const response = await fetch(`/api/import-form`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(result[form]) });
-
-        if (response.ok) {
-
-
-
-        } else {
-          success = false;
-
-        }
-      }
-
-      if (success) {
-
-        document.querySelector("#importSuccess").click();
-
-      } else {
-        document.querySelector("#formatError").click();
-
-      }
-
-    } catch (error) {
-      console.error("Erreur :", error);
-      document.querySelector("#error").click();
+    if (!response.ok) {
+      return false;
     }
+    return true;
   };
 
   const onDragOver = useCallback((e) => {
@@ -50,27 +28,71 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
     setHighlight(false);
   }, []);
 
-  const onDrop = useCallback((e) => {
+  const traverseFileTree = (item) => {
+    return new Promise((resolve, reject) => {
+      if (item.isFile) {
+        item.file((file) => {
+          const reader = new FileReader();
+          reader.onload = async () => {
+            try {
+              const formJson = JSON.parse(reader.result);
+              const success = await handleImportForm(formJson);
+              if (success) {
+                resolve();
+              }
+              reject(new Error("formatError"));
+            } catch (err) {
+              reject(err);
+            }
+          };
+          reader.readAsText(file);
+        });
+      }
+
+      else if (item.isDirectory) {
+        const dirReader = item.createReader();
+        dirReader.readEntries(async (entries) => {
+          try {
+            await Promise.all(
+              entries.map(entry =>
+                traverseFileTree(entry)
+              )
+            );
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }
+    });
+  };
+
+  const onDrop = useCallback(async (e) => {
     e.preventDefault();
     setHighlight(true);
 
-    const files = e.dataTransfer.files;
-    if (files.length === 0) return;
+    try {
+      const items = e.dataTransfer.items;
+      const promises = [];
 
-    const file = files[0];
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const formJson = JSON.parse(reader.result);
-        handleImportForm(formJson);
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i].webkitGetAsEntry();
+        if (item) {
+          promises.push(traverseFileTree(item));
+        }
       }
-      catch (err) {
+
+      await Promise.all(promises);
+      document.querySelector("#importSuccess").click();
+
+    } catch (err) {
+      if (err.message === "formatError") {
         document.querySelector("#formatError").click();
       }
-    };
-    reader.readAsText(file);
-
+      else {
+        document.querySelector("#error").click();
+      }
+    }
   }, []);
 
   if (!isOpen) return null;
@@ -84,9 +106,9 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
           onDragLeave={onDragLeave}
           onDrop={onDrop}
         >
-          Glissez un fichier ici.
+          Glissez un fichier/dossier ici.
         </div>
-        <input className={styles.fileSelector} type='file' accept=".json" multiple ></input>
+        <input className={styles.fileSelector} type='file' accept=".json" webkitdirectory='true' multiple ></input>
         {onConfirm && (
           <div className={styles.closeImportModal}
             id="importSuccess"
@@ -110,7 +132,7 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
         )}
         {onClose && (
           <button
-            onClick={onClose} // Call the onClose callback
+            onClick={onClose}
             className={styles.closeButton}
           >
             Fermer

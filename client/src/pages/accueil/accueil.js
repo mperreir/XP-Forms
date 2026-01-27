@@ -3,6 +3,9 @@ import styles from './accueil.module.css'; // Import CSS Module
 import { useNavigate } from "react-router-dom";
 import Modal from "../../components/Modal";
 import ImportModal from '../../components/ImportModal';
+import { saveAs } from 'file-saver';
+
+let JSZip = require("jszip");
 
 const Accueil = () => {
     const [forms, setForms] = useState([]);
@@ -182,25 +185,22 @@ const Accueil = () => {
 
         const DownloadExport = async (jsonExport) => {
 
-            // Téléchargement du fichier exporté
-            let element = document.createElement('a');
-            element.setAttribute('href',
-                'data:text/json;charset=utf-8, '
-                + encodeURIComponent(JSON.stringify(jsonExport, null, 2)));
-            element.setAttribute('download', jsonExport.title + '.json');
-
-            document.body.appendChild(element);
-            element.click();
-            document.body.removeChild(element);
+            let zip = new JSZip();
+            for (const form in jsonExport) {
+                zip.file(jsonExport[form].title + '.json', JSON.stringify(jsonExport[form], null, 2));
+            }
+            zip.generateAsync({ type: "blob" })
+                .then(function (content) {
+                    saveAs(content, "export_de_" + Object.keys(jsonExport).length + "_formulaires.zip");
+                });
 
             closeModal();
-            showNotification("Formulaire exporté !", "success");
+            showNotification("Formulaires exportés !", "success");
 
         };
 
         const exportForm = async (ids, resp = false) => {
 
-            console.log(ids);
             let jsonExport = {};
 
             for (let i = 0; i < ids.length; i++) {
@@ -468,17 +468,20 @@ const Accueil = () => {
         showImportModal(() => {
             closeImportModal();
             fetchForms();
-            showNotification("Formulaire importé !", "success");
+            showNotification("Formulaires importés !", "success");
+            console.log("OUI");
         },
             () => {
-                closeImportModal();
+                //closeImportModal();
                 fetchForms();
                 showNotification("Contenu du fichier incompatible.", "error");
+                console.log("NON");
             },
             () => {
-                closeImportModal();
+                //closeImportModal();
                 fetchForms();
                 showNotification("Impossible de contacter le serveur.", "error");
+                console.log("NONON");
             });
     }
 
