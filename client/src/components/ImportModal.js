@@ -14,9 +14,8 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
     });
 
     if (!response.ok) {
-      return false;
+      throw new Error("formatError");
     }
-    return true;
   };
 
   const onDragOver = useCallback((e) => {
@@ -29,21 +28,19 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
   }, []);
 
   const traverseFileTree = (item) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       if (item.isFile) {
         item.file((file) => {
           const reader = new FileReader();
           reader.onload = async () => {
             try {
               const formJson = JSON.parse(reader.result);
-              const success = await handleImportForm(formJson);
-              if (success) {
-                resolve();
-              }
-              reject(new Error("formatError"));
+              await handleImportForm(formJson);
             } catch (err) {
-              reject(err);
+              console.error("Erreur fichier :", file.name, err);
             }
+            resolve();
+
           };
           reader.readAsText(file);
         });
@@ -52,16 +49,10 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
       else if (item.isDirectory) {
         const dirReader = item.createReader();
         dirReader.readEntries(async (entries) => {
-          try {
-            await Promise.all(
-              entries.map(entry =>
-                traverseFileTree(entry)
-              )
-            );
-            resolve();
-          } catch (e) {
-            reject(e);
+          for (const entry of entries) {
+            await traverseFileTree(entry);
           }
+          resolve();
         });
       }
     });

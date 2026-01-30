@@ -5,8 +5,6 @@ import Modal from "../../components/Modal";
 import ImportModal from '../../components/ImportModal';
 import { saveAs } from 'file-saver';
 
-let JSZip = require("jszip");
-
 const Accueil = () => {
     const [forms, setForms] = useState([]);
     const [selectedForms, setSelectedForms] = useState([]);
@@ -31,7 +29,7 @@ const Accueil = () => {
     const [groupSearchQuery, setGroupSearchQuery] = useState("");
 
     document.onkeydown = function (evt) {
-        if (evt.keyCode == 27) {
+        if (evt.keyCode === 27) {
             // Escape key pressed
             if (importModal.isOpen === true) {
                 closeImportModal();
@@ -178,6 +176,7 @@ const Accueil = () => {
     };
 
     const handleExportForm = async (formId) => {
+        let JSZip = require("jszip");
 
         const ids = formId ? (Array.isArray(formId) ? formId : [formId]) : selectedForms;
 
@@ -469,19 +468,16 @@ const Accueil = () => {
             closeImportModal();
             fetchForms();
             showNotification("Formulaires importés !", "success");
-            console.log("OUI");
         },
             () => {
                 //closeImportModal();
                 fetchForms();
                 showNotification("Contenu du fichier incompatible.", "error");
-                console.log("NON");
             },
             () => {
                 //closeImportModal();
                 fetchForms();
                 showNotification("Impossible de contacter le serveur.", "error");
-                console.log("NONON");
             });
     }
 
