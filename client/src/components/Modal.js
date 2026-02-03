@@ -10,6 +10,14 @@ const Modal = ({ isOpen, title, message, onConfirm, confirm = 'Confirmer', close
         <h2>{title}</h2>
         <p>{message}</p>
         <div className={styles.modalActions}>
+          {onClose && (
+            <button
+              onClick={onClose} // Call the onClose callback
+              className={styles.closeButton}
+            >
+              {close}
+            </button>
+          )}
           {onConfirm && (
             <button
               onClick={() => {
@@ -18,14 +26,6 @@ const Modal = ({ isOpen, title, message, onConfirm, confirm = 'Confirmer', close
               className={styles.confirmButton}
             >
               {confirm}
-            </button>
-          )}
-          {onClose && (
-            <button
-              onClick={onClose} // Call the onClose callback
-              className={styles.closeButton}
-            >
-              {close}
             </button>
           )}
         </div>

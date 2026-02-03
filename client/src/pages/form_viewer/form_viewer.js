@@ -5,7 +5,7 @@ import Modal from "../../components/Modal";
 import styles from './form_viewer.module.css';
 
 const FormViewer = () => {
-  const { id, page, id_participant } = useParams();
+  const { id, page, range, id_participant } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const currentPage = parseInt(page) || 1;
@@ -21,6 +21,8 @@ const FormViewer = () => {
   const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
   const [isNextPageDisabled, setIsNextPageDisabled] = useState(true);
   const [notification, setNotification] = useState({ message: "", type: "" });
+  const [showExtraInfo, setShowExtraInfo] = useState(false);
+  const [pageRange, setPageRange] = useState(null);
 
   const dataInitialized = useRef(false);
   const formRef = useRef(null);
@@ -70,6 +72,54 @@ const FormViewer = () => {
     handleParticipantId();
   }, [id_participant, id, page, navigate, location.search]);
 
+  useEffect(() => {
+    if (!range) {
+      setPageRange(null);
+      return;
+    }
+
+    const match = range.match(/^(\d+)-(\d+)$/);
+    if (!match) {
+      console.warn("Range invalide :", range);
+      setPageRange(null);
+      return;
+    }
+
+    const start = parseInt(match[1], 10);
+    const end = parseInt(match[2], 10);
+
+    if (start <= 0 || end < start) {
+      console.warn("Range incohérent :", range);
+      setPageRange(null);
+      return;
+    }
+
+    setPageRange({ start, end });
+  }, [range]);
+
+  useEffect(() => {
+    if (!pageRange) return;
+
+    if (currentPage < pageRange.start || currentPage > pageRange.end) {
+      const safePage = pageRange.start;
+      navigate(
+        !id_participant
+          ? `/form-viewer/${id}/${safePage}/${range}?navigation=True`
+          : `/form-viewer/${id}/${safePage}/${range}/${id_participant}?navigation=True`,
+        { replace: true }
+      );
+    }
+  }, [currentPage, pageRange, id, id_participant, navigate, range])
+
+  const goToPage = (p) => {
+    const realPage = pageRange ? p + pageRange.start - 1 : p;
+
+    navigate(
+      !id_participant
+        ? `/form-viewer/${id}/${realPage}${range ? `/${range}` : ""}?navigation=True`
+        : `/form-viewer/${id}/${realPage}${range ? `/${range}` : ""}/${id_participant}?navigation=True`
+    );
+  };
 
   const splitSchemaBySeparator = (components) => {
     const pages = [[]];
@@ -82,6 +132,12 @@ const FormViewer = () => {
     });
     return pages;
   };
+
+  const effectivePages = pageRange ? pages.slice(pageRange.start - 1, pageRange.end) : pages;
+  const effectiveCurrentPage = pageRange ? currentPage - pageRange.start + 1 : currentPage;
+  const canGoPrev = effectiveCurrentPage > 1;
+  const canGoNext = effectiveCurrentPage < effectivePages.length;
+
 
   const handleGoHome = () => {
     navigate("/");
@@ -106,9 +162,9 @@ const FormViewer = () => {
   }, [id, id_participant]);
 
 const validateCurrentPage = useCallback(() => {
-  if (!schema || !pages[currentPage - 1]) return false;
+  if (!schema || !effectivePages[effectiveCurrentPage - 1]) return false;
 
-  const currentComponents = pages[currentPage - 1] || [];
+  const currentComponents = effectivePages[effectiveCurrentPage - 1] || [];
 
   // flatten nested components in the page (useful if components contain child components)
   const flatten = (components) => {
@@ -175,7 +231,7 @@ const validateCurrentPage = useCallback(() => {
 
     console.log("Résultat validation page (manual check)", currentPage, ":", isValid, "formData keys:", Object.keys(formData));
   return isValid;
-}, [schema, pages, currentPage, formData]);
+}, [schema, effectivePages, effectiveCurrentPage, formData]);
 
   useEffect(() => {
     const flattenComponents = (components) => {
@@ -227,8 +283,8 @@ const validateCurrentPage = useCallback(() => {
 
 
   useEffect(() => {
-    if (!schema || pages.length === 0) return;
-    if (!pages[currentPage - 1]) {
+    if (!schema || effectivePages.length === 0) return;
+    if (!effectivePages[effectiveCurrentPage - 1]) {
       console.error("Page invalide");
       return;
     }
@@ -247,7 +303,7 @@ const validateCurrentPage = useCallback(() => {
 
       const pageSchema = {
         ...schema,
-        components: pages[currentPage - 1] || [],
+        components: effectivePages[effectiveCurrentPage - 1] || [],
       };
 
       await form.importSchema(pageSchema, loadedData);
@@ -322,7 +378,7 @@ const validateCurrentPage = useCallback(() => {
 
   // Recalculer la validité de la page courante à chaque changement de formData
   useEffect(() => {
-    if (!schema || pages.length === 0 || !pages[currentPage - 1]) {
+    if (!schema || effectivePages.length === 0 || !pages[currentPage - 1]) {
       setIsNextPageDisabled(true);
       return;
     }
@@ -352,12 +408,31 @@ const validateCurrentPage = useCallback(() => {
           <div className={styles.formDetails}>
             <p><strong>ID du Formulaire :</strong> {formDetails.id}</p>
             <p><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
-            <p><strong>Pour intégrer dans un scénario Tobii utilisez :</strong> http://localhost:3000/form-viewer/{id}/{page}/id_participant</p>
-            <p>Ajoutez <strong>@</strong> comme ID participant pour utiliser l'ID utilisateur par défaut.</p>
-            <p>Ajoutez <strong>?navigation=True</strong> à la fin si vous voulez permettre la navigation entre pages.</p>
+            <div
+              className={styles.toggleExtraInfo}
+              onClick={() => setShowExtraInfo(prev => !prev)}
+            >
+              {showExtraInfo ? "−" : "+"}
+            </div>
+            {showExtraInfo && (
+              <div className={styles.extraInfo}>
+                <p>
+                  <strong>Pour intégrer dans un scénario Tobii utilisez :</strong><br />
+                  http://localhost:3000/form-viewer/{id}/{page}/id_participant
+                </p>
+                <p>
+                  Ajoutez <strong>@</strong> comme ID participant pour utiliser l'ID utilisateur par défaut.
+                </p>
+                <p>
+                  Ajoutez <strong>/numéroPageDebut-numéroPageFin</strong> entre le numéro de page et l'ID participant pour parcourir un intervalle de pages
+                </p>
+                <p>
+                  Ajoutez <strong>?navigation=True</strong> à la fin si vous voulez permettre la navigation entre pages.
+                </p>
+              </div>
+            )}
           </div>
         )}
-
         {/* Info Participant */}
         {id_participant && (
           <div>
@@ -369,16 +444,8 @@ const validateCurrentPage = useCallback(() => {
         {showNavigation && (
           <div className={styles.navigationButtons}>
             <div className={styles.navButtonWrapper}>
-              {currentPage > 1 ? (
-                <button
-                  onClick={() =>
-                    navigate(
-                      !id_participant
-                        ? `/form-viewer/${id}/${currentPage - 1}?navigation=True`
-                        : `/form-viewer/${id}/${currentPage - 1}/${id_participant}?navigation=True`
-                    )
-                  }
-                >
+              {canGoPrev ? (
+                <button onClick={() => goToPage(effectiveCurrentPage - 1)}>
                   Page précédente
                 </button>
               ) : (
@@ -387,28 +454,16 @@ const validateCurrentPage = useCallback(() => {
             </div>
 
             <div className={styles.pageIndicator}>
-              Page : {currentPage} / {pages.length}
+              Page : {effectiveCurrentPage} / {effectivePages.length}
             </div>
 
             <div className={styles.navButtonWrapper}>
-              {currentPage < pages.length ? (
+              {canGoNext ? (
                 <button
                   disabled={isNextPageDisabled}
-                  onClick={() => {
-                    const ok = validateCurrentPage();
-                    console.debug('Next page clicked - validateCurrentPage:', ok, 'page', currentPage, 'formData:', formData);
-                    if (!ok) {
-                      showNotification("Veuillez remplir tous les champs obligatoires avant de passer à la page suivante.", "error");
-                      return;
-                    }
-                    navigate(
-                      !id_participant
-                        ? `/form-viewer/${id}/${currentPage + 1}?navigation=True`
-                        : `/form-viewer/${id}/${currentPage + 1}/${id_participant}?navigation=True`
-                    );
-                  }}
+                  onClick={() => goToPage(effectiveCurrentPage + 1)}
                 >
-                Page suivante
+                  Page suivante
                 </button>
               ) : (
                 <div className={styles.placeholder}></div>

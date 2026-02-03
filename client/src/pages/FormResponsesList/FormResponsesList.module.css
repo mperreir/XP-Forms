@@ -40,6 +40,15 @@ button:active {
 }
 
 /* Table styling */
+/* Scrollable table wrapper */
+.tableWrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  margin-bottom: 20px;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
