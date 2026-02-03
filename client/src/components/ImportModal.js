@@ -58,31 +58,67 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
     });
   };
 
+  const handleZipFolder = (zipFolder) => {
+    return new Promise(async (resolve) => {
+      const JSZip = require("jszip");
+      const zipReader = new FileReader();
+
+      zipReader.onload = async () => {
+        const zip = await JSZip.loadAsync(zipReader.result);
+
+        for (const fileName of Object.keys(zip.files)) {
+          const file = zip.files[fileName];
+          if (file.dir) continue;
+
+          try {
+            const content = await file.async("text");
+            const formJson = JSON.parse(content);
+            await handleImportForm(formJson);
+          } catch (err) {
+            console.error("Erreur fichier:", fileName, err);
+          }
+        }
+
+        resolve();
+      };
+
+      zipReader.readAsArrayBuffer(zipFolder);
+    });
+  };
+
   const onDrop = useCallback(async (e) => {
     e.preventDefault();
     setHighlight(true);
 
     try {
-      const items = e.dataTransfer.items;
-      const promises = [];
+      let promises = [];
+      let items = e.dataTransfer.files[0];
+      if (items && items.name.endsWith(".zip")) {
+        promises.push(handleZipFolder(items));
+      }
+      else {
+        items = e.dataTransfer.items;
 
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i].webkitGetAsEntry();
-        if (item) {
-          promises.push(traverseFileTree(item));
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i].webkitGetAsEntry();
+          if (item) {
+            promises.push(traverseFileTree(item));
+          }
         }
       }
 
-      await Promise.all(promises);
-      document.querySelector("#importSuccess").click();
+      const results = await Promise.allSettled(promises);
 
-    } catch (err) {
-      if (err.message === "formatError") {
-        document.querySelector("#formatError").click();
-      }
-      else {
+      const hasSuccess = results.some(r => r.status === "fulfilled");
+
+      if (hasSuccess) {
+        document.querySelector("#importSuccess").click();
+      } else {
         document.querySelector("#error").click();
       }
+
+    } catch (err) {
+      document.querySelector("#error").click();
     }
   }, []);
 
