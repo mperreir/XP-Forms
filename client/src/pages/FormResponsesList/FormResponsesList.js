@@ -127,12 +127,24 @@ const FormResponsesList = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <h2>Réponses du formulaire</h2>
-
-      <button className="btn" onClick={handleGoHome}>Retour à l'accueil</button>
-      <button onClick={exportToCSV} style={{ marginBottom: "10px" }}>Exporter en CSV</button>
-
+    <div>
+      <div className={styles.toolbar}>
+        <div className={styles.left}>
+          <button className={styles.btnAccueil} onClick={handleGoHome}>
+            Retour à l'accueil
+          </button>
+          <button onClick={exportToCSV}>Exporter en CSV</button>
+        </div>
+        <h2 className={styles.title}>Réponses du formulaire</h2>
+        <div className={styles.right}>
+          <button
+            onClick={handleDeleteResponses}
+            className={styles.deleteBtn}
+          >
+            Supprimer toutes les réponses
+          </button>
+        </div>
+      </div>
       {responses.length > 0 && questions.length > 0 ? (
         <div className={styles.tableWrapper}>
           <table>
@@ -160,13 +172,6 @@ const FormResponsesList = () => {
       ) : (
         <p className={styles.message}>Chargement des données ou aucune réponse trouvée.</p>
       )}
-
-      <button
-        onClick={handleDeleteResponses}
-        style={{ backgroundColor: "#dc3545", color: "white", marginBottom: "10px", marginLeft: "10px" }}
-      >
-        Supprimer toutes les réponses
-      </button>
 
       <Modal
         isOpen={modal.isOpen}

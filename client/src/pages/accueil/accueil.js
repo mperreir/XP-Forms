@@ -476,9 +476,8 @@ const Accueil = () => {
 
     return (
         <>
-            <div>
+            <div className={styles.projectName}>
                 <h1>XP-Forms</h1>
-                {/* Champ pour entrer l'ID utilisateur par défaut */}
             </div>
 
             <div className={styles.displayType}>
@@ -576,7 +575,7 @@ const Accueil = () => {
                                 className={styles.createButton}
                                 onClick={() => navigate("/form-editor2")}
                             >
-                                Créer un nouveau formulaire
+                                Créer
                             </button>
                         </div>
                     </div>
@@ -792,7 +791,7 @@ const Accueil = () => {
                                 className={styles.createButton}
                                 onClick={() => creategroup()}
                             >
-                                Créer un nouveau groupe
+                                Créer
                             </button>
                         </div>
                     </div>
