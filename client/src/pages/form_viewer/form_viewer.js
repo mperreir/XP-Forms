@@ -394,28 +394,46 @@ const validateCurrentPage = useCallback(() => {
   return (
     <>
       <div className={styles.formViewerContainer}>
-        <h2>Form Viewer</h2>
+        <div className={styles.toolbar}>
+          {/* Bouton Retour affiché seulement en mode Admin */}
+          <div className={styles.left}>
+            {!id_participant && (
+              <button className="btn" onClick={handleGoHome}>
+                Retour à l'accueil
+              </button>
+            )}
+          </div>
+          <h2 className={styles.title}>Form Viewer</h2>
+          <div className={styles.right}>
+            <div className={styles.pageWrapper}>
+              <span className={styles.pageIndicator}>
+                Page : {effectiveCurrentPage} / {effectivePages.length}
+              </span>
 
-        {/* Bouton Retour affiché seulement en mode Admin */}
-        {!id_participant && (
-          <button className="btn" onClick={handleGoHome}>
-            Retour à l'accueil
-          </button>
-        )}
-
+              {id_participant && (
+                <div className={styles.participantTooltip}>
+                  ID participant : {id_participant}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
         {/* Informations sur le formulaire */}
-        {!id_participant && formDetails && (
-          <div className={styles.formDetails}>
-            <p><strong>ID du Formulaire :</strong> {formDetails.id}</p>
-            <p><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
+       {!id_participant && (
+        <div className={styles.formDetails}>
+          <div className={styles.adminInfoWrapper}>
+            <p className={styles.info}><strong>ID du Formulaire :</strong> {formDetails.id}</p>
+            <p className={styles.info}><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
             <div
               className={styles.toggleExtraInfo}
               onClick={() => setShowExtraInfo(prev => !prev)}
+              title="Informations du formulaire"
             >
               {showExtraInfo ? "−" : "+"}
             </div>
+
             {showExtraInfo && (
-              <div className={styles.extraInfo}>
+              <div className={styles.adminDropdown}>
                 <p>
                   <strong>Pour intégrer dans un scénario Tobii utilisez :</strong><br />
                   http://localhost:3000/form-viewer/{id}/{page}/id_participant
@@ -424,22 +442,15 @@ const validateCurrentPage = useCallback(() => {
                   Ajoutez <strong>@</strong> comme ID participant pour utiliser l'ID utilisateur par défaut.
                 </p>
                 <p>
-                  Ajoutez <strong>/numéroPageDebut-numéroPageFin</strong> entre le numéro de page et l'ID participant pour parcourir un intervalle de pages
+                  Ajoutez <strong>/début-fin</strong> entre le numéro de page et l'ID participant pour parcourir un intervalle de pages. Exemple : <strong>/2-4/id</strong>
                 </p>
                 <p>
                   Ajoutez <strong>?navigation=True</strong> à la fin si vous voulez permettre la navigation entre pages.
-                </p>
-              </div>
+                </p>            </div>
             )}
+            </div>
           </div>
-        )}
-        {/* Info Participant */}
-        {id_participant && (
-          <div>
-            <p><strong>ID du Participant :</strong> {id_participant}</p>
-          </div>
-        )}
-
+      )}
         {/* Navigation entre pages */}
         {showNavigation && (
           <div className={styles.navigationButtons}>
@@ -451,10 +462,6 @@ const validateCurrentPage = useCallback(() => {
               ) : (
                 <div className={styles.placeholder}></div>
               )}
-            </div>
-
-            <div className={styles.pageIndicator}>
-              Page : {effectiveCurrentPage} / {effectivePages.length}
             </div>
 
             <div className={styles.navButtonWrapper}>

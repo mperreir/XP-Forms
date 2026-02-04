@@ -231,13 +231,15 @@ const FormEditor = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.headerContainer}>
-        <h2 className={styles.pageTitle}>
+      <div className={styles.toolbar}>
+        <div className={styles.left}>
+          <button className="btn" onClick={handleGoHome}>
+            Retour à l'accueil
+          </button>
+        </div>
+        <h2 className={styles.title}>
           {isEditing ? "Modifier le formulaire" : "Créer un formulaire"}
         </h2>
-        <button className="btn" onClick={handleGoHome}>
-          Retour à l'accueil
-        </button>
       </div>
 
       <div className={styles.titleContainer}>
