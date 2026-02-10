@@ -395,29 +395,54 @@ const validateCurrentPage = useCallback(() => {
 
   return (
     <>
-      <div className={styles.formViewerContainer}>
-        <h2>Form Viewer</h2>
-
+      <div className={styles.toolbar}>
         {/* Bouton Retour affiché seulement en mode Admin */}
-        {!id_participant && (
-          <button className="btn" onClick={handleGoHome}>
-            {t("Back to home")}
-          </button>
-        )}
+        <div className={styles.left}>
+          {!id_participant && (
+            <button className="btn" onClick={handleGoHome}>
+              {t('Back to home')}
+            </button>
+          )}
+        </div>
+        <h2 className={styles.title}>{t('Form Viewer')}</h2>
+        <div className={styles.right}>
+          <div className={styles.pageWrapper}>
+            <span className={styles.pageIndicator}>
+              {t('Page')} : {effectiveCurrentPage} / {effectivePages.length}
+            </span>
+>>>>>>> origin/iteration_4
 
+              {id_participant && (
+                <div className={styles.participantTooltip}>
+                  ID participant : {id_participant}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
         {/* Informations sur le formulaire */}
+<<<<<<< HEAD
         {!id_participant && formDetails && (
           <div className={styles.formDetails}>
             <p><strong>{t("Form ID")} :</strong> {formDetails.id}</p>
             <p><strong>{t("Creation date")} :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
+=======
+       {!id_participant && (
+        <div className={styles.formDetails}>
+          <div className={styles.adminInfoWrapper}>
+            <p className={styles.info}><strong>ID du Formulaire :</strong> {formDetails.id}</p>
+            <p className={styles.info}><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
+>>>>>>> origin/iteration_4
             <div
               className={styles.toggleExtraInfo}
               onClick={() => setShowExtraInfo(prev => !prev)}
+              title="Informations du formulaire"
             >
               {showExtraInfo ? "−" : "+"}
             </div>
+
             {showExtraInfo && (
-              <div className={styles.extraInfo}>
+              <div className={styles.adminDropdown}>
                 <p>
                   <strong>{t("To integrate in a Tobii scenario use:")}</strong><br />
                   http://localhost:3000/form-viewer/{id}/{page}/id_participant
@@ -426,14 +451,24 @@ const validateCurrentPage = useCallback(() => {
                   {t("Add")} <strong>@</strong> {t("as participant ID to use the default user ID.")}
                 </p>
                 <p>
+<<<<<<< HEAD
                   {t("Add")} <strong>/startPageNumber-endPageNumber</strong> {t("between the page number and participant ID to browse a page range.")}
                 </p>
                 <p>
                   {t("Add")} <strong>?navigation=True</strong> {t("at the end if you want to allow navigation between pages.")}
                 </p>
               </div>
+=======
+                  Ajoutez <strong>/début-fin</strong> entre le numéro de page et l'ID participant pour parcourir un intervalle de pages. Exemple : <strong>/2-4/id</strong>
+                </p>
+                <p>
+                  Ajoutez <strong>?navigation=True</strong> à la fin si vous voulez permettre la navigation entre pages.
+                </p>            </div>
+>>>>>>> origin/iteration_4
             )}
+            </div>
           </div>
+<<<<<<< HEAD
         )}
         {/* Info Participant */}
         {id_participant && (
@@ -442,6 +477,9 @@ const validateCurrentPage = useCallback(() => {
           </div>
         )}
 
+=======
+      )}
+>>>>>>> origin/iteration_4
         {/* Navigation entre pages */}
         {showNavigation && (
           <div className={styles.navigationButtons}>
@@ -455,10 +493,13 @@ const validateCurrentPage = useCallback(() => {
               )}
             </div>
 
+<<<<<<< HEAD
             <div className={styles.pageIndicator}>
               {t("Page")} : {effectiveCurrentPage} / {effectivePages.length}
             </div>
 
+=======
+>>>>>>> origin/iteration_4
             <div className={styles.navButtonWrapper}>
               {canGoNext ? (
                 <button

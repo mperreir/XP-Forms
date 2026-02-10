@@ -6,6 +6,7 @@
   max-width: 100%;
   margin: 20px auto;
   padding: 20px;
+  padding-top: 0;
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -29,21 +30,17 @@
 /* Titles */
 h2 {
   color: #007bff;
-  margin-bottom: 30px;
   font-size: 32px;
   font-weight: 600;
 }
 
 /* Form details section (ID and creation date) */
-.formDetails {
-  background-color: #f1f1f1;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 30px;
+
+.info {
+  margin: 0;
 }
 
 .formDetails p {
-  font-size: 18px;
   color: #333;
 }
 
@@ -215,27 +212,101 @@ button:disabled:hover {
     background-color: #f44336;
 }
 
+.extraInfo {
+
+}
+
+.extraInfo p {
+  font-size: 16px;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  padding: 0 5%;
+}
+
+.title {
+  text-align: center;
+}
+
+.left {
+  justify-self: start;
+}
+
+.right {
+  justify-self: end;
+}
+
+.pageWrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.participantTooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  background-color: #333;
+  color: white;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 10;
+}
+
+/* Apparition au hover */
+.pageWrapper:hover .participantTooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+.adminInfoWrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+  gap: 5%;
+}
+
 .toggleExtraInfo {
-  margin-top: 10px;
-  padding: 6px 0;
   cursor: pointer;
   font-size: 22px;
   font-weight: bold;
   color: #007bff;
   user-select: none;
+  line-height: 1;
 }
 
 .toggleExtraInfo:hover {
   color: #0056b3;
 }
 
-.extraInfo {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid #ddd;
+.adminDropdown {
+  position: absolute;
+  top: 130%;
+  right: 50%;
+  transform: translateX(50%);
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 14px 18px;
+  width: max-content;
+  max-width: 90vw;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  z-index: 50;
+  text-align: center;
 }
 
-.extraInfo p {
-  font-size: 16px;
-  margin-bottom: 10px;
+.adminDropdown p {
+  margin: 6px 0;
+  font-size: 14px;
 }
