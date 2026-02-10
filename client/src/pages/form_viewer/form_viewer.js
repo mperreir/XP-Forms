@@ -498,15 +498,15 @@ const validateCurrentPage = useCallback(() => {
         isOpen={modal.isOpen}
         title={modal.title}
         message={modal.message}
-        onConfirm={modal.onConfirm} // Correctly pass the onConfirm callback
+        onConfirm={modal.onConfirm}
       />
       {notification.message && (
         <div className={`${styles.notification} ${styles[notification.type]}`}>
-            {notification.message}
+          {notification.message}
         </div>
       )}
     </>
   );
-};
+}
 
 export default FormViewer;
