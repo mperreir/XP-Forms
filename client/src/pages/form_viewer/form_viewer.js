@@ -473,8 +473,7 @@ const validateCurrentPage = useCallback(() => {
 
 // ...existing code...
             <div className={styles.navButtonWrapper}>
-              {canGoNext ? (
-                <button
+    }
                   disabled={isNextPageDisabled}
                   onClick={() => goToPage(effectiveCurrentPage + 1)}
                 >
