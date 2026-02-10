@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import styles from './accueil.module.css'; // Import CSS Module
 import { createBrowserRouter, useNavigate } from "react-router-dom";
 import Modal from "../../components/Modal";
 import ImportModal from '../../components/ImportModal';
 
 const Accueil = () => {
+    const { t, i18n } = useTranslation();
     const [forms, setForms] = useState([]);
     const [selectedForms, setSelectedForms] = useState([]);
     const [newUserId, setNewUserId] = useState(localStorage.getItem('defaultUserId') || ""); // Utiliser la valeur du localStorage ou une valeur vide
@@ -34,7 +36,7 @@ const Accueil = () => {
     const filteredGroups = groups
         .filter(g => g.name.toLowerCase().includes(groupSearchQuery.toLowerCase()));
 
-    const showModal = (title, message, onConfirm = null, confirm = 'Confirmer', close = 'Fermer', onClose = closeModal) => {
+    const showModal = (title, message, onConfirm = null, confirm = t('Confirm'), close = t('Close'), onClose = closeModal) => {
         setModal({ isOpen: true, title, message, onConfirm, confirm, close, onClose });
     };
 
@@ -53,7 +55,7 @@ const Accueil = () => {
     const fetchForms = async () => {
         try {
             const response = await fetch('/api/forms');
-            if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
+            if (!response.ok) throw new Error(t('Error loading forms'));
             const data = await response.json();
             const formsWithCounts = await Promise.all(
                 data.map(async (form) => {
@@ -83,7 +85,7 @@ const Accueil = () => {
     const reloadForms = async () => {
         try {
             const response = await fetch('/api/forms');
-            if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
+            if (!response.ok) throw new Error(t('Error loading forms'));
             const data = await response.json();
 
             const formsWithCounts = await Promise.all(
@@ -107,7 +109,7 @@ const Accueil = () => {
     const reloadgroups = async () => {
         try {
             const response = await fetch('/api/groups');
-            if (!response.ok) throw new Error('Erreur lors du chargement des groupes');
+            if (!response.ok) throw new Error(t('Error loading groups'));
             const data = await response.json();
             const groupsWithCounts = await Promise.all(
                 data.map(async (group) => {
@@ -123,7 +125,7 @@ const Accueil = () => {
             );
             setgroups(groupsWithCounts);
         } catch (error) {
-            console.error("Erreur reloadgroups :", error);
+            console.error(t("Error loading groups"), error);
         }
     };
 
@@ -155,13 +157,13 @@ const Accueil = () => {
             const data = await response.json();
 
             if (data.hasResponses) {
-                showNotification("Attention, ce formulaire contient déjà des réponses et ne peut pas être modifié.", "error");
+                showNotification(t("This form already has responses and cannot be edited."), t("error"));
             } else {
                 navigate(`/form-editor2/${formId}`);
             }
         } catch (error) {
-            console.error("Erreur lors de la vérification des réponses :", error);
-            showNotification("Erreur lors de la vérification des réponses.", "error");
+            console.error(t("Error checking responses:"), error);
+            showNotification(t("Error checking responses."), t("error"));
         }
     };
 
@@ -185,7 +187,7 @@ const Accueil = () => {
             document.body.removeChild(element);
 
             closeModal();
-            showNotification("Formulaire exporté !", "success");
+            showNotification(t("Form exported!"), t("success"));
 
         };
 
@@ -207,18 +209,18 @@ const Accueil = () => {
 
                     } else {
                         const errorData = await response.json();
-                        showNotification("Erreur : " + errorData.error, "error");
+                        showNotification(t("Error: ") + errorData.error, t("error"));
                     }
                 } catch (error) {
-                    console.error("Erreur :", error);
-                    showNotification("Impossible de contacter le serveur.", "error");
+                    console.error(t("Error:"), error);
+                    showNotification(t("Unable to contact the server."), t("error"));
                 }
             }
 
             DownloadExport(jsonExport);
         }
 
-        showModal('Export', 'Voulez-vous également exporter les réponses ?', () => { exportForm(ids, true) }, 'Oui', 'Non', () => { exportForm(ids) });
+        showModal(t('Export'), t('Do you also want to export the responses?'), () => { exportForm(ids, true) }, t('Yes'), t('No'), () => { exportForm(ids) });
     };
 
     // Pour mettre à jour ce que tape l'utilisateur dans l'input
@@ -239,12 +241,12 @@ const Accueil = () => {
                 body: JSON.stringify({ defaultUserId: newUserId }),
             });
 
-            if (!response.ok) throw new Error("Erreur lors de l'enregistrement de l'ID utilisateur par défaut.");
+            if (!response.ok) throw new Error(t("Error saving default user ID."));
 
-            showNotification("ID utilisateur par défaut enregistré !", "success");
+            showNotification(t("Default user ID saved!"), t("success"));
         } catch (error) {
             console.error(error);
-            showNotification("Impossible d'enregistrer l'ID utilisateur par défaut.", "error");
+            showNotification(t("Unable to save default user ID."), t("error"));
         }
     };
 
@@ -288,7 +290,7 @@ const Accueil = () => {
                 await fetch(`/api/forms/${id}/duplicate`, { method: "POST" });
             }
 
-            showNotification("Tous les formulaires sélectionnés ont été dupliqués !", "success");
+            showNotification(t("All selected forms have been duplicated!"), t("success"));
 
             await reloadForms();
             await reloadgroups();
@@ -296,7 +298,7 @@ const Accueil = () => {
 
         } catch (error) {
             console.error(error);
-            showNotification("Impossible de dupliquer certains formulaires.", "error");
+            showNotification(t("Unable to duplicate some forms."), t("error"));
         }
     };
 
@@ -308,29 +310,29 @@ const Accueil = () => {
         if (!ids || ids.length === 0) return;
 
         showModal(
-            "Suppression",
-            `Supprimer ${ids.length} formulaire(s) ? Cette action est irréversible.`,
+            t("Suppression"),
+            t(`Supprimer ${ids.length} formulaire(s) ? Cette action est irréversible.`),
             async () => {
                 try {
                     closeModal();
                     for (const id of ids) {
                         await fetch(`/api/forms/${id}`, { method: "DELETE" });
                     }
-                    showNotification("Tous les formulaires sélectionnés ont été supprimés !", "success");
+                    showNotification(t("All selected forms have been deleted!"), t("success"));
 
                     await reloadForms();
                     await reloadgroups();
                     setSelectedForms([]); // Nettoyage
                 } catch (error) {
                     console.error(error);
-                    showNotification("Impossible de supprimer certains formulaires.", "error");
+                    showNotification(t("Unable to delete some forms."), t("error"));
                 }
             }
         );
     };
 
     const creategroup = () => {
-        let groupName = prompt("Nom du nouveau groupe :");
+        let groupName = prompt(t("Nom du nouveau groupe :"));
 
         if (!groupName || groupName.trim() === "") return;
 
@@ -341,12 +343,12 @@ const Accueil = () => {
         })
             .then(res => {
                 res.json();
-                showNotification("Groupe créé.", "success")
+                showNotification(t("Group created."), t("success"));
             })
             .then(() => reloadgroups())
             .catch(err => {
                 console.log(err);
-                showNotification("Impossible de contacter le serveur.", "error");
+                showNotification(t("Unable to contact the server."), t("error"));
             })
     };
 
@@ -360,7 +362,7 @@ const Accueil = () => {
                 method: "PUT",
             });
         }
-        showNotification(`Formulaire(s) déplacé(s)`, "success");
+        showNotification(t("Form(s) moved"), t("success"));
 
         setMoveModal({ open: false, item: null, selectedGroup: "" });
         setMoveModal({ open: false, item: null, selectedGroup: "" });
@@ -371,7 +373,7 @@ const Accueil = () => {
     };
 
     const handleRenameGroup = async (groupId, currentName) => {
-        const newName = prompt("Nouveau nom du groupe :", currentName);
+        const newName = prompt(t("Nouveau nom du groupe :"), currentName);
         if (!newName || newName.trim() === "") return;
 
         try {
@@ -381,23 +383,23 @@ const Accueil = () => {
                 body: JSON.stringify({ name: newName }),
             });
 
-            if (!response.ok) throw new Error("Erreur lors du renommage du groupe");
+            if (!response.ok) throw new Error(t("Erreur lors du renommage du groupe"));
 
             await reloadgroups();
             await reloadForms();
-            showNotification(`Groupe renommé en "${newName}"`, "success");
+            showNotification(t(`Groupe renommé en "${newName}"`), t("success"));
 
         } catch (err) {
             console.error(err);
-            showNotification("Impossible de renommer le groupe", "error");
+            showNotification(t("Impossible de renommer le groupe"), t("error"));
         }
     };
 
 
     const handleDeletegroup = (groupId) => {
         showModal(
-            "Suppression",
-            "Supprimer le(s) groupe(s) ? Cette action est irréversible.",
+            t("Suppression"),
+            t("Supprimer le(s) groupe(s) ? Cette action est irréversible."),
             async () => {
                 try {
                     closeModal();
@@ -406,11 +408,11 @@ const Accueil = () => {
                     reloadgroups();
                     reloadForms();
                     setSelectedForms([]);
-                    showNotification(`Groupe(s) supprimé(s)`, "success");
+                    showNotification(t("Group(s) deleted"), t("success"));
 
                 } catch (err) {
                     console.error(err);
-                    showNotification("Impossible de supprimer le(s) groupe(s).", "error");
+                    showNotification(t("Unable to delete group(s)."), t("error"));
                 }
 
             }
@@ -459,25 +461,28 @@ const Accueil = () => {
         showImportModal(() => {
             closeImportModal();
             fetchForms();
-            showNotification("Formulaire importé !", "success");
+            showNotification(t("Form imported!"), t("success"));
         },
             () => {
                 closeImportModal();
                 fetchForms();
-                showNotification("Contenu du fichier incompatible.", "error");
+                showNotification(t("File content incompatible."), t("error"));
             },
             () => {
                 closeImportModal();
                 fetchForms();
-                showNotification("Impossible de contacter le serveur.", "error");
+                showNotification(t("Unable to contact the server."), t("error"));
             });
     }
 
 
+
     return (
         <>
-            <div>
-                <h1>XP-Forms</h1>
+            <div style={{ padding: '16px' }}>
+                <h1>{t('welcome')}</h1>
+                <button className={styles.langSwitch} onClick={() => i18n.changeLanguage('fr')}>FR</button>
+                <button className={styles.langSwitch} onClick={() => i18n.changeLanguage('en')}>EN</button>
                 {/* Champ pour entrer l'ID utilisateur par défaut */}
             </div>
 
@@ -489,7 +494,7 @@ const Accueil = () => {
                     }}
                     className={`${styles.viewButton} ${viewMode === "forms" ? styles.activeViewButton : ""} ${styles.switchToViewForms}`}
                 >
-                    Formulaires
+                    {t('Forms')}
                 </button>
 
                 <button
@@ -499,7 +504,7 @@ const Accueil = () => {
                     }}
                     className={`${styles.viewButton} ${viewMode === "groups" ? styles.activeViewButton : ""} ${styles.switchToViewGroups}`}
                 >
-                    Groupes
+                    {t('Groups')}
                 </button>
             </div>
 
@@ -527,13 +532,13 @@ const Accueil = () => {
             {moveModal.open && (
                 <div className={styles.moveModalOverlay}>
                     <div className={styles.moveModalContent}>
-                        <h3>Déplacer vers…</h3>
+                        <h3>{t("Move to…")}</h3>
 
                         <select
                             value={moveModal.selectedGroup}
                             onChange={(e) => setMoveModal(prev => ({ ...prev, selectedGroup: e.target.value }))}
                         >
-                            <option value="">Sélectionner un groupe</option>
+                            <option value="">{t("Select a group")}</option>
                             {groups.map(group => (
                                 <option key={group.id} value={group.id}>
                                     📁 {group.name}
@@ -543,10 +548,10 @@ const Accueil = () => {
 
                         <div className={styles.buttonsRow}>
                             <button onClick={handleMove} disabled={!moveModal.selectedGroup}>
-                                Confirmer
+                                {t("Confirm")}
                             </button>
                             <button onClick={() => setMoveModal({ open: false, item: null })}>
-                                Annuler
+                                {t("Cancel")}
                             </button>
                         </div>
                     </div>
@@ -557,7 +562,7 @@ const Accueil = () => {
                     <div className={styles.tableHeader}>
                         <div className={styles.defaultUserIdContainer}>
                             <label htmlFor="defaultUserId" className={styles.defaultUserIdLabel}>
-                                ID participant par défaut :
+                                {t("Default participant ID:")}
                             </label>
                             <input
                                 id="defaultUserId"
@@ -567,16 +572,16 @@ const Accueil = () => {
                                 className={styles.defaultUserIdInput}
                             />
                             <button onClick={handleSaveDefaultUserId} className={styles.saveButton}>
-                                Sauvegarder
+                                {t("Save")}
                             </button>
                         </div>
-                        <h2 className={styles.tableTitle}>Liste des formulaires enregistrés</h2>
+                        <h2 className={styles.tableTitle}>{t("List of saved forms")}</h2>
                         <div className={styles.createButtonContainer}>
                             <button
                                 className={styles.createButton}
                                 onClick={() => navigate("/form-editor2")}
                             >
-                                Créer un nouveau formulaire
+                                {t("Create a new form")}
                             </button>
                         </div>
                     </div>
@@ -589,7 +594,7 @@ const Accueil = () => {
                                         <th className={styles.thFilter}>
                                             <input
                                                 type="text"
-                                                placeholder="Rechercher un formulaire..."
+                                                placeholder={t("Search a form...")}
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                                 className={styles.headerSearchInput}
@@ -600,7 +605,7 @@ const Accueil = () => {
                                                 value={tableSelectedGroup}
                                                 onChange={(e) => setTableSelectedGroup(e.target.value)}
                                             >
-                                                <option value="">Tous les groupes</option>
+                                                <option value="">{t("All groups")}</option>
                                                 {groups.map((g) => (
                                                 <option key={g.id} value={g.id}>
                                                     {g.name}
@@ -653,29 +658,29 @@ const Accueil = () => {
                                                     selectedForms.length === 0 ? styles.selectDisabled : styles.selectEnabled
                                                 }`}
                                             >
-                                                <option value="">— Actions —</option>
+                                                <option value="">— {t("Actions")} —</option>
 
                                                 {selectedForms.length === 1 && (
                                                     <>
-                                                        <option value="view">Voir</option>
+                                                        <option value="view">{t("View")}</option>
                                                         <option
                                                             value="edit"
                                                             disabled={
                                                                 forms.find(f => f.id === selectedForms[0])?.responseCount > 0
                                                             }
                                                         >
-                                                            Modifier
+                                                            {t("Edit")}
                                                         </option>
-                                                        <option value="responses">Voir réponses</option>
+                                                        <option value="responses">{t("View responses")}</option>
                                                     </>
                                                 )}
 
                                                 {selectedForms.length > 0 && (
                                                     <>
-                                                        <option value="move">Déplacer</option>
-                                                        <option value="duplicate">Dupliquer</option>
-                                                        <option value="delete">Supprimer</option>
-                                                        <option value="export">Exporter</option>
+                                                        <option value="move">{t("Move")}</option>
+                                                        <option value="duplicate">{t("Duplicate")}</option>
+                                                        <option value="delete">{t("Delete")}</option>
+                                                        <option value="export">{t("Export")}</option>
                                                     </>
                                                 )}
                                             </select>
@@ -693,19 +698,19 @@ const Accueil = () => {
                                             }}
                                         />
                                         </th>
-                                        <th className={styles.th}>Titre</th>
-                                        <th className={styles.th}>Groupe</th>
-                                        <th className={styles.th}>Date de création</th>
-                                        <th className={styles.th}>Dernière mise à jour</th>
-                                        <th className={styles.th}>Nombre de réponses</th>
-                                        <th className={styles.th}>Actions</th>
+                                        <th className={styles.th}>{t("Title")}</th>
+                                        <th className={styles.th}>{t("Group")}</th>
+                                        <th className={styles.th}>{t("Creation date")}</th>
+                                        <th className={styles.th}>{t("Last update")}</th>
+                                        <th className={styles.th}>{t("Number of responses")}</th>
+                                        <th className={styles.th}>{t("Actions")}</th>
                                     </tr>
                                 </thead>
 
                                 <tbody className={styles.scrollableTable}>
                                     {forms.length === 0 ? (
                                         <tr>
-                                        <td colSpan="7">Aucun formulaire</td>
+                                        <td colSpan="7">{t("No forms")}</td>
                                         </tr>
                                     ) : (
                                         filteredForms.map(form => (
@@ -771,7 +776,7 @@ const Accueil = () => {
                     <div className={styles.tableHeader}>
                         <div className={styles.defaultUserIdContainer}>
                             <label htmlFor="defaultUserId" className={styles.defaultUserIdLabel}>
-                                ID participant par défaut :
+                                t{t("Default participant ID")} :
                             </label>
                             <input
                                 id="defaultUserId"
@@ -781,18 +786,18 @@ const Accueil = () => {
                                 className={styles.defaultUserIdInput}
                             />
                             <button onClick={handleSaveDefaultUserId} className={styles.saveButton}>
-                                Sauvegarder
+                                {t("Save")}
                             </button>
                         </div>
                         <h2 className={styles.tableTitle}>
-                            Liste des groupes enregistrés
+                            {t("List of saved groups")}
                         </h2>
                         <div className={styles.createButtonContainer}>
                             <button
                                 className={styles.createButton}
                                 onClick={() => creategroup()}
                             >
-                                Créer un nouveau groupe
+                                {t("Create a new group")}
                             </button>
                         </div>
                     </div>
@@ -806,7 +811,7 @@ const Accueil = () => {
                                     <th className={styles.thFilter}>
                                         <input
                                             type="text"
-                                            placeholder="Rechercher un groupe..."
+                                            placeholder={t("Search for a group...")}
                                             value={groupSearchQuery}
                                             onChange={(e) => setGroupSearchQuery(e.target.value)}
                                             className={styles.headerSearchInput}
@@ -847,14 +852,14 @@ const Accueil = () => {
                                                     : styles.selectEnabled
                                             }`}
                                         >
-                                            <option value="">— Actions —</option>
+                                            <option value="">{t("— Actions —")}</option>
 
                                             {selectedGroups.length === 1 && (
-                                                <option value="rename">Renommer</option>
+                                                <option value="rename">{t("Rename")}</option>
                                             )}
 
                                             {selectedGroups.length > 0 && (
-                                                <option value="delete">Supprimer</option>
+                                                <option value="delete">{t("Delete")}</option>
                                             )}
                                         </select>
                                     </th>
@@ -877,11 +882,11 @@ const Accueil = () => {
                                             }
                                         />
                                     </th>
-                                    <th className={styles.th}>Nom du groupe</th>
-                                    <th className={styles.th}>Date de création</th>
-                                    <th className={styles.th}>Dernière mise à jour</th>
-                                    <th className={styles.th}>Nombre de formulaires</th>
-                                    <th className={styles.th}>Actions</th>
+                                    <th className={styles.th}>{t("Group name")}</th>
+                                    <th className={styles.th}>{t("Creation date")}</th>
+                                    <th className={styles.th}>{t("Last update")}</th>
+                                    <th className={styles.th}>{t("Number of forms")}</th>
+                                    <th className={styles.th}>{t("Actions")}</th>
                                 </tr>
                             </thead>
 
@@ -889,7 +894,7 @@ const Accueil = () => {
                             <tbody className={styles.scrollableTable}>
                                 {filteredGroups.length === 0 ? (
                                     <tr>
-                                        <td colSpan="6">Aucun groupe</td>
+                                        <td colSpan="6">{t("No groups")}</td>
                                     </tr>
                                 ) : (
                                     filteredGroups.map(group => (
@@ -996,11 +1001,11 @@ const Accueil = () => {
                             </div>
                         );
                     })()}
-                    <div onClick={() => navigate(`/form-responses/${openMenuId}`)}>Réponses</div>
-                    <div onClick={() => setMoveModal({ open: true, item: { id: [openMenuId] } })}>Déplacer</div>
-                    <div onClick={() => handleDuplicateForm(openMenuId)}>Dupliquer</div>
-                    <div onClick={() => handleDeleteForm(openMenuId)}>Supprimer</div>
-                    <div onClick={() => handleExportForm(openMenuId)}>Exporter</div>
+                    <div onClick={() => navigate(`/form-responses/${openMenuId}`)}>{t("Responses")}</div>
+                    <div onClick={() => setMoveModal({ open: true, item: { id: [openMenuId] } })}>{t("Move")}</div>
+                    <div onClick={() => handleDuplicateForm(openMenuId)}>{t("Duplicate")}</div>
+                    <div onClick={() => handleDeleteForm(openMenuId)}>{t("Delete")}</div>
+                    <div onClick={() => handleExportForm(openMenuId)}>{t("Export")}</div>
                 </div>
             )}
             {openGroupMenuId && (
@@ -1009,8 +1014,8 @@ const Accueil = () => {
                     className={styles.actionMenu}
                     style={{ top: groupMenuPosition.y, left: groupMenuPosition.x }}
                 >
-                    <div onClick={() => handleRenameGroup(openGroupMenuId, groups.find(g => g.id === openGroupMenuId)?.name)}>Renommer</div>
-                    <div onClick={() => handleDeletegroup(openGroupMenuId)}>Supprimer</div>
+                    <div onClick={() => handleRenameGroup(openGroupMenuId, groups.find(g => g.id === openGroupMenuId)?.name)}>{t("Rename")}</div>
+                    <div onClick={() => handleDeletegroup(openGroupMenuId)}>{t("Delete")}</div>
                 </div>
             )}
         </>
@@ -1018,4 +1023,3 @@ const Accueil = () => {
 };
 
 export default Accueil;
-
