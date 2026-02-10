@@ -471,13 +471,7 @@ const validateCurrentPage = useCallback(() => {
               )}
             </div>
 
-<<<<<<< HEAD
-            <div className={styles.pageIndicator}>
-              {t("Page")} : {effectiveCurrentPage} / {effectivePages.length}
-            </div>
-
-=======
->>>>>>> origin/iteration_4
+// ...existing code...
             <div className={styles.navButtonWrapper}>
               {canGoNext ? (
                 <button
