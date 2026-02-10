@@ -3,7 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import Modal from "../../components/Modal";
 import styles from "./FormResponsesList.module.css";
 
+import { useTranslation } from "react-i18next";
+
 const FormResponsesList = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const [formTitle, setFormTitle] = useState("");
   const [responses, setResponses] = useState([]);
@@ -35,10 +38,10 @@ const FormResponsesList = () => {
     const fetchFormInfo = async () => {
       try {
         const response = await fetch(`/api/forms/${id}`);
-        if (!response.ok) throw new Error("Erreur lors du chargement du formulaire");
+        if (!response.ok) throw new Error(t("Error loading form"));
 
         const form = await response.json();
-        setFormTitle(form.title || "formulaire");
+        setFormTitle(form.title || t("Untitled form"));
 
       } catch (error) {
         console.error("Erreur chargement formulaire :", error);
@@ -51,7 +54,7 @@ const FormResponsesList = () => {
     const fetchResponses = async () => {
       try {
         const response = await fetch(`/api/forms/${id}/responses`);
-        if (!response.ok) throw new Error("Erreur lors du chargement des réponses");
+        if (!response.ok) throw new Error(t("Error loading responses"));
 
         const data = await response.json();
         const extractedQuestions = [];
@@ -75,7 +78,7 @@ const FormResponsesList = () => {
   }, [id]);
 
   const exportToCSV = () => {
-    const headers = ["ID Utilisateur", ...questions];
+    const headers = [t("User ID"), ...questions];
     const rows = responses.map((userResponse) => {
       const row = [userResponse.user_id];
       questions.forEach((question) => {
@@ -102,8 +105,8 @@ const FormResponsesList = () => {
 
   const handleDeleteResponses = () => {
     showModal(
-      "Confirmation",
-      "Êtes-vous sûr de vouloir supprimer toutes les réponses de ce formulaire ?",
+      t("Confirmation"),
+      t("Are you sure you want to delete all responses for this form?"),
       async () => {
         try {
           const response = await fetch(`/api/forms/${id}/responses`, {
@@ -111,15 +114,15 @@ const FormResponsesList = () => {
           });
           if (response.ok) {
             closeModal();
-            showNotification("Toutes les réponses ont été supprimées.", "success");
+            showNotification(t("All responses have been deleted."), "success");
             setResponses([]);
           } else {
             const errorData = await response.json();
-            showNotification("Erreur : " + errorData.error, "error");
+            showNotification(t("Error: ") + errorData.error, "error");
           }
         } catch (error) {
-          console.error("Erreur lors de la suppression :", error);
-          showNotification("Impossible de contacter le serveur.", "error");
+          console.error(t("Error deleting responses:"), error);
+          showNotification(t("Unable to contact the server."), "error");
         }
       },
       closeModal
@@ -128,17 +131,17 @@ const FormResponsesList = () => {
 
   return (
     <div className={styles.container}>
-      <h2>Réponses du formulaire</h2>
+      <h2>{t('Form responses')}</h2>
 
-      <button className="btn" onClick={handleGoHome}>Retour à l'accueil</button>
-      <button onClick={exportToCSV} style={{ marginBottom: "10px" }}>Exporter en CSV</button>
+      <button className="btn" onClick={handleGoHome}>{t('Back to home')}</button>
+      <button onClick={exportToCSV} style={{ marginBottom: "10px" }}>{t('Export to CSV')}</button>
 
       {responses.length > 0 && questions.length > 0 ? (
         <div className={styles.tableWrapper}>
           <table>
             <thead>
               <tr>
-                <th>ID Utilisateur</th>
+                <th>{t('User ID')}</th>
                 {questions.map((question, index) => (
                   <th key={index}>{question}</th>
                 ))}
@@ -158,14 +161,14 @@ const FormResponsesList = () => {
           </table>
         </div>
       ) : (
-        <p className={styles.message}>Chargement des données ou aucune réponse trouvée.</p>
+        <p className={styles.message}>{t('Loading data or no responses found.')}</p>
       )}
 
       <button
         onClick={handleDeleteResponses}
         style={{ backgroundColor: "#dc3545", color: "white", marginBottom: "10px", marginLeft: "10px" }}
       >
-        Supprimer toutes les réponses
+        {t('Delete all responses')}
       </button>
 
       <Modal
@@ -174,6 +177,8 @@ const FormResponsesList = () => {
         message={modal.message}
         onConfirm={modal.onConfirm}
         onClose={modal.onClose}
+        confirm={t('Confirm')}
+        close={t('Close')}
       />
 
       {notification.message && (

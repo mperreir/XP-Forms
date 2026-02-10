@@ -311,7 +311,7 @@ const Accueil = () => {
 
         showModal(
             t("Suppression"),
-            t(`Supprimer ${ids.length} formulaire(s) ? Cette action est irréversible.`),
+            t("Supprimer {ids} formulaire(s) ? Cette action est irréversible.", { ids: ids.length }),
             async () => {
                 try {
                     closeModal();
@@ -985,7 +985,7 @@ const Accueil = () => {
                         left: menuPosition.x,
                     }}
                 >
-                    <div onClick={() => navigate(`/form-viewer/${openMenuId}/1?navigation=True`)}>Voir</div>
+                    <div onClick={() => navigate(`/form-viewer/${openMenuId}/1?navigation=True`)}>{t('View')}</div>
                     {(() => {
                         const form = forms.find(f => f.id === openMenuId);
                         const disabled = form?.responseCount > 0;

@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { Form } from "@bpmn-io/form-js-viewer";
 import Modal from "../../components/Modal";
 import styles from './form_viewer.module.css';
 
 const FormViewer = () => {
+  const { t, i18n } = useTranslation();
   const { id, page, range, id_participant } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,11 +62,11 @@ const FormViewer = () => {
             const newPath = `/form-viewer/${id}/${page}/${defaultUserId}${location.search}`;
             navigate(newPath, { replace: true });
           } else {
-            showNotification("Aucun ID utilisateur par défaut enregistré.", "error");
+            showNotification(t("No default user ID saved."), "error");
           }
         } catch (error) {
           console.error(error);
-          showNotification("Impossible de récupérer l'ID utilisateur par défaut.", "error");
+          showNotification(t("Unable to fetch default user ID."), "error");
         }
       }
     };
@@ -146,7 +148,7 @@ const FormViewer = () => {
   const fetchSavedData = useCallback(async () => {
     try {
       const response = await fetch(`/api/form-responses-participant/${id}/${id_participant}`);
-      if (!response.ok) throw new Error("Erreur lors du chargement des réponses sauvegardées");
+      if (!response.ok) throw new Error(t("Error loading saved responses"));
       const data = await response.json();
 
       const loadedData = {};
@@ -156,7 +158,7 @@ const FormViewer = () => {
 
       return loadedData;
     } catch (error) {
-      console.error("Erreur de récupération des données:", error);
+      console.error(t("Error fetching data:"), error);
       return {};
     }
   }, [id, id_participant]);
@@ -399,15 +401,15 @@ const validateCurrentPage = useCallback(() => {
         {/* Bouton Retour affiché seulement en mode Admin */}
         {!id_participant && (
           <button className="btn" onClick={handleGoHome}>
-            Retour à l'accueil
+            {t("Back to home")}
           </button>
         )}
 
         {/* Informations sur le formulaire */}
         {!id_participant && formDetails && (
           <div className={styles.formDetails}>
-            <p><strong>ID du Formulaire :</strong> {formDetails.id}</p>
-            <p><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
+            <p><strong>{t("Form ID")} :</strong> {formDetails.id}</p>
+            <p><strong>{t("Creation date")} :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
             <div
               className={styles.toggleExtraInfo}
               onClick={() => setShowExtraInfo(prev => !prev)}
@@ -417,17 +419,17 @@ const validateCurrentPage = useCallback(() => {
             {showExtraInfo && (
               <div className={styles.extraInfo}>
                 <p>
-                  <strong>Pour intégrer dans un scénario Tobii utilisez :</strong><br />
+                  <strong>{t("To integrate in a Tobii scenario use:")}</strong><br />
                   http://localhost:3000/form-viewer/{id}/{page}/id_participant
                 </p>
                 <p>
-                  Ajoutez <strong>@</strong> comme ID participant pour utiliser l'ID utilisateur par défaut.
+                  {t("Add")} <strong>@</strong> {t("as participant ID to use the default user ID.")}
                 </p>
                 <p>
-                  Ajoutez <strong>/numéroPageDebut-numéroPageFin</strong> entre le numéro de page et l'ID participant pour parcourir un intervalle de pages
+                  {t("Add")} <strong>/startPageNumber-endPageNumber</strong> {t("between the page number and participant ID to browse a page range.")}
                 </p>
                 <p>
-                  Ajoutez <strong>?navigation=True</strong> à la fin si vous voulez permettre la navigation entre pages.
+                  {t("Add")} <strong>?navigation=True</strong> {t("at the end if you want to allow navigation between pages.")}
                 </p>
               </div>
             )}
@@ -436,7 +438,7 @@ const validateCurrentPage = useCallback(() => {
         {/* Info Participant */}
         {id_participant && (
           <div>
-            <p><strong>ID du Participant :</strong> {id_participant}</p>
+            <p><strong>{t("Participant ID")} :</strong> {id_participant}</p>
           </div>
         )}
 
@@ -446,7 +448,7 @@ const validateCurrentPage = useCallback(() => {
             <div className={styles.navButtonWrapper}>
               {canGoPrev ? (
                 <button onClick={() => goToPage(effectiveCurrentPage - 1)}>
-                  Page précédente
+                  {t("Previous page")}
                 </button>
               ) : (
                 <div className={styles.placeholder}></div>
@@ -454,7 +456,7 @@ const validateCurrentPage = useCallback(() => {
             </div>
 
             <div className={styles.pageIndicator}>
-              Page : {effectiveCurrentPage} / {effectivePages.length}
+              {t("Page")} : {effectiveCurrentPage} / {effectivePages.length}
             </div>
 
             <div className={styles.navButtonWrapper}>
@@ -463,7 +465,7 @@ const validateCurrentPage = useCallback(() => {
                   disabled={isNextPageDisabled}
                   onClick={() => goToPage(effectiveCurrentPage + 1)}
                 >
-                  Page suivante
+                  {t("Next page")}
                 </button>
               ) : (
                 <div className={styles.placeholder}></div>
@@ -476,7 +478,7 @@ const validateCurrentPage = useCallback(() => {
         {schema ? (
           <div ref={containerRef} id="form" style={{ width: "100%" }}></div>
         ) : (
-          <p>Chargement du formulaire...</p>
+          <p>{t("Loading form...")}</p>
         )}
       </div>
       <Modal
