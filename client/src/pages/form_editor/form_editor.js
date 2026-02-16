@@ -17,6 +17,7 @@ const FormEditor = () => {
   const params = new URLSearchParams(window.location.search);
   const groupId = params.get("group_id");
   const [notification, setNotification] = useState({ message: "", type: "" });
+  const currentElementRef = useRef(null);
 
   const showModal = (title, message, onConfirm = null) => {
     setModal({ isOpen: true, title, message, onConfirm });
@@ -42,6 +43,18 @@ const FormEditor = () => {
 
     setFormEditor(editor);
 
+    editor.on("selection.changed", (event) => {
+      if (!event || !event.selection) {
+        currentElementRef.current = null;
+        return;
+      }
+
+      // Dans ta version, selection est un objet, pas un tableau
+      currentElementRef.current = event.selection;
+
+      console.log("Selected:", currentElementRef.current);
+    });
+
     if (id) {
       fetch(`/api/forms/${id}`)
         .then((response) => response.json())
@@ -62,6 +75,43 @@ const FormEditor = () => {
     editor.on("changed", () => {
       setIsModified(true);
     });
+
+    editor.on("changed", async () => {
+      const schema = await editor.getSchema();
+
+      const applyStyles = (components) => {
+        components.forEach((component) => {
+          if (component.bold) {
+            const wrapper = document.querySelector(
+              `[data-id="${component.id}"]`
+            );
+
+            if (wrapper) {
+              const label = wrapper.querySelector(".fjs-form-field-label");
+              if (label) {
+                label.style.setProperty("font-weight", "bold", "important");
+              }
+
+              const richText = wrapper.querySelector(
+                "h1, h2, h3, h4, h5, h6, p, span"
+              );
+              if (richText) {
+                richText.style.setProperty("font-weight", "bold", "important");
+              }
+            }
+          }
+
+          if (component.components) {
+            applyStyles(component.components);
+          }
+        });
+      };
+
+      requestAnimationFrame(() => {
+        applyStyles(schema.components);
+      });
+    });
+
 
     // Fonction utilitaire : recherche récursive d'un composant par ID
     const findComponentById = (components, targetId) => {
@@ -217,6 +267,37 @@ const FormEditor = () => {
     }
   };
 
+  const handleBoldClick = async () => {
+    if (!formEditor || !currentElementRef.current) return;
+
+    const schema = await formEditor.getSchema();
+
+    const findComponentById = (components, targetId) => {
+      for (const component of components) {
+        if (component.id === targetId) return component;
+        if (component.components) {
+          const found = findComponentById(component.components, targetId);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const component = findComponentById(
+      schema.components,
+      currentElementRef.current.id
+    );
+    console.log(component);
+    if (!component) return;
+
+    // Toggle
+    component.bold = !component.bold;
+    await formEditor.importSchema(schema);
+  };
+
+
+
+
   const handleGoHome = () => {
     if (isModified) {
       showModal(
@@ -235,6 +316,9 @@ const FormEditor = () => {
         <div className={styles.left}>
           <button className="btn" onClick={handleGoHome}>
             Retour à l'accueil
+          </button>
+          <button className="btn" onClick={handleBoldClick}>
+            Gras
           </button>
         </div>
         <h2 className={styles.title}>
