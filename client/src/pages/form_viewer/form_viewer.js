@@ -395,61 +395,44 @@ const validateCurrentPage = useCallback(() => {
 
   return (
     <>
-      <div className={styles.toolbar}>
-        {/* Bouton Retour affiché seulement en mode Admin */}
-        <div className={styles.left}>
-          {!id_participant && (
-            <button className="btn" onClick={handleGoHome}>
-              {t('Back to home')}
-            </button>
-          )}
-        </div>
-        <h2 className={styles.title}>{t('Form Viewer')}</h2>
-        <div className={styles.right}>
-          <div className={styles.pageWrapper}>
-            <span className={styles.pageIndicator}>
-              {t('Page')} : {effectiveCurrentPage} / {effectivePages.length}
-            </span>
+      <div className={styles.formViewerContainer}>
+        <h2>Form Viewer</h2>
 
-              {id_participant && (
-                <div className={styles.participantTooltip}>
-                  ID participant : {id_participant}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        {/* Bouton Retour affiché seulement en mode Admin */}
+        {!id_participant && (
+          <button className="btn" onClick={handleGoHome}>
+            {t("Back to home")}
+          </button>
+        )}
+
         {/* Informations sur le formulaire */}
         {!id_participant && formDetails && (
           <div className={styles.formDetails}>
-            <div className={styles.adminInfoWrapper}>
-              <p className={styles.info}><strong>{t("Form ID")} :</strong> {formDetails.id}</p>
-              <p className={styles.info}><strong>{t("Creation date")} :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
-              <div
-                className={styles.toggleExtraInfo}
-                onClick={() => setShowExtraInfo(prev => !prev)}
-                title={t("Form information")}
-              >
-                {showExtraInfo ? "−" : "+"}
-              </div>
-              {showExtraInfo && (
-                <div className={styles.adminDropdown}>
-                  <p>
-                    <strong>{t("To integrate in a Tobii scenario use:")}</strong><br />
-                    http://localhost:3000/form-viewer/{id}/{page}/id_participant
-                  </p>
-                  <p>
-                    {t("Add")} <strong>@</strong> {t("as participant ID to use the default user ID.")}
-                  </p>
-                  <p>
-                    {t("Add")} <strong>/startPageNumber-endPageNumber</strong> {t("between the page number and participant ID to browse a page range.")}
-                  </p>
-                  <p>
-                    {t("Add")} <strong>?navigation=True</strong> {t("at the end if you want to allow navigation between pages.")}
-                  </p>
-                </div>
-              )}
+            <p><strong>{t("Form ID")} :</strong> {formDetails.id}</p>
+            <p><strong>{t("Creation date")} :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
+            <div
+              className={styles.toggleExtraInfo}
+              onClick={() => setShowExtraInfo(prev => !prev)}
+            >
+              {showExtraInfo ? "−" : "+"}
             </div>
+            {showExtraInfo && (
+              <div className={styles.extraInfo}>
+                <p>
+                  <strong>{t("To integrate in a Tobii scenario use:")}</strong><br />
+                  http://localhost:3000/form-viewer/{id}/{page}/id_participant
+                </p>
+                <p>
+                  {t("Add")} <strong>@</strong> {t("as participant ID to use the default user ID.")}
+                </p>
+                <p>
+                  {t("Add")} <strong>/startPageNumber-endPageNumber</strong> {t("between the page number and participant ID to browse a page range.")}
+                </p>
+                <p>
+                  {t("Add")} <strong>?navigation=True</strong> {t("at the end if you want to allow navigation between pages.")}
+                </p>
+              </div>
+            )}
           </div>
         )}
         {/* Info Participant */}
@@ -458,6 +441,7 @@ const validateCurrentPage = useCallback(() => {
             <p><strong>{t("Participant ID")} :</strong> {id_participant}</p>
           </div>
         )}
+
         {/* Navigation entre pages */}
         {showNavigation && (
           <div className={styles.navigationButtons}>
@@ -471,9 +455,13 @@ const validateCurrentPage = useCallback(() => {
               )}
             </div>
 
-// ...existing code...
+            <div className={styles.pageIndicator}>
+              {t("Page")} : {effectiveCurrentPage} / {effectivePages.length}
+            </div>
+
             <div className={styles.navButtonWrapper}>
-    }
+              {canGoNext ? (
+                <button
                   disabled={isNextPageDisabled}
                   onClick={() => goToPage(effectiveCurrentPage + 1)}
                 >
@@ -497,15 +485,15 @@ const validateCurrentPage = useCallback(() => {
         isOpen={modal.isOpen}
         title={modal.title}
         message={modal.message}
-        onConfirm={modal.onConfirm}
+        onConfirm={modal.onConfirm} // Correctly pass the onConfirm callback
       />
       {notification.message && (
         <div className={`${styles.notification} ${styles[notification.type]}`}>
-          {notification.message}
+            {notification.message}
         </div>
       )}
     </>
   );
-}
+};
 
 export default FormViewer;

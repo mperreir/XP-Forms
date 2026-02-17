@@ -233,18 +233,16 @@ const FormEditor = () => {
 
   return (
     <div className={styles.container}>
-<<<<<<< HEAD
-      <div className={styles.container}>
-        <div className={styles.toolbar}>
-          <div className={styles.left}>
-            <button className="btn" onClick={handleGoHome}>
-              {t('Back to home')}
-            </button>
-          </div>
-          <h2 className={styles.title}>
-            {isEditing ? t('Edit form') : t('Create form')}
-          </h2>
-        </div>
+      <div className={styles.headerContainer}>
+        <h2 className={styles.pageTitle}>
+          {isEditing ? t("Edit form") : t("Create form")}
+        </h2>
+        <button className="btn" onClick={handleGoHome}>
+          {t("Back to home")}
+        </button>
+      </div>
+
+      <div className={styles.titleContainer}>
         <label htmlFor="titre">{t("Title")} :</label>
         <input
           type="text"

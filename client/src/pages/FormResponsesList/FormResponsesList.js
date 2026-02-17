@@ -130,33 +130,12 @@ const FormResponsesList = () => {
   };
 
   return (
-<<<<<<< HEAD
     <div className={styles.container}>
       <h2>{t('Form responses')}</h2>
 
       <button className="btn" onClick={handleGoHome}>{t('Back to home')}</button>
       <button onClick={exportToCSV} style={{ marginBottom: "10px" }}>{t('Export to CSV')}</button>
 
-=======
-    <div>
-      <div className={styles.toolbar}>
-        <div className={styles.left}>
-          <button className={styles.btnAccueil} onClick={handleGoHome}>
-            {t('Back to home')}
-          </button>
-          <button onClick={exportToCSV}>{t('Export to CSV')}</button>
-        </div>
-        <h2 className={styles.title}>{t('Form responses')}</h2>
-        <div className={styles.right}>
-          <button
-            onClick={handleDeleteResponses}
-            className={styles.deleteBtn}
-          >
-            {t('Delete all responses')}
-          </button>
-        </div>
-      </div>
->>>>>>> origin/iteration_4
       {responses.length > 0 && questions.length > 0 ? (
         <div className={styles.tableWrapper}>
           <table>
@@ -185,7 +164,6 @@ const FormResponsesList = () => {
         <p className={styles.message}>{t('Loading data or no responses found.')}</p>
       )}
 
-<<<<<<< HEAD
       <button
         onClick={handleDeleteResponses}
         style={{ backgroundColor: "#dc3545", color: "white", marginBottom: "10px", marginLeft: "10px" }}
@@ -193,8 +171,6 @@ const FormResponsesList = () => {
         {t('Delete all responses')}
       </button>
 
-=======
->>>>>>> origin/iteration_4
       <Modal
         isOpen={modal.isOpen}
         title={modal.title}

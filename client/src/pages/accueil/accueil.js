@@ -479,36 +479,38 @@ const Accueil = () => {
 
     return (
         <>
-<<<<<<< HEAD
             <div style={{ padding: '16px' }}>
                 <h1>{t('welcome')}</h1>
                 <button className={styles.langSwitch} onClick={() => i18n.changeLanguage('fr')}>FR</button>
                 <button className={styles.langSwitch} onClick={() => i18n.changeLanguage('en')}>EN</button>
                 {/* Champ pour entrer l'ID utilisateur par défaut */}
-=======
-            <div className={styles.projectName}>
-                <h1>XP-Forms</h1>
-                <button className={styles.langSwitch} onClick={() => i18n.changeLanguage('fr')}>FR</button>
-                <button className={styles.langSwitch} onClick={() => i18n.changeLanguage('en')}>EN</button>
->>>>>>> origin/iteration_4
-            <div className={styles.projectName}>
-                <h1>XP-Forms</h1>
-                <button className={styles.langSwitch} onClick={() => i18n.changeLanguage('fr')}>FR</button>
-                <button className={styles.langSwitch} onClick={() => i18n.changeLanguage('en')}>EN</button>
             </div>
-                            >
-                                {t("Create a new form")}
-                            </button>
+
+            <div className={styles.displayType}>
+                <button
+                    onClick={() => {
+                        setViewMode("forms"); 
+                        handleUncheckAll();
+                    }}
+                    className={`${styles.viewButton} ${viewMode === "forms" ? styles.activeViewButton : ""} ${styles.switchToViewForms}`}
+                >
+                    {t('Forms')}
+                </button>
+
+                <button
+                    onClick={() => {
+                        setViewMode("groups");
+                        handleUncheckAllGroups();
                     }}
                     className={`${styles.viewButton} ${viewMode === "groups" ? styles.activeViewButton : ""} ${styles.switchToViewGroups}`}
                 >
                     {t('Groups')}
-                            <button
-                                className={styles.createButton}
-                                onClick={() => creategroup()}
-                            >
-                                {t("Create a new group")}
-                            </button>
+                </button>
+            </div>
+
+            <Modal
+                isOpen={modal.isOpen}
+                title={modal.title}
                 message={modal.message}
                 onClose={modal.onClose}
                 onConfirm={modal.onConfirm}
@@ -579,11 +581,7 @@ const Accueil = () => {
                                 className={styles.createButton}
                                 onClick={() => navigate("/form-editor2")}
                             >
-<<<<<<< HEAD
                                 {t("Create a new form")}
-=======
-                                Créer
->>>>>>> origin/iteration_4
                             </button>
                         </div>
                     </div>
@@ -799,11 +797,7 @@ const Accueil = () => {
                                 className={styles.createButton}
                                 onClick={() => creategroup()}
                             >
-<<<<<<< HEAD
                                 {t("Create a new group")}
-=======
-                                Créer
->>>>>>> origin/iteration_4
                             </button>
                         </div>
                     </div>
@@ -995,6 +989,7 @@ const Accueil = () => {
                     {(() => {
                         const form = forms.find(f => f.id === openMenuId);
                         const disabled = form?.responseCount > 0;
+
                         return (
                             <div
                                 className={disabled ? styles.disabledAction : ""}
@@ -1002,7 +997,7 @@ const Accueil = () => {
                                     if (!disabled) handleEditForm(openMenuId);
                                 }}
                             >
-                                {t('Edit')}
+                                Modifier
                             </div>
                         );
                     })()}
