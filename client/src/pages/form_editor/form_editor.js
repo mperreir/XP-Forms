@@ -4,8 +4,10 @@ import { FormEditor as BPMNFormEditor } from "@bpmn-io/form-js-editor";
 import Modal from "../../components/Modal";
 import './form-js-editor.css';
 import styles from "./form_editor.module.css"; 
+import { useTranslation } from 'react-i18next';
 
 const FormEditor = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const editorContainerRef = useRef(null);
@@ -206,22 +208,22 @@ const FormEditor = () => {
 
       if (response.ok) {
         setIsModified(false); // Les modifications sont enregistrées
-        showNotification(isEditing ? "Formulaire mis à jour !" : "Formulaire enregistré !", "success")
+        showNotification(isEditing ? t("Form updated!") : t("Form saved!"), "success")
       } else {
         console.error("Erreur serveur :", await response.json());
-        showNotification("Erreur lors de l'enregistrement.", "error");
+        showNotification(t("Error while saving."), "error");
       }
     } catch (error) {
       console.error("Erreur :", error);
-      showNotification("Impossible de contacter le serveur.", "error");
+      showNotification(t("Unable to contact server."), "error");
     }
   };
 
   const handleGoHome = () => {
     if (isModified) {
       showModal(
-        "Attention",
-        "Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter cette page ?",
+        t("Warning"),
+        t("You have unsaved changes. Do you really want to leave this page?"),
         () => navigate("/accueil")
       );
     } else {
@@ -234,16 +236,16 @@ const FormEditor = () => {
       <div className={styles.toolbar}>
         <div className={styles.left}>
           <button className="btn" onClick={handleGoHome}>
-            Retour à l'accueil
+            {t("Back to home")}
           </button>
         </div>
         <h2 className={styles.title}>
-          {isEditing ? "Modifier le formulaire" : "Créer un formulaire"}
+          {isEditing ? t("Edit form") : t("Create form")}
         </h2>
       </div>
 
       <div className={styles.titleContainer}>
-        <label htmlFor="titre">Titre :</label>
+        <label htmlFor="titre">{t("Title:")}</label>
         <input
           type="text"
           id="titre"
@@ -255,7 +257,7 @@ const FormEditor = () => {
           className={styles.titleInput}
         />
         <button onClick={handleSaveForm} className={styles.saveButton}>
-          {isEditing ? "Mettre à jour" : "Enregistrer"}
+          {isEditing ? t("Update") : t("Save")}
         </button>
       </div>
 

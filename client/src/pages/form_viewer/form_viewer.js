@@ -3,8 +3,10 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Form } from "@bpmn-io/form-js-viewer";
 import Modal from "../../components/Modal";
 import styles from './form_viewer.module.css';
+import { useTranslation } from 'react-i18next';
 
 const FormViewer = () => {
+  const { t } = useTranslation();
   const { id, page, range, id_participant } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -399,35 +401,35 @@ const validateCurrentPage = useCallback(() => {
           <div className={styles.left}>
             {!id_participant && (
               <button className="btn" onClick={handleGoHome}>
-                Retour à l'accueil
+                {t("Back to home")}
               </button>
             )}
           </div>
-          <h2 className={styles.title}>Form Viewer</h2>
+          <h2 className={styles.title}>{t("Form Viewer")}</h2>
           <div className={styles.right}>
             <div className={styles.pageWrapper}>
               <span className={styles.pageIndicator}>
-                Page : {effectiveCurrentPage} / {effectivePages.length}
+                {t("Page:")} {effectiveCurrentPage} / {effectivePages.length}
               </span>
 
               {id_participant && (
                 <div className={styles.participantTooltip}>
-                  ID participant : {id_participant}
+                  {t("Participant ID:")} {id_participant}
                 </div>
               )}
             </div>
           </div>
         </div>
         {/* Informations sur le formulaire */}
-       {!id_participant && (
+       {!id_participant && formDetails && (
         <div className={styles.formDetails}>
           <div className={styles.adminInfoWrapper}>
-            <p className={styles.info}><strong>ID du Formulaire :</strong> {formDetails.id}</p>
-            <p className={styles.info}><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
+            <p className={styles.info}><strong>{t("Form ID:")}</strong> {formDetails.id}</p>
+            <p className={styles.info}><strong>{t("Creation date:")}</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
             <div
               className={styles.toggleExtraInfo}
               onClick={() => setShowExtraInfo(prev => !prev)}
-              title="Informations du formulaire"
+              title={t("Form information")}
             >
               {showExtraInfo ? "−" : "+"}
             </div>
@@ -435,17 +437,17 @@ const validateCurrentPage = useCallback(() => {
             {showExtraInfo && (
               <div className={styles.adminDropdown}>
                 <p>
-                  <strong>Pour intégrer dans un scénario Tobii utilisez :</strong><br />
+                  <strong>{t("To integrate in a Tobii scenario use:")}</strong><br />
                   http://localhost:3000/form-viewer/{id}/{page}/id_participant
                 </p>
                 <p>
-                  Ajoutez <strong>@</strong> comme ID participant pour utiliser l'ID utilisateur par défaut.
+                  {t("Add @ as participant ID to use the default user ID.")}
                 </p>
                 <p>
-                  Ajoutez <strong>/début-fin</strong> entre le numéro de page et l'ID participant pour parcourir un intervalle de pages. Exemple : <strong>/2-4/id</strong>
+                  {t("Add /start-end between the page number and the participant ID to browse a range of pages. Example:")} <strong>/2-4/id</strong>
                 </p>
                 <p>
-                  Ajoutez <strong>?navigation=True</strong> à la fin si vous voulez permettre la navigation entre pages.
+                  {t("Add ?navigation=True at the end if you want to allow navigation between pages.")}
                 </p>            </div>
             )}
             </div>
@@ -457,7 +459,7 @@ const validateCurrentPage = useCallback(() => {
             <div className={styles.navButtonWrapper}>
               {canGoPrev ? (
                 <button onClick={() => goToPage(effectiveCurrentPage - 1)}>
-                  Page précédente
+                  {t("Previous page")}
                 </button>
               ) : (
                 <div className={styles.placeholder}></div>
@@ -470,7 +472,7 @@ const validateCurrentPage = useCallback(() => {
                   disabled={isNextPageDisabled}
                   onClick={() => goToPage(effectiveCurrentPage + 1)}
                 >
-                  Page suivante
+                  {t("Next page")}
                 </button>
               ) : (
                 <div className={styles.placeholder}></div>
@@ -483,7 +485,7 @@ const validateCurrentPage = useCallback(() => {
         {schema ? (
           <div ref={containerRef} id="form" style={{ width: "100%" }}></div>
         ) : (
-          <p>Chargement du formulaire...</p>
+          <p>{t("Loading form...")}</p>
         )}
       </div>
       <Modal
