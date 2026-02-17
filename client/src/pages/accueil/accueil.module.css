@@ -1,23 +1,9 @@
-.langSwitch {
-    background: #f5f5f5;
-    color: #333;
-    border: 1px solid #ccc;
-    border-radius: 20px;
-    padding: 6px 18px;
-    margin: 0 6px;
-    font-size: 15px;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s, border 0.2s;
-}
-
-.langSwitch:hover {
-    background: #007bff;
-    color: #fff;
-    border: 1px solid #007bff;
+.projectName {
+    margin-left: 5%;
+    margin-top: 0.5%;
 }
 
 /* Styling for the "Créer un nouveau formulaire" link */
-
 .createFormLink {
     display: inline-block;
     text-decoration: none;
@@ -28,11 +14,6 @@
     font-size: 16px;
     margin-bottom: 20px;
     text-align: center;
-}
-
-.projectName {
-    margin-left: 5%;
-    margin-top: 0.5%;
 }
 
 .createFormLink:hover {

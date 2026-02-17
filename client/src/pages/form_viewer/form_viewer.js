@@ -1,12 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useTranslation } from 'react-i18next';
 import { Form } from "@bpmn-io/form-js-viewer";
 import Modal from "../../components/Modal";
 import styles from './form_viewer.module.css';
 
 const FormViewer = () => {
-  const { t, i18n } = useTranslation();
   const { id, page, range, id_participant } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -62,11 +60,11 @@ const FormViewer = () => {
             const newPath = `/form-viewer/${id}/${page}/${defaultUserId}${location.search}`;
             navigate(newPath, { replace: true });
           } else {
-            showNotification(t("No default user ID saved."), "error");
+            showNotification("Aucun ID utilisateur par défaut enregistré.", "error");
           }
         } catch (error) {
           console.error(error);
-          showNotification(t("Unable to fetch default user ID."), "error");
+          showNotification("Impossible de récupérer l'ID utilisateur par défaut.", "error");
         }
       }
     };
@@ -148,7 +146,7 @@ const FormViewer = () => {
   const fetchSavedData = useCallback(async () => {
     try {
       const response = await fetch(`/api/form-responses-participant/${id}/${id_participant}`);
-      if (!response.ok) throw new Error(t("Error loading saved responses"));
+      if (!response.ok) throw new Error("Erreur lors du chargement des réponses sauvegardées");
       const data = await response.json();
 
       const loadedData = {};
@@ -158,7 +156,7 @@ const FormViewer = () => {
 
       return loadedData;
     } catch (error) {
-      console.error(t("Error fetching data:"), error);
+      console.error("Erreur de récupération des données:", error);
       return {};
     }
   }, [id, id_participant]);
@@ -396,67 +394,74 @@ const validateCurrentPage = useCallback(() => {
   return (
     <>
       <div className={styles.formViewerContainer}>
-        <h2>Form Viewer</h2>
+        <div className={styles.toolbar}>
+          {/* Bouton Retour affiché seulement en mode Admin */}
+          <div className={styles.left}>
+            {!id_participant && (
+              <button className="btn" onClick={handleGoHome}>
+                Retour à l'accueil
+              </button>
+            )}
+          </div>
+          <h2 className={styles.title}>Form Viewer</h2>
+          <div className={styles.right}>
+            <div className={styles.pageWrapper}>
+              <span className={styles.pageIndicator}>
+                Page : {effectiveCurrentPage} / {effectivePages.length}
+              </span>
 
-        {/* Bouton Retour affiché seulement en mode Admin */}
-        {!id_participant && (
-          <button className="btn" onClick={handleGoHome}>
-            {t("Back to home")}
-          </button>
-        )}
-
+              {id_participant && (
+                <div className={styles.participantTooltip}>
+                  ID participant : {id_participant}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
         {/* Informations sur le formulaire */}
-        {!id_participant && formDetails && (
-          <div className={styles.formDetails}>
-            <p><strong>{t("Form ID")} :</strong> {formDetails.id}</p>
-            <p><strong>{t("Creation date")} :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
+       {!id_participant && (
+        <div className={styles.formDetails}>
+          <div className={styles.adminInfoWrapper}>
+            <p className={styles.info}><strong>ID du Formulaire :</strong> {formDetails.id}</p>
+            <p className={styles.info}><strong>Date de Création :</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
             <div
               className={styles.toggleExtraInfo}
               onClick={() => setShowExtraInfo(prev => !prev)}
+              title="Informations du formulaire"
             >
               {showExtraInfo ? "−" : "+"}
             </div>
+
             {showExtraInfo && (
-              <div className={styles.extraInfo}>
+              <div className={styles.adminDropdown}>
                 <p>
-                  <strong>{t("To integrate in a Tobii scenario use:")}</strong><br />
+                  <strong>Pour intégrer dans un scénario Tobii utilisez :</strong><br />
                   http://localhost:3000/form-viewer/{id}/{page}/id_participant
                 </p>
                 <p>
-                  {t("Add")} <strong>@</strong> {t("as participant ID to use the default user ID.")}
+                  Ajoutez <strong>@</strong> comme ID participant pour utiliser l'ID utilisateur par défaut.
                 </p>
                 <p>
-                  {t("Add")} <strong>/startPageNumber-endPageNumber</strong> {t("between the page number and participant ID to browse a page range.")}
+                  Ajoutez <strong>/début-fin</strong> entre le numéro de page et l'ID participant pour parcourir un intervalle de pages. Exemple : <strong>/2-4/id</strong>
                 </p>
                 <p>
-                  {t("Add")} <strong>?navigation=True</strong> {t("at the end if you want to allow navigation between pages.")}
-                </p>
-              </div>
+                  Ajoutez <strong>?navigation=True</strong> à la fin si vous voulez permettre la navigation entre pages.
+                </p>            </div>
             )}
+            </div>
           </div>
-        )}
-        {/* Info Participant */}
-        {id_participant && (
-          <div>
-            <p><strong>{t("Participant ID")} :</strong> {id_participant}</p>
-          </div>
-        )}
-
+      )}
         {/* Navigation entre pages */}
         {showNavigation && (
           <div className={styles.navigationButtons}>
             <div className={styles.navButtonWrapper}>
               {canGoPrev ? (
                 <button onClick={() => goToPage(effectiveCurrentPage - 1)}>
-                  {t("Previous page")}
+                  Page précédente
                 </button>
               ) : (
                 <div className={styles.placeholder}></div>
               )}
-            </div>
-
-            <div className={styles.pageIndicator}>
-              {t("Page")} : {effectiveCurrentPage} / {effectivePages.length}
             </div>
 
             <div className={styles.navButtonWrapper}>
@@ -465,7 +470,7 @@ const validateCurrentPage = useCallback(() => {
                   disabled={isNextPageDisabled}
                   onClick={() => goToPage(effectiveCurrentPage + 1)}
                 >
-                  {t("Next page")}
+                  Page suivante
                 </button>
               ) : (
                 <div className={styles.placeholder}></div>
@@ -478,7 +483,7 @@ const validateCurrentPage = useCallback(() => {
         {schema ? (
           <div ref={containerRef} id="form" style={{ width: "100%" }}></div>
         ) : (
-          <p>{t("Loading form...")}</p>
+          <p>Chargement du formulaire...</p>
         )}
       </div>
       <Modal

@@ -1,13 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useTranslation } from 'react-i18next';
 import { FormEditor as BPMNFormEditor } from "@bpmn-io/form-js-editor";
 import Modal from "../../components/Modal";
 import './form-js-editor.css';
 import styles from "./form_editor.module.css"; 
 
 const FormEditor = () => {
-  const { t, i18n } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const editorContainerRef = useRef(null);
@@ -193,7 +191,7 @@ const FormEditor = () => {
     const schema = await formEditor.getSchema();
     const formId = id || schema.id || `Form_${Date.now()}`;
     if (id) schema.id = id;
-    const formTitle = title.trim() || t("Untitled form");
+    const formTitle = title.trim() || "Formulaire sans titre";
     const formData = { id: formId, title: formTitle, json_data: schema, group_id: groupId };
 
     try {
@@ -208,22 +206,22 @@ const FormEditor = () => {
 
       if (response.ok) {
         setIsModified(false); // Les modifications sont enregistrées
-        showNotification(isEditing ? t("Form updated!") : t("Form saved!"), "success")
+        showNotification(isEditing ? "Formulaire mis à jour !" : "Formulaire enregistré !", "success")
       } else {
         console.error("Erreur serveur :", await response.json());
-        showNotification(t("Error saving form."), "error");
+        showNotification("Erreur lors de l'enregistrement.", "error");
       }
     } catch (error) {
       console.error("Erreur :", error);
-      showNotification(t("Unable to contact the server."), "error");
+      showNotification("Impossible de contacter le serveur.", "error");
     }
   };
 
   const handleGoHome = () => {
     if (isModified) {
       showModal(
-        t("Warning"),
-        t("You have unsaved changes. Are you sure you want to leave this page?"),
+        "Attention",
+        "Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter cette page ?",
         () => navigate("/accueil")
       );
     } else {
@@ -233,17 +231,19 @@ const FormEditor = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.headerContainer}>
-        <h2 className={styles.pageTitle}>
-          {isEditing ? t("Edit form") : t("Create form")}
+      <div className={styles.toolbar}>
+        <div className={styles.left}>
+          <button className="btn" onClick={handleGoHome}>
+            Retour à l'accueil
+          </button>
+        </div>
+        <h2 className={styles.title}>
+          {isEditing ? "Modifier le formulaire" : "Créer un formulaire"}
         </h2>
-        <button className="btn" onClick={handleGoHome}>
-          {t("Back to home")}
-        </button>
       </div>
 
       <div className={styles.titleContainer}>
-        <label htmlFor="titre">{t("Title")} :</label>
+        <label htmlFor="titre">Titre :</label>
         <input
           type="text"
           id="titre"
@@ -255,7 +255,7 @@ const FormEditor = () => {
           className={styles.titleInput}
         />
         <button onClick={handleSaveForm} className={styles.saveButton}>
-          {isEditing ? t("Update") : t("Save")}
+          {isEditing ? "Mettre à jour" : "Enregistrer"}
         </button>
       </div>
 
