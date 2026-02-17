@@ -12,9 +12,27 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(result)
     });
+    const json = await response.json();
 
     if (!response.ok) {
       throw new Error("formatError");
+    }
+    if (result.responses != {}) {
+      try {
+        for (const user in result.responses) {
+          result.responses[user].forEach(element => {
+            element.form_id = json.newFormID;
+          });
+          await fetch(`/api/submit-form`, {
+            method: 'POST',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 'form_id': json.newFormID, 'user_id': user, 'responses': result.responses[user] })
+          });
+        }
+      }
+      catch (e) {
+        console.log("Echec de l'importation des réponses. : ", e);
+      }
     }
   };
 

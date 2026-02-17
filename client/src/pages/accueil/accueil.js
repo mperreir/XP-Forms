@@ -30,9 +30,11 @@ const Accueil = () => {
 
     document.onkeydown = function (evt) {
         if (evt.keyCode === 27) {
-            // Escape key pressed
             if (importModal.isOpen === true) {
                 closeImportModal();
+            }
+            if (modal.isOpen === true) {
+                closeModal();
             }
         }
     };
