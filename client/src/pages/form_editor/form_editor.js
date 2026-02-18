@@ -18,6 +18,7 @@ const FormEditor = () => {
   const groupId = params.get("group_id");
   const [notification, setNotification] = useState({ message: "", type: "" });
   const currentElementRef = useRef(null);
+  const [selectedColor, setSelectedColor] = useState("#000000");
 
   const showModal = (title, message, onConfirm = null) => {
     setModal({ isOpen: true, title, message, onConfirm });
@@ -43,16 +44,19 @@ const FormEditor = () => {
 
     setFormEditor(editor);
 
-    editor.on("selection.changed", (event) => {
-      if (!event || !event.selection) {
+    editorContainerRef.current.addEventListener("click", async (e) => {
+      const wrapper = e.target.closest("[data-id]");
+      if (!wrapper) {
         currentElementRef.current = null;
+        setSelectedColor("#000000");
         return;
       }
-
-      // Dans ta version, selection est un objet, pas un tableau
-      currentElementRef.current = event.selection;
-
-      console.log("Selected:", currentElementRef.current);
+      const componentId = wrapper.getAttribute("data-id");
+      currentElementRef.current = { id: componentId };
+      const schema = await editor.getSchema();
+      const component = findComponentById(schema.components, componentId);
+      const color = component?.styles?.color || "#000000";
+      setSelectedColor(color);
     });
 
     if (id) {
@@ -87,54 +91,60 @@ const FormEditor = () => {
         italic: {
           property: "font-style",
           value: "italic"
+        },
+        color: {
+          property: "color",
+          dynamic: true
         }
       };
 
       const applyStyles = (components) => {
         components.forEach((component) => {
-
           const wrapper = document.querySelector(
             `[data-id="${component.id}"]`
           );
-
           if (!wrapper) return;
-
-          const targets = [
-            wrapper.querySelector(".fjs-form-field-label"),
-            wrapper.querySelector("h1, h2, h3, h4, h5, h6, p, span")
-          ].filter(Boolean);
-
           // On boucle sur tous les styles définis
           Object.entries(STYLE_MAP).forEach(([styleKey, config]) => {
-
-            const isActive = component.styles?.[styleKey];
-
-            targets.forEach((el) => {
-              if (isActive) {
+            const styleValue = component.styles?.[styleKey];
+            const elementsToStyle = [wrapper];
+            if (component.type === "text") {
+              const textNodes = wrapper.querySelectorAll(
+                "h1, h2, h3, h4, h5, h6, p, span"
+              );
+              elementsToStyle.push(...textNodes);
+            }
+            const labelNodes = wrapper.querySelectorAll(
+              ".fjs-form-field-label, .fjs-inline-label, label"
+            );
+            elementsToStyle.push(...labelNodes);
+            elementsToStyle.forEach(el => {
+              if (styleValue !== undefined && styleValue !== false) {
+                const value = config.dynamic
+                  ? styleValue
+                  : config.value;
+                if (config.property === "color" && typeof value !== "string") {
+                  return;
+                }
                 el.style.setProperty(
                   config.property,
-                  config.value,
+                  value,
                   "important"
                 );
               } else {
                 el.style.removeProperty(config.property);
               }
             });
-
           });
-
           if (component.components) {
             applyStyles(component.components);
           }
-
         });
       };
-
       requestAnimationFrame(() => {
         applyStyles(schema.components);
       });
     });
-
 
     // Fonction utilitaire : recherche récursive d'un composant par ID
     const findComponentById = (components, targetId) => {
@@ -290,11 +300,9 @@ const FormEditor = () => {
     }
   };
 
-  const handleStyleSelect = async (styleType) => {
+  const handleStyleChange = async (styleKey, value = null) => {
     if (!formEditor || !currentElementRef.current) return;
-
     const schema = await formEditor.getSchema();
-
     const findComponentById = (components, targetId) => {
       for (const component of components) {
         if (component.id === targetId) return component;
@@ -305,24 +313,22 @@ const FormEditor = () => {
       }
       return null;
     };
-
     const component = findComponentById(
       schema.components,
       currentElementRef.current.id
     );
-
     if (!component) return;
-
     if (!component.styles) component.styles = {};
-
-    // Toggle
-    component.styles[styleType] = !component.styles[styleType];
-
+    // color
+    if (value !== null) {
+      component.styles[styleKey] = value;
+    } 
+    // Toggle (bold / italic)
+    else {
+      component.styles[styleKey] =! component.styles[styleKey];
+    }
     await formEditor.importSchema(schema);
   };
-
-
-
 
   const handleGoHome = () => {
     if (isModified) {
@@ -349,10 +355,10 @@ const FormEditor = () => {
         </h2>
         <div className={styles.right}>
           <select
-            className="btn"
+            className={styles.styleSelect}
             onChange={(e) => {
               if (!e.target.value) return;
-              handleStyleSelect(e.target.value);
+              handleStyleChange(e.target.value);
               e.target.value = "";
             }}
           >
@@ -360,6 +366,15 @@ const FormEditor = () => {
             <option value="bold">Gras</option>
             <option value="italic">Italique</option>
           </select>
+          <input
+            type="color"
+            className={styles.colorPicker}
+            value={selectedColor}
+            onChange={(e) => {
+              handleStyleChange("color", e.target.value);
+              setSelectedColor(e.target.value);
+            }}
+          />
         </div>
       </div>
 
