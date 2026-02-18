@@ -79,31 +79,54 @@ const FormEditor = () => {
     editor.on("changed", async () => {
       const schema = await editor.getSchema();
 
+      const STYLE_MAP = {
+        bold: {
+          property: "font-weight",
+          value: "bold"
+        },
+        italic: {
+          property: "font-style",
+          value: "italic"
+        }
+      };
+
       const applyStyles = (components) => {
         components.forEach((component) => {
-          if (component.bold) {
-            const wrapper = document.querySelector(
-              `[data-id="${component.id}"]`
-            );
 
-            if (wrapper) {
-              const label = wrapper.querySelector(".fjs-form-field-label");
-              if (label) {
-                label.style.setProperty("font-weight", "bold", "important");
-              }
+          const wrapper = document.querySelector(
+            `[data-id="${component.id}"]`
+          );
 
-              const richText = wrapper.querySelector(
-                "h1, h2, h3, h4, h5, h6, p, span"
-              );
-              if (richText) {
-                richText.style.setProperty("font-weight", "bold", "important");
+          if (!wrapper) return;
+
+          const targets = [
+            wrapper.querySelector(".fjs-form-field-label"),
+            wrapper.querySelector("h1, h2, h3, h4, h5, h6, p, span")
+          ].filter(Boolean);
+
+          // On boucle sur tous les styles définis
+          Object.entries(STYLE_MAP).forEach(([styleKey, config]) => {
+
+            const isActive = component.styles?.[styleKey];
+
+            targets.forEach((el) => {
+              if (isActive) {
+                el.style.setProperty(
+                  config.property,
+                  config.value,
+                  "important"
+                );
+              } else {
+                el.style.removeProperty(config.property);
               }
-            }
-          }
+            });
+
+          });
 
           if (component.components) {
             applyStyles(component.components);
           }
+
         });
       };
 
@@ -267,7 +290,7 @@ const FormEditor = () => {
     }
   };
 
-  const handleBoldClick = async () => {
+  const handleStyleSelect = async (styleType) => {
     if (!formEditor || !currentElementRef.current) return;
 
     const schema = await formEditor.getSchema();
@@ -287,11 +310,14 @@ const FormEditor = () => {
       schema.components,
       currentElementRef.current.id
     );
-    console.log(component);
+
     if (!component) return;
 
+    if (!component.styles) component.styles = {};
+
     // Toggle
-    component.bold = !component.bold;
+    component.styles[styleType] = !component.styles[styleType];
+
     await formEditor.importSchema(schema);
   };
 
@@ -317,13 +343,24 @@ const FormEditor = () => {
           <button className="btn" onClick={handleGoHome}>
             Retour à l'accueil
           </button>
-          <button className="btn" onClick={handleBoldClick}>
-            Gras
-          </button>
         </div>
         <h2 className={styles.title}>
           {isEditing ? "Modifier le formulaire" : "Créer un formulaire"}
         </h2>
+        <div className={styles.right}>
+          <select
+            className="btn"
+            onChange={(e) => {
+              if (!e.target.value) return;
+              handleStyleSelect(e.target.value);
+              e.target.value = "";
+            }}
+          >
+            <option value="">Styles</option>
+            <option value="bold">Gras</option>
+            <option value="italic">Italique</option>
+          </select>
+        </div>
       </div>
 
       <div className={styles.titleContainer}>
