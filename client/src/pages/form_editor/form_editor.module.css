@@ -71,7 +71,6 @@
 
   padding: 8px 36px 8px 12px;
   font-size: 14px;
-  font-weight: 500;
 
   border: 1px solid #d0d5dd;
   border-radius: 8px;
@@ -80,7 +79,6 @@
   color: #344054;
 
   cursor: pointer;
-  transition: all 0.2s ease;
   position: relative;
 }
 
@@ -88,13 +86,6 @@
 .styleSelect:hover {
   border-color: #98a2b3;
   background-color: #f9fafb;
-}
-
-/* Focus */
-.styleSelect:focus {
-  outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
 }
 
 /* Custom arrow */
@@ -108,21 +99,12 @@
   width: 40px;
   height: 36px;
   padding: 0;
-  border: 1px solid #d0d5dd;
   border-radius: 8px;
   cursor: pointer;
-  background: white;
-  transition: all 0.2s ease;
 }
 
 .colorPicker:hover {
   border-color: #98a2b3;
-}
-
-.colorPicker:focus {
-  outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
 }
 
 .colorPicker::-webkit-color-swatch-wrapper {
@@ -132,4 +114,24 @@
 .colorPicker::-webkit-color-swatch {
   border-radius: 6px;
   border: none;
+}
+
+.fontSizeSelect {
+  appearance: none;
+  padding: 8px 30px 8px 10px;
+  font-size: 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.fontSizeSelect:hover {
+  border-color: #98a2b3;
+}
+
+.fontSizeSelect {
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
 }

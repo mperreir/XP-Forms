@@ -307,6 +307,59 @@ const validateCurrentPage = useCallback(() => {
       };
 
       await form.importSchema(pageSchema, loadedData);
+      const currentComponents = effectivePages[effectiveCurrentPage - 1] || [];
+
+      const flatten = (components) => {
+        const flat = [];
+        components.forEach((c) => {
+          flat.push(c);
+          if (Array.isArray(c.components) && c.components.length > 0) {
+            flat.push(...flatten(c.components));
+          }
+        });
+        return flat;
+      };
+
+      const currentFlat = flatten(currentComponents);
+
+      console.log("STYLING COMPONENTS:", currentFlat);
+
+      currentFlat.forEach((comp) => {
+        if (!comp.styles) return;
+
+        // On cible via le key (stable et présent dans le DOM)
+        if (comp.id) {
+          console.log("id", comp.id)
+          const input = containerRef.current.querySelector(
+            `[id$="${comp.id}"]`
+          );
+          console.log("Searching:", comp.id, input, comp.styles);
+          if (input) {
+            const wrapper = input.closest(".fjs-form-field");
+
+            if (wrapper) {
+              if (comp.styles.bold) wrapper.style.fontWeight = "bold";
+              if (comp.styles.italic) wrapper.style.fontStyle = "italic";
+              if (comp.styles.color) wrapper.style.color = comp.styles.color;
+              if (comp.styles.fontSize) wrapper.style.fontSize = comp.styles.fontSize;
+            }
+          }
+        }
+
+        // Cas spécial pour type text (pas de key)
+        if (comp.type === "text") {
+          const texts = containerRef.current.querySelectorAll(".fjs-text");
+          texts.forEach((t) => {
+            if (t.innerText.includes(comp.text.replace(/#/g, "").trim())) {
+              if (comp.styles.bold) t.style.fontWeight = "bold";
+              if (comp.styles.italic) t.style.fontStyle = "italic";
+              if (comp.styles.color) t.style.color = comp.styles.color;
+              if (comp.styles.fontSize) t.style.fontSize = comp.styles.fontSize;
+            }
+          });
+        }
+      });
+
 
       dataInitialized.current = true;
 
@@ -419,7 +472,7 @@ const validateCurrentPage = useCallback(() => {
           </div>
         </div>
         {/* Informations sur le formulaire */}
-       {!id_participant && (
+       {!id_participant && formDetails &&(
         <div className={styles.formDetails}>
           <div className={styles.adminInfoWrapper}>
             <p className={styles.info}><strong>ID du Formulaire :</strong> {formDetails.id}</p>

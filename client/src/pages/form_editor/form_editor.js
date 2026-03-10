@@ -19,6 +19,7 @@ const FormEditor = () => {
   const [notification, setNotification] = useState({ message: "", type: "" });
   const currentElementRef = useRef(null);
   const [selectedColor, setSelectedColor] = useState("#000000");
+  const [selectedFontSize, setSelectedFontSize] = useState("16px");
 
   const showModal = (title, message, onConfirm = null) => {
     setModal({ isOpen: true, title, message, onConfirm });
@@ -49,6 +50,7 @@ const FormEditor = () => {
       if (!wrapper) {
         currentElementRef.current = null;
         setSelectedColor("#000000");
+        setSelectedFontSize("16px")
         return;
       }
       const componentId = wrapper.getAttribute("data-id");
@@ -56,7 +58,9 @@ const FormEditor = () => {
       const schema = await editor.getSchema();
       const component = findComponentById(schema.components, componentId);
       const color = component?.styles?.color || "#000000";
+      const fontSize = component?.styles?.fontSize || "16px";
       setSelectedColor(color);
+      setSelectedFontSize(fontSize)
     });
 
     if (id) {
@@ -95,6 +99,10 @@ const FormEditor = () => {
         color: {
           property: "color",
           dynamic: true
+        },
+        fontSize: {
+          property: "font-size",
+          dynamic: true
         }
       };
 
@@ -103,6 +111,7 @@ const FormEditor = () => {
           const wrapper = document.querySelector(
             `[data-id="${component.id}"]`
           );
+          console.log(wrapper);
           if (!wrapper) return;
           // On boucle sur tous les styles définis
           Object.entries(STYLE_MAP).forEach(([styleKey, config]) => {
@@ -115,7 +124,7 @@ const FormEditor = () => {
               elementsToStyle.push(...textNodes);
             }
             const labelNodes = wrapper.querySelectorAll(
-              ".fjs-form-field-label, .fjs-inline-label, label"
+              ".fjs-form-field-label"
             );
             elementsToStyle.push(...labelNodes);
             elementsToStyle.forEach(el => {
@@ -365,6 +374,23 @@ const FormEditor = () => {
             <option value="">Styles</option>
             <option value="bold">Gras</option>
             <option value="italic">Italique</option>
+          </select>
+          <select 
+            value={selectedFontSize}
+            className={styles.fontSizeSelect}
+            onChange={(e) => {
+              setSelectedFontSize(e.target.value);
+              handleStyleChange("fontSize", e.target.value);
+            }}
+          >
+              <option value="12px">12</option>
+              <option value="14px">14</option>
+              <option value="16px">16</option>
+              <option value="18px">18</option>
+              <option value="20px">20</option>
+              <option value="24px">24</option>
+              <option value="32px">32</option>
+              <option value="64px">64</option>
           </select>
           <input
             type="color"
