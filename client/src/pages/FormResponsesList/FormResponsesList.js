@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Modal from "../../components/Modal";
 import styles from "./FormResponsesList.module.css";
+import { useTranslation } from 'react-i18next';
 
 const FormResponsesList = () => {
   const { id } = useParams();
@@ -11,6 +12,7 @@ const FormResponsesList = () => {
   const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
   const navigate = useNavigate();
   const [notification, setNotification] = useState({ message: "", type: "" });
+  const { t } = useTranslation();
 
   const handleGoHome = () => {
     navigate("/");
@@ -34,11 +36,11 @@ const FormResponsesList = () => {
   useEffect(() => {
     const fetchFormInfo = async () => {
       try {
-        const response = await fetch(`/api/forms/${id}`);
-        if (!response.ok) throw new Error("Erreur lors du chargement du formulaire");
+          const response = await fetch(`/api/forms/${id}`);
+          if (!response.ok) throw new Error(t("Error loading form"));
 
         const form = await response.json();
-        setFormTitle(form.title || "formulaire");
+        setFormTitle(form.title || t("form"));
 
       } catch (error) {
         console.error("Erreur chargement formulaire :", error);
@@ -51,7 +53,7 @@ const FormResponsesList = () => {
     const fetchResponses = async () => {
       try {
         const response = await fetch(`/api/forms/${id}/responses`);
-        if (!response.ok) throw new Error("Erreur lors du chargement des réponses");
+        if (!response.ok) throw new Error(t("Error loading responses"));
 
         const data = await response.json();
         const extractedQuestions = [];
@@ -67,7 +69,7 @@ const FormResponsesList = () => {
         setQuestions(extractedQuestions);
         setResponses(data);
       } catch (error) {
-        console.error("Erreur lors du chargement des réponses :", error);
+        console.error(t("Error loading responses"), error);
       }
     };
 
@@ -75,12 +77,12 @@ const FormResponsesList = () => {
   }, [id]);
 
   const exportToCSV = () => {
-    const headers = ["ID Utilisateur", ...questions];
+    const headers = [t("User ID"), ...questions];
     const rows = responses.map((userResponse) => {
       const row = [userResponse.user_id];
       questions.forEach((question) => {
         const answerObj = userResponse.responses.find((resp) => resp.question === question);
-        row.push(answerObj ? answerObj.answer || "N/A" : "N/A");
+        row.push(answerObj ? answerObj.answer || t("N/A") : t("N/A"));
       });
       return row;
     });
@@ -102,8 +104,8 @@ const FormResponsesList = () => {
 
   const handleDeleteResponses = () => {
     showModal(
-      "Confirmation",
-      "Êtes-vous sûr de vouloir supprimer toutes les réponses de ce formulaire ?",
+      t("Confirmation"),
+      t("Are you sure you want to delete all responses for this form?"),
       async () => {
         try {
           const response = await fetch(`/api/forms/${id}/responses`, {
@@ -111,15 +113,15 @@ const FormResponsesList = () => {
           });
           if (response.ok) {
             closeModal();
-            showNotification("Toutes les réponses ont été supprimées.", "success");
+            showNotification(t("All responses have been deleted."), "success");
             setResponses([]);
           } else {
             const errorData = await response.json();
-            showNotification("Erreur : " + errorData.error, "error");
+            showNotification(t("Error: ") + errorData.error, "error");
           }
         } catch (error) {
           console.error("Erreur lors de la suppression :", error);
-          showNotification("Impossible de contacter le serveur.", "error");
+          showNotification(t("Unable to contact server."), "error");
         }
       },
       closeModal
@@ -131,17 +133,17 @@ const FormResponsesList = () => {
       <div className={styles.toolbar}>
         <div className={styles.left}>
           <button className={styles.btnAccueil} onClick={handleGoHome}>
-            Retour à l'accueil
+            {t("Back to home")}
           </button>
-          <button onClick={exportToCSV}>Exporter en CSV</button>
+          <button onClick={exportToCSV}>{t("Export to CSV")}</button>
         </div>
-        <h2 className={styles.title}>Réponses du formulaire</h2>
+        <h2 className={styles.title}>{t("Form responses")}</h2>
         <div className={styles.right}>
           <button
             onClick={handleDeleteResponses}
             className={styles.deleteBtn}
           >
-            Supprimer toutes les réponses
+            {t("Delete all responses")}
           </button>
         </div>
       </div>
@@ -150,7 +152,7 @@ const FormResponsesList = () => {
           <table>
             <thead>
               <tr>
-                <th>ID Utilisateur</th>
+                <th>{t("User ID")}</th>
                 {questions.map((question, index) => (
                   <th key={index}>{question}</th>
                 ))}
@@ -162,7 +164,7 @@ const FormResponsesList = () => {
                   <td>{userResponse.user_id}</td>
                   {questions.map((question, qIndex) => {
                     const answerObj = userResponse.responses.find((resp) => resp.question === question);
-                    return <td key={qIndex}>{answerObj ? answerObj.answer || "N/A" : "N/A"}</td>;
+                    return <td key={qIndex}>{answerObj ? answerObj.answer || t("N/A") : t("N/A")}</td>;
                   })}
                 </tr>
               ))}
@@ -170,7 +172,7 @@ const FormResponsesList = () => {
           </table>
         </div>
       ) : (
-        <p className={styles.message}>Chargement des données ou aucune réponse trouvée.</p>
+        <p className={styles.message}>{t("Loading data or no responses found.")}</p>
       )}
 
       <Modal
