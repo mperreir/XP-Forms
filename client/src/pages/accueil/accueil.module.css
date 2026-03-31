@@ -1,6 +1,10 @@
 .projectName {
+    width: 100%;
+    margin-top: -3%;
     margin-left: 5%;
-    margin-top: 0.5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 /* Styling for the "Créer un nouveau formulaire" link */
@@ -498,4 +502,12 @@ button:disabled {
   gap: 10px;
   white-space: nowrap;
   margin: 0;
+}
+
+/* Styling for the language dropdown */
+.langSelect {
+  width: 80px;
+  margin-right: 5%;
+  margin-top: 0;
+  align-self: flex-end;
 }

@@ -187,7 +187,7 @@ const Accueil = () => {
             document.body.removeChild(element);
 
             closeModal();
-            showNotification("Formulaire exporté !", "success");
+            showNotification(t("Form exported!"), "success");
 
         };
 
@@ -220,7 +220,7 @@ const Accueil = () => {
             DownloadExport(jsonExport);
         }
 
-        showModal('Export', 'Voulez-vous également exporter les réponses ?', () => { exportForm(ids, true) }, 'Oui', 'Non', () => { exportForm(ids) });
+        showModal(t('Export'), t('Do you also want to export the responses?'), () => { exportForm(ids, true) }, 'Yes', 'No', () => { exportForm(ids) });
     };
 
     // Pour mettre à jour ce que tape l'utilisateur dans l'input
@@ -243,10 +243,10 @@ const Accueil = () => {
 
             if (!response.ok) throw new Error("Erreur lors de l'enregistrement de l'ID utilisateur par défaut.");
 
-            showNotification("ID utilisateur par défaut enregistré !", "success");
+            showNotification(t("Default user ID saved!"), "success");
         } catch (error) {
             console.error(error);
-            showNotification("Impossible d'enregistrer l'ID utilisateur par défaut.", "error");
+            showNotification(t("Unable to save default user ID."), "error");
         }
     };
 
@@ -290,7 +290,7 @@ const Accueil = () => {
                 await fetch(`/api/forms/${id}/duplicate`, { method: "POST" });
             }
 
-            showNotification("Tous les formulaires sélectionnés ont été dupliqués !", "success");
+            showNotification(t("All selected forms have been duplicated!"), "success");
 
             await reloadForms();
             await reloadgroups();
@@ -310,24 +310,26 @@ const Accueil = () => {
         if (!ids || ids.length === 0) return;
 
         showModal(
-            "Suppression",
-            `Supprimer ${ids.length} formulaire(s) ? Cette action est irréversible.`,
+            t("Delete"),
+            t("Delete") + ` ${ids.length} ` + t("form") + (ids.length > 1 ? 's' : '') + `? ` + t("This action is irreversible."),
             async () => {
                 try {
                     closeModal();
                     for (const id of ids) {
                         await fetch(`/api/forms/${id}`, { method: "DELETE" });
                     }
-                    showNotification("Tous les formulaires sélectionnés ont été supprimés !", "success");
+                    showNotification(t("All forms have been deleted."), "success");
 
                     await reloadForms();
                     await reloadgroups();
                     setSelectedForms([]); // Nettoyage
                 } catch (error) {
                     console.error(error);
-                    showNotification("Impossible de supprimer certains formulaires.", "error");
+                    showNotification(t("Unable to delete some forms."), "error");
                 }
-            }
+            },
+            "Confirm",
+            "Close"
         );
     };
 
@@ -476,14 +478,25 @@ const Accueil = () => {
     }
 
 
+
     return (
         <>
+            {/* Langue en haut à droite dans le flux */}
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start', marginTop: '40px', marginBottom: 0 }}>
+                <select
+                    className={styles.langSelect}
+                    value={i18n.language}
+                    onChange={e => {
+                        i18n.changeLanguage(e.target.value);
+                        localStorage.setItem('lang', e.target.value);
+                    }}
+                >
+                    <option value="fr">Français</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
             <div className={styles.projectName}>
                 <h1>{t('welcome')}</h1>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px' }}>
-                    <button className={styles.langSwitch} onClick={() => i18n.changeLanguage('fr')}>FR</button>
-                    <button className={styles.langSwitch} onClick={() => i18n.changeLanguage('en')}>EN</button>
-                </div>
             </div>
 
             <div className={styles.displayType}>
@@ -532,13 +545,13 @@ const Accueil = () => {
             {moveModal.open && (
                 <div className={styles.moveModalOverlay}>
                     <div className={styles.moveModalContent}>
-                        <h3>Déplacer vers…</h3>
+                        <h3>{t("Move to...")}</h3>
 
                         <select
                             value={moveModal.selectedGroup}
                             onChange={(e) => setMoveModal(prev => ({ ...prev, selectedGroup: e.target.value }))}
                         >
-                            <option value="">Sélectionner un groupe</option>
+                            <option value="">{t("Select a group")}</option>
                             {groups.map(group => (
                                 <option key={group.id} value={group.id}>
                                     📁 {group.name}
@@ -548,10 +561,10 @@ const Accueil = () => {
 
                         <div className={styles.buttonsRow}>
                             <button onClick={handleMove} disabled={!moveModal.selectedGroup}>
-                                Confirmer
+                                {t("Confirm")}
                             </button>
                             <button onClick={() => setMoveModal({ open: false, item: null })}>
-                                Annuler
+                                {t("Cancel")}
                             </button>
                         </div>
                     </div>
@@ -880,11 +893,11 @@ const Accueil = () => {
                                             }
                                         />
                                     </th>
-                                    <th className={styles.th}>Nom du groupe</th>
-                                    <th className={styles.th}>Date de création</th>
-                                    <th className={styles.th}>Dernière mise à jour</th>
-                                    <th className={styles.th}>Nombre de formulaires</th>
-                                    <th className={styles.th}>Actions</th>
+                                    <th className={styles.th}>{t("Title")}</th>
+                                    <th className={styles.th}>{t("Creation date")}</th>
+                                    <th className={styles.th}>{t("Last update")}</th>
+                                    <th className={styles.th}>{t("Number of forms")}</th>
+                                    <th className={styles.th}>{t("Actions")}</th>
                                 </tr>
                             </thead>
 
@@ -892,7 +905,7 @@ const Accueil = () => {
                             <tbody className={styles.scrollableTable}>
                                 {filteredGroups.length === 0 ? (
                                     <tr>
-                                        <td colSpan="6">Aucun groupe</td>
+                                        <td colSpan="6">{t('No groups')}</td>
                                     </tr>
                                 ) : (
                                     filteredGroups.map(group => (

@@ -1,7 +1,9 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 import styles from "./Modal.module.css";
 
-const Modal = ({ isOpen, title, message, onConfirm, confirm = 'Confirmer', close = 'Fermer', onClose }) => {
+const Modal = ({ isOpen, title, message, onConfirm, confirm, close, onClose }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   return (
@@ -12,20 +14,20 @@ const Modal = ({ isOpen, title, message, onConfirm, confirm = 'Confirmer', close
         <div className={styles.modalActions}>
           {onClose && (
             <button
-              onClick={onClose} // Call the onClose callback
+              onClick={onClose}
               className={styles.closeButton}
             >
-              {close}
+              {close ? t(close) : t('Close')}
             </button>
           )}
           {onConfirm && (
             <button
               onClick={() => {
-                if (onConfirm) onConfirm(); // Call the onConfirm callback
+                if (onConfirm) onConfirm();
               }}
               className={styles.confirmButton}
             >
-              {confirm}
+              {confirm ? t(confirm) : t('Confirm')}
             </button>
           )}
         </div>
