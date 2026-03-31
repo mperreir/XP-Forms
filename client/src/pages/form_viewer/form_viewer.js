@@ -5,6 +5,22 @@ import Modal from "../../components/Modal";
 import styles from './form_viewer.module.css';
 import { useTranslation } from 'react-i18next';
 
+const STYLE_MAP = {
+  bold:            { property: "font-weight", value: "bold" },
+  italic:          { property: "font-style", value: "italic" },
+  underline:       { property: "text-decoration", value: "underline" },
+  color:           { property: "color", dynamic: true },
+  fontSize:        { property: "font-size", dynamic: true },
+  backgroundColor: { property: "background-color", dynamic: true },
+  borderRadius:    { property: "border-radius", dynamic: true },
+  padding:         { property: "padding", dynamic: true },
+  margin:          { property: "margin", dynamic: true },
+  border:          { property: "border", dynamic: true },
+  opacity:         { property: "opacity", dynamic: true },
+  textAlign:       { property: "text-align", dynamic: true },
+  width:           { property: "width", dynamic: true },
+};
+
 const FormViewer = () => {
   const { t } = useTranslation();
   const { id, page, range, id_participant } = useParams();
@@ -44,7 +60,46 @@ const FormViewer = () => {
     }, duration);
   };
 
+  const applyComponentStyles = (component) => {
+    const wrapper = document.querySelector(`[data-id="${component.id}"]`);
+    if (!wrapper) return;
 
+    const elementsToStyle = [wrapper];
+
+    if (component.type === "text") {
+      elementsToStyle.push(...wrapper.querySelectorAll("h1,h2,h3,h4,h5,h6,p,span"));
+    }
+
+    elementsToStyle.push(...wrapper.querySelectorAll(".fjs-form-field-label"));
+
+    Object.entries(STYLE_MAP).forEach(([styleKey, config]) => {
+      const styleValue = component.styles?.[styleKey];
+
+      elementsToStyle.forEach((el) => {
+        if (styleValue !== undefined && styleValue !== false) {
+          const cssValue = config.dynamic ? styleValue : config.value;
+          el.style.setProperty(config.property, cssValue, "important");
+        } else {
+          el.style.removeProperty(config.property);
+        }
+      });
+    });
+
+    // styles custom
+    Object.entries(component.styles || {}).forEach(([key, value]) => {
+      if (STYLE_MAP[key]) return;
+
+      if (value === false || value === undefined) {
+        wrapper.style.removeProperty(key);
+      } else {
+        wrapper.style.setProperty(key, value === true ? "1" : String(value), "important");
+      }
+    });
+
+    if (component.components) {
+      component.components.forEach(applyComponentStyles);
+    }
+  };
 
   // 👉 Vérification si @ est dans l'URL
   useEffect(() => {
@@ -218,18 +273,6 @@ const validateCurrentPage = useCallback(() => {
       console.log("Résultat validation page (via form.validate)", currentPage, ":", isValid, "errorKeys:", errorKeys, "currentIds:", currentIds, "currentKeys:", currentKeys);
       return isValid;
     }
-  currentFlat.forEach((comp) => {
-    // only check components that have a key (skips layout containers)
-    if (!comp.key) return;
-
-    if (comp.validate?.required) {
-      const value = formData[comp.key];
-      if (isEmptyValue(value, comp)) {
-        console.debug('Champ requis non rempli sur la page', currentPage, '- key:', comp.key, 'value:', value, 'type:', typeof value, 'comp:', comp);
-        isValid = false;
-      }
-    }
-  });
 
     console.log("Résultat validation page (manual check)", currentPage, ":", isValid, "formData keys:", Object.keys(formData));
   return isValid;
@@ -309,6 +352,9 @@ const validateCurrentPage = useCallback(() => {
       };
 
       await form.importSchema(pageSchema, loadedData);
+      requestAnimationFrame(() => {
+        pageSchema.components.forEach(applyComponentStyles);
+      });
       const currentComponents = effectivePages[effectiveCurrentPage - 1] || [];
 
       const flatten = (components) => {
@@ -478,7 +524,7 @@ const validateCurrentPage = useCallback(() => {
         <div className={styles.formDetails}>
           <div className={styles.adminInfoWrapper}>
             <p className={styles.info}><strong>{t("Form ID:")}</strong> {formDetails.id}</p>
-            <p className={styles.info}><strong>{t("Creation date:")}</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
+            <p className={styles.info}><strong>{t("Creation date :")}</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
             <div
               className={styles.toggleExtraInfo}
               onClick={() => setShowExtraInfo(prev => !prev)}
