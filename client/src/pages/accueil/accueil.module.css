@@ -459,7 +459,7 @@ button:disabled {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    margin: 0;
+    margin-top: -2%;
 }
 
 .viewButton {

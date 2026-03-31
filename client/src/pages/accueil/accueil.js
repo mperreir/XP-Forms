@@ -404,19 +404,19 @@ const Accueil = () => {
 
             await reloadgroups();
             await reloadForms();
-            showNotification(`Groupe renommé en "${newName}"`, "success");
+            showNotification(t("Group renamed to") + ` "${newName}"`, "success");
 
         } catch (err) {
             console.error(err);
-            showNotification("Impossible de renommer le groupe", "error");
+            showNotification(t("Unable to rename group"), "error");
         }
     };
 
 
     const handleDeletegroup = (groupId) => {
         showModal(
-            "Suppression",
-            "Supprimer le(s) groupe(s) ? Cette action est irréversible.",
+            t("Delete"),
+            t("Delete") + ` ${groups.find(g => g.id === groupId)?.name} ? ` + t("This action is irreversible."),
             async () => {
                 try {
                     closeModal();
@@ -425,11 +425,11 @@ const Accueil = () => {
                     reloadgroups();
                     reloadForms();
                     setSelectedForms([]);
-                    showNotification(`Groupe(s) supprimé(s)`, "success");
+                    showNotification(t("Group(s) deleted"), "success");
 
                 } catch (err) {
                     console.error(err);
-                    showNotification("Impossible de supprimer le(s) groupe(s).", "error");
+                    showNotification(t("Unable to delete group"), "error");
                 }
 
             }
@@ -609,7 +609,7 @@ const Accueil = () => {
                                 className={styles.importButton}
                                 onClick={() => handleImportButton()}
                             >
-                                Importer un formulaire
+                                {t('Import a form')}
                             </button>
                             <button
                                 className={styles.createButton}
@@ -885,11 +885,11 @@ const Accueil = () => {
                                             <option value="">— Actions —</option>
 
                                             {selectedGroups.length === 1 && (
-                                                <option value="rename">Renommer</option>
+                                                <option value="rename">{t("Rename")}</option>
                                             )}
 
                                             {selectedGroups.length > 0 && (
-                                                <option value="delete">Supprimer</option>
+                                                <option value="delete">{t("Delete")}</option>
                                             )}
                                         </select>
                                     </th>
@@ -1044,8 +1044,8 @@ const Accueil = () => {
                     className={styles.actionMenu}
                     style={{ top: groupMenuPosition.y, left: groupMenuPosition.x }}
                 >
-                    <div onClick={() => handleRenameGroup(openGroupMenuId, groups.find(g => g.id === openGroupMenuId)?.name)}>Renommer</div>
-                    <div onClick={() => handleDeletegroup(openGroupMenuId)}>Supprimer</div>
+                    <div onClick={() => handleRenameGroup(openGroupMenuId, groups.find(g => g.id === openGroupMenuId)?.name)}>{t('Rename')}</div>
+                    <div onClick={() => handleDeletegroup(openGroupMenuId)}>{t('Delete')}</div>
                 </div>
             )}
         </>
