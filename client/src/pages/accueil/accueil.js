@@ -3,6 +3,7 @@ import styles from './accueil.module.css'; // Import CSS Module
 import { createBrowserRouter, useNavigate } from "react-router-dom";
 import Modal from "../../components/Modal";
 import ImportModal from '../../components/ImportModal';
+import { saveAs } from 'file-saver';
 import { useTranslation } from 'react-i18next'; // Ajout i18n
 
 const Accueil = () => {
@@ -28,6 +29,16 @@ const Accueil = () => {
     const groupMenuRef = useRef(null);
     const [groupSearchQuery, setGroupSearchQuery] = useState("");
 
+    document.onkeydown = function (evt) {
+        if (evt.keyCode === 27) {
+            if (importModal.isOpen === true) {
+                closeImportModal();
+            }
+            if (modal.isOpen === true) {
+                closeModal();
+            }
+        }
+    };
 
     const filteredForms = forms
         .filter(f => tableSelectedGroup ? f.group_id === Number(tableSelectedGroup) : true)
@@ -168,6 +179,7 @@ const Accueil = () => {
     };
 
     const handleExportForm = async (formId) => {
+        let JSZip = require("jszip");
 
         const ids = formId ? (Array.isArray(formId) ? formId : [formId]) : selectedForms;
 
@@ -175,16 +187,20 @@ const Accueil = () => {
 
         const DownloadExport = async (jsonExport) => {
 
-            // Téléchargement du fichier exporté
-            let element = document.createElement('a');
-            element.setAttribute('href',
-                'data:text/json;charset=utf-8, '
-                + encodeURIComponent(JSON.stringify(jsonExport, null, 2)));
-            element.setAttribute('download', jsonExport.title + '.json');
-
-            document.body.appendChild(element);
-            element.click();
-            document.body.removeChild(element);
+            let zip = new JSZip();
+            let ladate = new Date();
+            for (const form in jsonExport) {
+                zip.file(jsonExport[form].title + '.json', JSON.stringify(jsonExport[form], null, 2));
+            }
+            zip.generateAsync({ type: "blob" })
+                .then(function (content) {
+                    if (Object.keys(jsonExport).length === 1) {
+                        saveAs(content, ladate.toISOString().substring(0, 10) + "_export_de_" + Object.keys(jsonExport).length + "_formulaire.zip");
+                    }
+                    else {
+                        saveAs(content, ladate.toISOString().substring(0, 10) + "_export_de_" + Object.keys(jsonExport).length + "_formulaires.zip");
+                    }
+                });
 
             closeModal();
             showNotification(t("Form exported!"), "success");
@@ -193,7 +209,6 @@ const Accueil = () => {
 
         const exportForm = async (ids, resp = false) => {
 
-            console.log(ids);
             let jsonExport = {};
 
             for (let i = 0; i < ids.length; i++) {
@@ -463,15 +478,15 @@ const Accueil = () => {
         showImportModal(() => {
             closeImportModal();
             fetchForms();
-            showNotification("Formulaire importé !", "success");
+            showNotification("Formulaires importés !", "success");
         },
             () => {
-                closeImportModal();
+                //closeImportModal();
                 fetchForms();
                 showNotification("Contenu du fichier incompatible.", "error");
             },
             () => {
-                closeImportModal();
+                //closeImportModal();
                 fetchForms();
                 showNotification("Impossible de contacter le serveur.", "error");
             });
@@ -502,7 +517,7 @@ const Accueil = () => {
             <div className={styles.displayType}>
                 <button
                     onClick={() => {
-                        setViewMode("forms"); 
+                        setViewMode("forms");
                         handleUncheckAll();
                     }}
                     className={`${styles.viewButton} ${viewMode === "forms" ? styles.activeViewButton : ""} ${styles.switchToViewForms}`}
@@ -591,6 +606,12 @@ const Accueil = () => {
                         <h2 className={styles.tableTitle}>{t('List of saved forms')}</h2>
                         <div className={styles.createButtonContainer}>
                             <button
+                                className={styles.importButton}
+                                onClick={() => handleImportButton()}
+                            >
+                                Importer un formulaire
+                            </button>
+                            <button
                                 className={styles.createButton}
                                 onClick={() => navigate("/form-editor2")}
                             >
@@ -620,9 +641,9 @@ const Accueil = () => {
                                             >
                                                 <option value="">{t('All groups') || 'Tous les groupes'}</option>
                                                 {groups.map((g) => (
-                                                <option key={g.id} value={g.id}>
-                                                    {g.name}
-                                                </option>
+                                                    <option key={g.id} value={g.id}>
+                                                        {g.name}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </th>
@@ -667,9 +688,8 @@ const Accueil = () => {
                                                             break;
                                                     }
                                                 }}
-                                                className={`${styles.headerSelect} ${
-                                                    selectedForms.length === 0 ? styles.selectDisabled : styles.selectEnabled
-                                                }`}
+                                                className={`${styles.headerSelect} ${selectedForms.length === 0 ? styles.selectDisabled : styles.selectEnabled
+                                                    }`}
                                             >
                                                 <option value="">{t('— Actions —')}</option>
 
@@ -701,15 +721,15 @@ const Accueil = () => {
                                     </tr>
                                     <tr>
                                         <th className={styles.th}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            checked={selectedForms.length === filteredForms.length && filteredForms.length > 0}
-                                            onChange={(e) => {
-                                            if (e.target.checked) handleCheckAll();
-                                            else handleUncheckAll();
-                                            }}
-                                        />
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                checked={selectedForms.length === filteredForms.length && filteredForms.length > 0}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) handleCheckAll();
+                                                    else handleUncheckAll();
+                                                }}
+                                            />
                                         </th>
                                         <th className={styles.th}>{t('Title')}</th>
                                         <th className={styles.th}>{t('Group')}</th>
@@ -723,60 +743,60 @@ const Accueil = () => {
                                 <tbody className={styles.scrollableTable}>
                                     {forms.length === 0 ? (
                                         <tr>
-                                        <td colSpan="7">{t('No forms')}</td>
+                                            <td colSpan="7">{t('No forms')}</td>
                                         </tr>
                                     ) : (
                                         filteredForms.map(form => (
-                                        <tr 
-                                            key={form.id}
-                                            onContextMenu={(e) => {
-                                                handleRightClick(e, form.id)
-                                            }}
-                                        >
-                                            <td className={styles.td}>
-                                            <input
-                                                type="checkbox"
-                                                className={styles.checkbox}
-                                                checked={selectedForms.includes(form.id)}
-                                                onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
-                                            />
-                                            </td>
-                                            <td className={styles.td}>{form.title}</td>
-                                            <td className={styles.td}>{form.group_name || "-"}</td>
-                                            <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
-                                            <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
-                                            <td className={styles.td}>{form.responseCount}</td>
-                                            <td className={styles.td}>
-                                                <div className={styles.actionWrapper}>
-                                                    <button
-                                                        className={styles.actionButton}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
+                                            <tr
+                                                key={form.id}
+                                                onContextMenu={(e) => {
+                                                    handleRightClick(e, form.id)
+                                                }}
+                                            >
+                                                <td className={styles.td}>
+                                                    <input
+                                                        type="checkbox"
+                                                        className={styles.checkbox}
+                                                        checked={selectedForms.includes(form.id)}
+                                                        onChange={(e) => handleCheckboxChange(form.id, e.target.checked)}
+                                                    />
+                                                </td>
+                                                <td className={styles.td}>{form.title}</td>
+                                                <td className={styles.td}>{form.group_name || "-"}</td>
+                                                <td className={styles.td}>{new Date(form.created_at).toLocaleString()}</td>
+                                                <td className={styles.td}>{new Date(form.updated_at).toLocaleString()}</td>
+                                                <td className={styles.td}>{form.responseCount}</td>
+                                                <td className={styles.td}>
+                                                    <div className={styles.actionWrapper}>
+                                                        <button
+                                                            className={styles.actionButton}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
 
-                                                            const rect = e.currentTarget.getBoundingClientRect();
-                                                            const MENU_HEIGHT = 220;
+                                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                                const MENU_HEIGHT = 220;
 
-                                                            let y = rect.bottom;
+                                                                let y = rect.bottom;
 
-                                                            if (y + MENU_HEIGHT > window.innerHeight) {
-                                                                y = rect.top - MENU_HEIGHT + 38;
-                                                            }
+                                                                if (y + MENU_HEIGHT > window.innerHeight) {
+                                                                    y = rect.top - MENU_HEIGHT + 38;
+                                                                }
 
-                                                            setMenuPosition({
-                                                                x: rect.left,
-                                                                y,
-                                                            });
+                                                                setMenuPosition({
+                                                                    x: rect.left,
+                                                                    y,
+                                                                });
 
-                                                            setOpenMenuId(openMenuId === form.id ? null : form.id);
-                                                        }}
-                                                    >
-                                                        ...
-                                                    </button>
-                                                
-                                                </div>
+                                                                setOpenMenuId(openMenuId === form.id ? null : form.id);
+                                                            }}
+                                                        >
+                                                            ...
+                                                        </button>
 
-                                            </td>
-                                        </tr>
+                                                    </div>
+
+                                                </td>
+                                            </tr>
                                         ))
                                     )}
                                 </tbody>
@@ -857,11 +877,10 @@ const Accueil = () => {
                                                         break;
                                                 }
                                             }}
-                                            className={`${styles.headerSelect} ${
-                                                selectedGroups.length === 0
-                                                    ? styles.selectDisabled
-                                                    : styles.selectEnabled
-                                            }`}
+                                            className={`${styles.headerSelect} ${selectedGroups.length === 0
+                                                ? styles.selectDisabled
+                                                : styles.selectEnabled
+                                                }`}
                                         >
                                             <option value="">— Actions —</option>
 

@@ -6,29 +6,33 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
   const [highlight, setHighlight] = useState(false);
 
   const handleImportForm = async (result) => {
-    try {
 
-      const response = await fetch(`/api/import-form`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(result) });
+    const response = await fetch(`/api/import-form`, {
+      method: 'POST',
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(result)
+    });
+    const json = await response.json();
 
-      if (response.ok) {
-
-        // for (const response in result.responses) {
-
-        //   const responsesJson = { "formId": result.json_data.id, "user_id": result.user_id, "response": responsesJson };
-
-        //   const response = await fetch(`/api/import-form`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(responsesJson) });
-
-        // }
-
-        document.querySelector("#importSuccess").click();
-
-      } else {
-        document.querySelector("#formatError").click();
-
+    if (!response.ok) {
+      throw new Error("formatError");
+    }
+    if (result.responses != {}) {
+      try {
+        for (const user in result.responses) {
+          result.responses[user].forEach(element => {
+            element.form_id = json.newFormID;
+          });
+          await fetch(`/api/submit-form`, {
+            method: 'POST',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 'form_id': json.newFormID, 'user_id': user, 'responses': result.responses[user] })
+          });
+        }
       }
-    } catch (error) {
-      console.error("Erreur :", error);
-      document.querySelector("#error").click();
+      catch (e) {
+        console.log("Echec de l'importation des réponses. : ", e);
+      }
     }
   };
 
@@ -41,27 +45,99 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
     setHighlight(false);
   }, []);
 
-  const onDrop = useCallback((e) => {
+  const traverseFileTree = (item) => {
+    return new Promise((resolve) => {
+      if (item.isFile) {
+        item.file((file) => {
+          const reader = new FileReader();
+          reader.onload = async () => {
+            try {
+              const formJson = JSON.parse(reader.result);
+              await handleImportForm(formJson);
+            } catch (err) {
+              console.error("Erreur fichier :", file.name, err);
+            }
+            resolve();
+
+          };
+          reader.readAsText(file);
+        });
+      }
+
+      else if (item.isDirectory) {
+        const dirReader = item.createReader();
+        dirReader.readEntries(async (entries) => {
+          for (const entry of entries) {
+            await traverseFileTree(entry);
+          }
+          resolve();
+        });
+      }
+    });
+  };
+
+  const handleZipFolder = (zipFolder) => {
+    return new Promise(async (resolve) => {
+      const JSZip = require("jszip");
+      const zipReader = new FileReader();
+
+      zipReader.onload = async () => {
+        const zip = await JSZip.loadAsync(zipReader.result);
+
+        for (const fileName of Object.keys(zip.files)) {
+          const file = zip.files[fileName];
+          if (file.dir) continue;
+
+          try {
+            const content = await file.async("text");
+            const formJson = JSON.parse(content);
+            await handleImportForm(formJson);
+          } catch (err) {
+            console.error("Erreur fichier:", fileName, err);
+          }
+        }
+
+        resolve();
+      };
+
+      zipReader.readAsArrayBuffer(zipFolder);
+    });
+  };
+
+  const onDrop = useCallback(async (e) => {
     e.preventDefault();
     setHighlight(true);
 
-    const files = e.dataTransfer.files;
-    if (files.length === 0) return;
-
-    const file = files[0];
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const formJson = JSON.parse(reader.result);
-        handleImportForm(formJson[1]);
+    try {
+      let promises = [];
+      let items = e.dataTransfer.files[0];
+      if (items && items.name.endsWith(".zip")) {
+        promises.push(handleZipFolder(items));
       }
-      catch (err) {
-        document.querySelector("#formatError").click();
-      }
-    };
-    reader.readAsText(file);
+      else {
+        items = e.dataTransfer.items;
 
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i].webkitGetAsEntry();
+          if (item) {
+            promises.push(traverseFileTree(item));
+          }
+        }
+      }
+
+      const results = await Promise.allSettled(promises);
+
+      const hasSuccess = results.some(r => r.status === "fulfilled");
+
+      if (hasSuccess) {
+        document.querySelector("#importSuccess").click();
+      } else {
+        document.querySelector("#error").click();
+      }
+
+    } catch (err) {
+      document.querySelector("#error").click();
+    }
   }, []);
 
   if (!isOpen) return null;
@@ -75,8 +151,9 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
           onDragLeave={onDragLeave}
           onDrop={onDrop}
         >
-          Glissez un fichier ici.
+          Glissez un fichier/dossier ici.
         </div>
+        <input className={styles.fileSelector} type='file' accept=".zip" ></input>
         {onConfirm && (
           <div className={styles.closeImportModal}
             id="importSuccess"
@@ -100,7 +177,7 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
         )}
         {onClose && (
           <button
-            onClick={onClose} // Call the onClose callback
+            onClick={onClose}
             className={styles.closeButton}
           >
             Fermer

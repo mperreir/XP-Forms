@@ -56,23 +56,23 @@
 
 /* input de recherche dans l'en-tête */
 .headerSearchInput {
-  width: 100%;
-  height: 32px;
-  box-sizing: border-box;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
+    width: 100%;
+    height: 32px;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
 }
 
 /* select de filtre groupe dans l'en-tête */
 .headerSelect {
-  width: 100%;
-  height: 32px;
-  box-sizing: border-box;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
-  cursor: pointer;
+    width: 100%;
+    height: 32px;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    cursor: pointer;
 }
 
 .selectEnabled {
@@ -233,6 +233,23 @@ tbody tr:hover {
 
 .createButton:hover {
     background-color: #218838;
+    /* Darker green on hover */
+}
+
+.importButton {
+    margin: 20px 15px;
+    /* Remove auto centering */
+    padding: 12px 24px;
+    background-color: #a72890;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.importButton:hover {
+    background-color: #88217a;
     /* Darker green on hover */
 }
 
@@ -421,9 +438,9 @@ button:disabled {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 1000;
     min-width: 120px;
-    width: max-content;   
-    max-width: 200px;  
-    white-space: nowrap;  
+    width: max-content;
+    max-width: 200px;
+    white-space: nowrap;
     font-size: 14px;
     text-align: center;
 }
@@ -479,35 +496,35 @@ button:disabled {
 }
 
 .tableHeader {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    width: 100%;
 }
 
 .tableTitle {
-  text-align: center;
-  margin: 0;
+    text-align: center;
+    margin: 0;
 }
 
 .defaultUserIdContainer {
-  justify-self: start;
-  margin: 0;
-  margin-left: 15%;
+    justify-self: start;
+    margin: 0;
+    margin-left: 15%;
 }
 
 .createButtonContainer {
-  justify-self: end;
-  display: flex;
-  gap: 10px;
-  white-space: nowrap;
-  margin: 0;
+    justify-self: end;
+    display: flex;
+    gap: 10px;
+    white-space: nowrap;
+    margin: 0;
 }
 
 /* Styling for the language dropdown */
 .langSelect {
-  width: 80px;
-  margin-right: 5%;
-  margin-top: 0;
-  align-self: flex-end;
+    width: 80px;
+    margin-right: 5%;
+    margin-top: 0;
+    align-self: flex-end;
 }

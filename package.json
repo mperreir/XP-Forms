@@ -4,6 +4,8 @@
   "private": true,
   "dependencies": {
     "concurrently": "^7.6.0",
+    "file-saver": "^2.0.5",
+    "jszip": "^3.10.1",
     "react-i18next": "^16.5.8"
   },
   "scripts": {

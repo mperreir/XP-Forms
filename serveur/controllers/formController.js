@@ -152,7 +152,7 @@ const importForm = async (req, res) => {
     const newFormID = await generateUniqueFormId();
     json_data.id = newFormID;
     const message = await formService.saveForm(newFormID, title, json_data);
-    res.status(201).json({ message });
+    res.status(201).json({ message, newFormID });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
