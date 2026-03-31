@@ -1,5 +1,7 @@
-import { BrowserRouter as Router, Routes, Route, BrowserRouter } from "react-router-dom";
 import React from "react";
+import { BrowserRouter as Router, Routes, Route, BrowserRouter } from "react-router-dom";
+import { I18nextProvider } from 'react-i18next';
+import i18n from './i18n';
 import './App.css';
 import Accueil from "./pages/accueil/accueil";
 import FormEditor2 from "./pages/form_editor/form_editor";
@@ -9,7 +11,7 @@ import Merci from "./pages/merci/Merci";
 
 function App() {
   return (
-    <div>
+    <I18nextProvider i18n={i18n}>
       <BrowserRouter>
         <Routes>
           <Route index element={<Accueil />}></Route>
@@ -23,7 +25,7 @@ function App() {
           <Route path="/merci" element={<Merci />} />
         </Routes>
       </BrowserRouter>
-    </div>
+    </I18nextProvider>
   );
 }
 
