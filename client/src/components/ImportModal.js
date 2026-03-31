@@ -104,25 +104,73 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
     });
   };
 
-  const onDrop = useCallback(async (e) => {
+  const onDrop = useCallback((e) => {
     e.preventDefault();
     setHighlight(true);
 
+    const input = document.querySelector("#fileSelector");
+    input.files = e.dataTransfer.files;
+
+    updateInput();
+
+    // try {
+    //   let promises = [];
+    //   let items = e.dataTransfer.files[0];
+    //   if (items && items.name.endsWith(".zip")) {
+    //     promises.push(handleZipFolder(items));
+    //   }
+    //   else {
+    //     items = e.dataTransfer.items;
+
+    //     for (let i = 0; i < items.length; i++) {
+    //       const item = items[i].webkitGetAsEntry();
+    //       if (item) {
+    //         promises.push(traverseFileTree(item));
+    //       }
+    //     }
+    //   }
+
+    //   const results = await Promise.allSettled(promises);
+
+    //   const hasSuccess = results.some(r => r.status === "fulfilled");
+
+    //   if (hasSuccess) {
+    //     document.querySelector("#importSuccess").click();
+    //   } else {
+    //     document.querySelector("#error").click();
+    //   }
+
+    // } catch (err) {
+    //   document.querySelector("#error").click();
+    // }
+  }, []);
+
+  const onClickLabel = () => {
+    const input = document.querySelector("#fileSelector");
+    input.click();
+  }
+
+  const updateInput = () => {
+    const input = document.querySelector("#fileSelector");
+    const preview = document.querySelector("#filePreview");
+    const para = preview.querySelector('p');
+    const curFile = input.files[0];
+    if (curFile.length === 0) {
+      para.textContent = "Pas de dossier selectionné";
+    }
+    else {
+      para.textContent = curFile.name;
+    }
+  }
+
+  const submit = useCallback(async () => {
+
     try {
+      const input = document.querySelector("#fileSelector");
       let promises = [];
-      let items = e.dataTransfer.files[0];
+      let items = input.files[0];
       if (items && items.name.endsWith(".zip")) {
         promises.push(handleZipFolder(items));
-      }
-      else {
-        items = e.dataTransfer.items;
-
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i].webkitGetAsEntry();
-          if (item) {
-            promises.push(traverseFileTree(item));
-          }
-        }
       }
 
       const results = await Promise.allSettled(promises);
@@ -138,7 +186,7 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
     } catch (err) {
       document.querySelector("#error").click();
     }
-  }, []);
+  })
 
   if (!isOpen) return null;
 
@@ -153,7 +201,17 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
         >
           Glissez un fichier/dossier ici.
         </div>
-        <input className={styles.fileSelector} type='file' accept=".zip" ></input>
+        <div>
+          <label className={styles.fileLabel} id="fileLabel"
+            onClick={onClickLabel}
+          >Choisissez un dossier à importer</label>
+          <input className={styles.fileSelector} type='file' accept=".zip" id="fileSelector"
+            onChange={updateInput}
+          ></input>
+        </div>
+        <div className={styles.preview} id="filePreview">
+          <p>Pas de dossier selectionné</p>
+        </div>
         {onConfirm && (
           <div className={styles.closeImportModal}
             id="importSuccess"
@@ -175,14 +233,20 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
               if (onError) onError();
             }}></div>
         )}
-        {onClose && (
-          <button
-            onClick={onClose}
-            className={styles.closeButton}
-          >
-            Fermer
+        <div className={styles.buttonsLine}>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className={styles.closeButton}
+            >
+              Fermer
+            </button>
+          )}
+          <button className={styles.fileSubmitButton}
+            onClick={submit}>
+            Importer
           </button>
-        )}
+        </div>
       </div>
     </div>
   );

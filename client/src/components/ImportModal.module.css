@@ -28,20 +28,6 @@
   margin-top: 0;
 }
 
-.ImportModalContent button {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.ImportModalContent button:hover {
-  background-color: #0056b3;
-}
-
 .ImportModalContent .dropZone {
   height: 200px;
   width: 300px;
@@ -59,10 +45,47 @@
   opacity: 1;
 }
 
-.ImportModalContent .fileSelector {
+.ImportModalContent .fileLabel {
   margin-top: 30px;
+  margin-bottom: 15px;
+  padding: 10px 20px;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  transition: background-color 0.3s ease;
 }
+
+.ImportModalContent .fileLabel:hover {
+  background-color: #0056b3;
+}
+
+.ImportModalContent .fileSelector {
+  display: none;
+}
+
+.ImportModalContent .fileSubmitButton {}
 
 .ImportModalContent .closeImportModal {
   display: none;
+}
+
+.ImportModalContent .closeButton {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.ImportModalContent .closeButton:hover {
+  background-color: #0056b3;
+}
+
+.ImportModalContent .buttonsLine {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
 }
