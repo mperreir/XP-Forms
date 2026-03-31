@@ -609,7 +609,7 @@ const Accueil = () => {
                                 className={styles.importButton}
                                 onClick={() => handleImportButton()}
                             >
-                                Importer un formulaire
+                                {t('Import a form')}
                             </button>
                             <button
                                 className={styles.createButton}
