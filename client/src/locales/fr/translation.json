@@ -83,6 +83,10 @@
   "Import a form": "Importer un formulaire",
   "Forms": "Formulaires",
   "Groups": "Groupes",
-  "This action is irreversible.": "Cette action est irréversible."
+  "This action is irreversible.": "Cette action est irréversible.",
+  "unable to rename group": "Impossible de renommer le groupe",
+  "Unable to delete group": "Impossible de supprimer le groupe",
+  "Group renamed to": "Groupe renommé en",
+  "Rename": "Renommer"
   
 }

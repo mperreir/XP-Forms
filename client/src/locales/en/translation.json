@@ -83,5 +83,9 @@
   "Import a form": "Import a form",
   "Forms": "Forms",
   "Groups": "Groups",
-  "This action is irreversible.": "This action is irreversible."
+  "This action is irreversible.": "This action is irreversible.",
+  "Unable to rename group": "Unable to rename group",
+  "Unable to delete group": "Unable to delete group",
+  "Group renamed to": "Group renamed to",
+  "Rename": "Rename"
 }
