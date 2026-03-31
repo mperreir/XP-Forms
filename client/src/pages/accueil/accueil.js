@@ -187,12 +187,18 @@ const Accueil = () => {
         const DownloadExport = async (jsonExport) => {
 
             let zip = new JSZip();
+            let ladate = new Date();
             for (const form in jsonExport) {
                 zip.file(jsonExport[form].title + '.json', JSON.stringify(jsonExport[form], null, 2));
             }
             zip.generateAsync({ type: "blob" })
                 .then(function (content) {
-                    saveAs(content, "export_de_" + Object.keys(jsonExport).length + "_formulaires.zip");
+                    if (Object.keys(jsonExport).length === 1) {
+                        saveAs(content, ladate.toISOString().substring(0, 10) + "_export_de_" + Object.keys(jsonExport).length + "_formulaire.zip");
+                    }
+                    else {
+                        saveAs(content, ladate.toISOString().substring(0, 10) + "_export_de_" + Object.keys(jsonExport).length + "_formulaires.zip");
+                    }
                 });
 
             closeModal();

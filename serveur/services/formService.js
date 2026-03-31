@@ -376,13 +376,13 @@ const exportForm = async (formId, withResponses) => {
             responsesJson[user_id].push(item);
           });
 
-          resolve({ "json_data": formJson, "title": formName, "responses": responsesJson });
+          resolve({ "title": formName, "json_data": formJson, "responses": responsesJson });
         });
 
       }
       else {
 
-        resolve({ "json_data": formJson, "title": formName, "responses": [] });
+        resolve({ "title": formName, "json_data": formJson, "responses": [] });
 
       }
 

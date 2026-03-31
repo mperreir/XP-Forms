@@ -153,7 +153,7 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
         >
           Glissez un fichier/dossier ici.
         </div>
-        <input className={styles.fileSelector} type='file' accept=".json" webkitdirectory='true' multiple ></input>
+        <input className={styles.fileSelector} type='file' accept=".zip" ></input>
         {onConfirm && (
           <div className={styles.closeImportModal}
             id="importSuccess"
