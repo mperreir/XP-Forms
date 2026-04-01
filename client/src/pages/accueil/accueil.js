@@ -497,45 +497,35 @@ const Accueil = () => {
     return (
         <>
             {/* Langue en haut à droite dans le flux */}
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start', marginTop: '40px', marginBottom: 0 }}>
-                <select
-                    className={styles.langSelect}
-                    value={i18n.language}
-                    onChange={e => {
-                        i18n.changeLanguage(e.target.value);
-                        localStorage.setItem('lang', e.target.value);
-                    }}
-                >
-                    <option value="fr">Français</option>
-                    <option value="en">English</option>
-                </select>
-            </div>
-            <div className={styles.projectName}>
-                <h1>{t('welcome')}</h1>
-            </div>
-
-            <div className={styles.displayType}>
-                <button
-                    onClick={() => {
-                        setViewMode("forms");
-                        handleUncheckAll();
-                    }}
-                    className={`${styles.viewButton} ${viewMode === "forms" ? styles.activeViewButton : ""} ${styles.switchToViewForms}`}
-                >
-                    {t('Forms')}
-                </button>
-
-                <button
-                    onClick={() => {
-                        setViewMode("groups");
-                        handleUncheckAllGroups();
-                    }}
-                    className={`${styles.viewButton} ${viewMode === "groups" ? styles.activeViewButton : ""} ${styles.switchToViewGroups}`}
-                >
-                    {t('Groups')}
-                </button>
-            </div>
-
+            <div className={styles.topBar}>
+                <h1 className={styles.topBarLeft}>{t('welcome')}</h1>
+                <div className={styles.topBarCenter}>
+                    <div className={styles.displayType}>
+                        <button
+                            onClick={() => { setViewMode("forms"); handleUncheckAll(); }}
+                            className={`${styles.viewButton} ${viewMode === "forms" ? styles.activeViewButton : ""} ${styles.switchToViewForms}`}
+                        >
+                            {t('Forms')}
+                        </button>
+                        <button
+                            onClick={() => { setViewMode("groups"); handleUncheckAllGroups(); }}
+                            className={`${styles.viewButton} ${viewMode === "groups" ? styles.activeViewButton : ""} ${styles.switchToViewGroups}`}
+                        >
+                            {t('Groups')}
+                        </button>
+                    </div>
+                </div>
+                <div className={styles.topBarRight}>
+                    <select
+                        className={styles.langSelect}
+                        value={i18n.language}
+                        onChange={e => { i18n.changeLanguage(e.target.value); localStorage.setItem('lang', e.target.value); }}
+                        >
+                        <option value="fr">Français</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                </div>
             <Modal
                 isOpen={modal.isOpen}
                 title={modal.title}
@@ -586,7 +576,7 @@ const Accueil = () => {
                 </div>
             )}
             {viewMode === "forms" ? (
-                <div>
+                <div className={styles.container}>
                     <div className={styles.tableHeader}>
                         <div className={styles.defaultUserIdContainer}>
                             <label htmlFor="defaultUserId" className={styles.defaultUserIdLabel}>
@@ -794,7 +784,6 @@ const Accueil = () => {
                                                         </button>
 
                                                     </div>
-
                                                 </td>
                                             </tr>
                                         ))
@@ -805,7 +794,7 @@ const Accueil = () => {
                     </div >
                 </div>
             ) : (
-                <div>
+                <div className={styles.container}>
                     <div className={styles.tableHeader}>
                         <div className={styles.defaultUserIdContainer}>
                             <label htmlFor="defaultUserId" className={styles.defaultUserIdLabel}>

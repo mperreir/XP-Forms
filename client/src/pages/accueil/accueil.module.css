@@ -1,10 +1,40 @@
-.projectName {
-    width: 100%;
-    margin-top: -3%;
-    margin-left: 5%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+
+.container {
+    margin: 0 1em;
+}
+
+.topBar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  margin: 1em 1em 0 1em;
+}
+
+.topBarLeft {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.topBarCenter {
+  text-align: center;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.topBarRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.displayType {
+  display: flex;
+  flex-direction: row;
+}
+
+.langSelect {
+  width: 90px;
+  margin: 0;
 }
 
 /* Styling for the "Créer un nouveau formulaire" link */
@@ -39,10 +69,8 @@
 }
 
 .table {
-    width: 90%;
     margin: 0 auto;
     border-collapse: collapse;
-    margin-top: 20px;
     border-radius: 8px;
     overflow: hidden;
 }
@@ -221,14 +249,6 @@ tbody tr:hover {
     border-radius: 4px;
     font-size: 16px;
     cursor: pointer;
-}
-
-.createButtonContainer {
-    display: flex;
-    flex-direction: row;
-    position: absolute;
-    right: 5%;
-    gap: 20px;
 }
 
 .createButton:hover {
@@ -454,31 +474,25 @@ button:disabled {
     background-color: #f3f4f6;
 }
 
-
-.displayType {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    margin-top: -2%;
-}
-
 .viewButton {
-    padding: 8px 16px;
-    border-radius: 6px;
-    border: 2px solid #ccc;
-    background: #f0f0f0;
-    cursor: pointer;
-    margin: 0;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 2px solid #007bff;
+  background: #ffffff;
+  color: #007bff;
+  font-weight: 500;
+  cursor: pointer;
+  margin: 0;
 }
 
 .viewButton:hover {
-    background-color: #0056b3;
+  background-color: #d3dae5;
 }
 
 .activeViewButton {
-    background: #007bff;
-    color: white;
-    border-color: #007bff;
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
 }
 
 .switchToViewForms {
@@ -499,7 +513,8 @@ button:disabled {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    width: 100%;
+    margin: 0px;
+    padding: 0;;
 }
 
 .tableTitle {
@@ -510,7 +525,6 @@ button:disabled {
 .defaultUserIdContainer {
     justify-self: start;
     margin: 0;
-    margin-left: 15%;
 }
 
 .createButtonContainer {
@@ -521,10 +535,3 @@ button:disabled {
     margin: 0;
 }
 
-/* Styling for the language dropdown */
-.langSelect {
-    width: 80px;
-    margin-right: 5%;
-    margin-top: 0;
-    align-self: flex-end;
-}

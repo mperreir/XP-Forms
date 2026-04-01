@@ -424,6 +424,7 @@ const FormEditor = () => {
       </div>
 
       <div
+        className={styles.editorContainer}
         ref={editorContainerRef}
         id="form-editor"
         style={{
