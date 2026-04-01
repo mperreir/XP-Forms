@@ -44,6 +44,7 @@
   "Page:": "Page :",
   "Participant ID:": "ID participant :",
   "Form ID:": "ID du Formulaire :",
+  "Apply": "Appliquer",
   "Form information": "Informations du formulaire",
   "To integrate in a Tobii scenario use:": "Pour intégrer dans un scénario Tobii utilisez :",
   "Add @ as participant ID to use the default user ID.": "Ajoutez @ comme ID participant pour utiliser l'ID utilisateur par défaut.",

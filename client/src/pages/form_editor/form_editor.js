@@ -322,7 +322,6 @@ const FormEditor = () => {
           id="form-editor"
           style={{ flex: 1, height: "500px", border: "1px solid #ccc", marginTop: "20px" }}
         />
-
         {stylePanel.visible && (
           <div className={styles.stylePanel}>
             <div className={styles.stylePanelHeader}>
@@ -377,6 +376,7 @@ const FormEditor = () => {
           {notification.message}
         </div>
       )}
+      <div className={styles.footer}/>
     </div>
   );
 };
