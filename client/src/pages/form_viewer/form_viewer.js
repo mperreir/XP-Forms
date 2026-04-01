@@ -61,44 +61,51 @@ const FormViewer = () => {
   };
 
   const applyComponentStyles = (component) => {
-    const wrapper = document.querySelector(`[data-id="${component.id}"]`);
-    if (!wrapper) return;
+    if (!component.styles || Object.keys(component.styles).length === 0) return;
 
-    const elementsToStyle = [wrapper];
+    const input = containerRef.current?.querySelector(`[id$="-${component.id}"]`);
+    const targetWrapper = input?.closest(".fjs-form-field");
+    if (!targetWrapper) return;
 
-    if (component.type === "text") {
-      elementsToStyle.push(...wrapper.querySelectorAll("h1,h2,h3,h4,h5,h6,p,span"));
-    }
-
-    elementsToStyle.push(...wrapper.querySelectorAll(".fjs-form-field-label"));
+    // Labels uniquement pour text-decoration, color, font-*
+    const labelEls = [...targetWrapper.querySelectorAll(".fjs-form-field-label")];
+    
+    // Wrapper pour background, padding, margin, border, etc.
+    const wrapperOnlyStyles = ["backgroundColor", "borderRadius", "padding", "margin", "border", "opacity", "width"];
+    
+    // Text pour les composants type "text"
+    const textEls = component.type === "text" 
+      ? [...targetWrapper.querySelectorAll("h1,h2,h3,h4,h5,h6,p,span")] 
+      : [];
 
     Object.entries(STYLE_MAP).forEach(([styleKey, config]) => {
       const styleValue = component.styles?.[styleKey];
+      if (styleValue === undefined || styleValue === false) return;
 
-      elementsToStyle.forEach((el) => {
-        if (styleValue !== undefined && styleValue !== false) {
-          const cssValue = config.dynamic ? styleValue : config.value;
-          el.style.setProperty(config.property, cssValue, "important");
-        } else {
-          el.style.removeProperty(config.property);
-        }
-      });
-    });
+      const cssValue = config.dynamic ? styleValue : config.value;
 
-    // styles custom
-    Object.entries(component.styles || {}).forEach(([key, value]) => {
-      if (STYLE_MAP[key]) return;
-
-      if (value === false || value === undefined) {
-        wrapper.style.removeProperty(key);
+      if (wrapperOnlyStyles.includes(styleKey)) {
+        // S'applique uniquement sur le wrapper, pas sur le texte
+        targetWrapper.style.setProperty(config.property, cssValue, "important");
       } else {
-        wrapper.style.setProperty(key, value === true ? "1" : String(value), "important");
+        // S'applique sur labels et textes uniquement — jamais sur le wrapper (évite l'héritage)
+        [...labelEls, ...textEls].forEach(el => {
+          el.style.setProperty(config.property, cssValue, "important");
+        });
       }
     });
 
-    if (component.components) {
-      component.components.forEach(applyComponentStyles);
-    }
+    // Clés inconnues → wrapper uniquement
+    Object.entries(component.styles || {}).forEach(([key, value]) => {
+      if (STYLE_MAP[key]) return;
+      if (value === false || value === undefined) {
+        targetWrapper.style.removeProperty(key);
+      } else {
+        targetWrapper.style.setProperty(key, value === true ? "1" : String(value), "important");
+      }
+    });
+
+    if (component.components) component.components.forEach(applyComponentStyles);
   };
 
   // 👉 Vérification si @ est dans l'URL
@@ -352,62 +359,17 @@ const validateCurrentPage = useCallback(() => {
       };
 
       await form.importSchema(pageSchema, loadedData);
-      requestAnimationFrame(() => {
-        pageSchema.components.forEach(applyComponentStyles);
-      });
-      const currentComponents = effectivePages[effectiveCurrentPage - 1] || [];
 
-      const flatten = (components) => {
-        const flat = [];
-        components.forEach((c) => {
-          flat.push(c);
-          if (Array.isArray(c.components) && c.components.length > 0) {
-            flat.push(...flatten(c.components));
-          }
-        });
-        return flat;
+      let stylesApplied = false;
+
+      const applyOnce = () => {
+        if (stylesApplied) return;
+        stylesApplied = true;
+        pageSchema.components.forEach(applyComponentStyles);
       };
 
-      const currentFlat = flatten(currentComponents);
-
-      console.log("STYLING COMPONENTS:", currentFlat);
-
-      currentFlat.forEach((comp) => {
-        if (!comp.styles) return;
-
-        // On cible via le key (stable et présent dans le DOM)
-        if (comp.id) {
-          console.log("id", comp.id)
-          const input = containerRef.current.querySelector(
-            `[id$="${comp.id}"]`
-          );
-          console.log("Searching:", comp.id, input, comp.styles);
-          if (input) {
-            const wrapper = input.closest(".fjs-form-field");
-
-            if (wrapper) {
-              if (comp.styles.bold) wrapper.style.fontWeight = "bold";
-              if (comp.styles.italic) wrapper.style.fontStyle = "italic";
-              if (comp.styles.color) wrapper.style.color = comp.styles.color;
-              if (comp.styles.fontSize) wrapper.style.fontSize = comp.styles.fontSize;
-            }
-          }
-        }
-
-        // Cas spécial pour type text (pas de key)
-        if (comp.type === "text") {
-          const texts = containerRef.current.querySelectorAll(".fjs-text");
-          texts.forEach((t) => {
-            if (t.innerText.includes(comp.text.replace(/#/g, "").trim())) {
-              if (comp.styles.bold) t.style.fontWeight = "bold";
-              if (comp.styles.italic) t.style.fontStyle = "italic";
-              if (comp.styles.color) t.style.color = comp.styles.color;
-              if (comp.styles.fontSize) t.style.fontSize = comp.styles.fontSize;
-            }
-          });
-        }
-      });
-
+      // Tentative après rendu initial
+      applyOnce();
 
       dataInitialized.current = true;
 

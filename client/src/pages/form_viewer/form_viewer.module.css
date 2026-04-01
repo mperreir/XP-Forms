@@ -310,3 +310,9 @@ button:disabled:hover {
   margin: 6px 0;
   font-size: 14px;
 }
+
+.fjs-form-field input,
+.fjs-form-field select,
+.fjs-form-field textarea {
+  text-decoration: none !important;
+}
