@@ -5,43 +5,7 @@ import Modal from "../../components/Modal";
 import './form-js-editor.css';
 import styles from "./form_editor.module.css";
 import { useTranslation } from 'react-i18next';
-
-// Les clés "dynamic" prennent la valeur telle quelle
-// Les clés non-dynamic ont une valeur fixe (toggle)
-const STYLE_MAP = {
-  bold:            { property: "font-weight",       value: "bold" },
-  italic:          { property: "font-style",         value: "italic" },
-  underline:       { property: "text-decoration",    value: "underline" },
-  color:           { property: "color",              dynamic: true },
-  fontSize:        { property: "font-size",          dynamic: true },
-  backgroundColor: { property: "background-color",   dynamic: true },
-  borderRadius:    { property: "border-radius",      dynamic: true },
-  padding:         { property: "padding",            dynamic: true },
-  margin:          { property: "margin",             dynamic: true },
-  border:          { property: "border",             dynamic: true },
-  opacity:         { property: "opacity",            dynamic: true },
-  textAlign:       { property: "text-align",         dynamic: true },
-  width:           { property: "width",              dynamic: true },
-  // Ajouter autant de clés que nécessaire
-};
-
-// Référence pour le panneau de styles : clés connues + exemples
-const STYLE_REFERENCE = [
-  { key: "bold",            example: "true",      desc: "Texte en gras" },
-  { key: "italic",          example: "true",      desc: "Texte en italique" },
-  { key: "underline",       example: "true",      desc: "Texte souligné" },
-  { key: "color",           example: "#e74c3c",   desc: "Couleur du texte" },
-  { key: "fontSize",        example: "18px",      desc: "Taille de la police" },
-  { key: "backgroundColor", example: "#fdf6e3",   desc: "Couleur de fond" },
-  { key: "borderRadius",    example: "8px",       desc: "Arrondi des coins" },
-  { key: "padding",         example: "8px 12px",  desc: "Espacement intérieur" },
-  { key: "margin",          example: "0 0 16px 0",desc: "Espacement extérieur" },
-  { key: "border",          example: "2px solid #ccc", desc: "Bordure" },
-  { key: "opacity",         example: "0.7",       desc: "Transparence (0 à 1)" },
-  { key: "textAlign",       example: "center",    desc: "Alignement du texte" },
-  { key: "width",           example: "50%",       desc: "Largeur du composant" },
-];
-
+import { STYLE_MAP, STYLE_REFERENCE } from "../../components/Style_Form_components";
 
 // Parse le texte brut du panneau ("bold: true\ncolor: red") en objet styles
 const parseStyleText = (text) => {
@@ -362,7 +326,7 @@ const FormEditor = () => {
         {stylePanel.visible && (
           <div className={styles.stylePanel}>
             <div className={styles.stylePanelHeader}>
-              <span>🎨 {t("Custom styles")}</span>
+              <span>{t("Custom styles")}</span>
 
               <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                 <button

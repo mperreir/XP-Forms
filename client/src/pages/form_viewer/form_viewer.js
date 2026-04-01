@@ -4,22 +4,7 @@ import { Form } from "@bpmn-io/form-js-viewer";
 import Modal from "../../components/Modal";
 import styles from './form_viewer.module.css';
 import { useTranslation } from 'react-i18next';
-
-const STYLE_MAP = {
-  bold:            { property: "font-weight", value: "bold" },
-  italic:          { property: "font-style", value: "italic" },
-  underline:       { property: "text-decoration", value: "underline" },
-  color:           { property: "color", dynamic: true },
-  fontSize:        { property: "font-size", dynamic: true },
-  backgroundColor: { property: "background-color", dynamic: true },
-  borderRadius:    { property: "border-radius", dynamic: true },
-  padding:         { property: "padding", dynamic: true },
-  margin:          { property: "margin", dynamic: true },
-  border:          { property: "border", dynamic: true },
-  opacity:         { property: "opacity", dynamic: true },
-  textAlign:       { property: "text-align", dynamic: true },
-  width:           { property: "width", dynamic: true },
-};
+import { STYLE_MAP, STYLE_REFERENCE } from "../../components/Style_Form_components";
 
 const FormViewer = () => {
   const { t } = useTranslation();
