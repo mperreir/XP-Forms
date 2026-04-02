@@ -48,39 +48,73 @@ const FormViewer = () => {
   const applyComponentStyles = (component) => {
     if (!component.styles || Object.keys(component.styles).length === 0) return;
 
+    let targetWrapper = null;
+
+    // Stratégie 1 : input/select avec id qui se termine par component.id
     const input = containerRef.current?.querySelector(`[id$="-${component.id}"]`);
-    const targetWrapper = input?.closest(".fjs-form-field");
+    if (input) targetWrapper = input.closest(".fjs-form-field");
+
+    // Stratégie 2 : aria-labelledby ou aria-describedby
+    if (!targetWrapper) {
+      const ariaEl = containerRef.current?.querySelector(
+        `[aria-labelledby*="${component.id}"], [aria-describedby*="${component.id}"]`
+      );
+      if (ariaEl) targetWrapper = ariaEl.closest(".fjs-form-field");
+    }
+
+    // Stratégie 3 : par classe CSS selon le type
+    const TYPE_CLASS_MAP = {
+      "text":     "fjs-form-field-text",
+      "radio":    "fjs-form-field-radio",
+      "checkbox": "fjs-form-field-checklist",
+      "datetime": "fjs-form-field-datetime",
+    };
+
+    if (!targetWrapper && TYPE_CLASS_MAP[component.type]) {
+      const candidates = [...(containerRef.current?.querySelectorAll(`.${TYPE_CLASS_MAP[component.type]}`) || [])];
+
+      if (component.type === "text" && component.text) {
+        const cleanText = component.text
+          .replace(/#{1,6}\s/g, "")
+          .replace(/\*\*/g, "")
+          .replace(/\*/g, "")
+          .replace(/_/g, "")
+          .trim()
+          .slice(0, 30);
+        targetWrapper = candidates.find(el =>
+          el.textContent.trim().slice(0, 30).includes(cleanText)
+        ) || candidates[0];
+      } else if (component.label) {
+        targetWrapper = candidates.find(el => {
+          const labelEl = el.querySelector("label, legend");
+          return labelEl?.textContent.trim() === component.label.trim();
+        }) || null;
+      }
+    }
+
+    // ── Ici seulement, après avoir trouvé le wrapper ──
     if (!targetWrapper) return;
 
-    // Labels uniquement pour text-decoration, color, font-*
-    const labelEls = [...targetWrapper.querySelectorAll(".fjs-form-field-label")];
-    
-    // Wrapper pour background, padding, margin, border, etc.
     const wrapperOnlyStyles = ["backgroundColor", "borderRadius", "padding", "margin", "border", "opacity", "width"];
-    
-    // Text pour les composants type "text"
-    const textEls = component.type === "text" 
-      ? [...targetWrapper.querySelectorAll("h1,h2,h3,h4,h5,h6,p,span")] 
+    const labelEls = [...targetWrapper.querySelectorAll(".fjs-form-field-label, label, legend")];
+    const textEls = component.type === "text"
+      ? [...targetWrapper.querySelectorAll("h1,h2,h3,h4,h5,h6,p,span,strong,em")]
       : [];
 
     Object.entries(STYLE_MAP).forEach(([styleKey, config]) => {
       const styleValue = component.styles?.[styleKey];
       if (styleValue === undefined || styleValue === false) return;
-
       const cssValue = config.dynamic ? styleValue : config.value;
 
       if (wrapperOnlyStyles.includes(styleKey)) {
-        // S'applique uniquement sur le wrapper, pas sur le texte
         targetWrapper.style.setProperty(config.property, cssValue, "important");
       } else {
-        // S'applique sur labels et textes uniquement — jamais sur le wrapper (évite l'héritage)
         [...labelEls, ...textEls].forEach(el => {
           el.style.setProperty(config.property, cssValue, "important");
         });
       }
     });
 
-    // Clés inconnues → wrapper uniquement
     Object.entries(component.styles || {}).forEach(([key, value]) => {
       if (STYLE_MAP[key]) return;
       if (value === false || value === undefined) {
@@ -92,7 +126,6 @@ const FormViewer = () => {
 
     if (component.components) component.components.forEach(applyComponentStyles);
   };
-
   // 👉 Vérification si @ est dans l'URL
   useEffect(() => {
     const handleParticipantId = async () => {
