@@ -5,10 +5,11 @@ import Modal from "../../components/Modal";
 import './form-js-editor.css';
 import styles from "./form_editor.module.css";
 import { useTranslation } from 'react-i18next';
-import { STYLE_MAP, STYLE_REFERENCE } from "../../components/Style_Form_components";
+import { STYLE_MAP, STYLE_REFERENCE } from "../../components/Form_components_styles";
 
-// Parse le texte brut du panneau ("bold: true\ncolor: red") en objet styles
-const parseStyleText = (text) => {
+// Utilitaires
+
+const parseStyleText = (text = "") => {
   const result = {};
   text.split("\n").forEach((line) => {
     const colonIndex = line.indexOf(":");
@@ -16,7 +17,6 @@ const parseStyleText = (text) => {
     const key = line.slice(0, colonIndex).trim();
     const val = line.slice(colonIndex + 1).trim();
     if (!key || !val) return;
-    // Convertir "true"/"false" en booléen
     if (val === "true")  { result[key] = true;  return; }
     if (val === "false") { result[key] = false; return; }
     result[key] = val;
@@ -24,14 +24,9 @@ const parseStyleText = (text) => {
   return result;
 };
 
-// Sérialise un objet styles en texte pour l'afficher dans le panneau
-const serializeStyleToText = (stylesObj = {}) => {
-  return Object.entries(stylesObj)
-    .map(([k, v]) => `${k}: ${v}`)
-    .join("\n");
-};
+const serializeStyleToText = (stylesObj = {}) =>
+  Object.entries(stylesObj).map(([k, v]) => `${k}: ${v}`).join("\n");
 
-// Cherche récursivement un composant par ID
 const findComponentById = (components, targetId) => {
   for (const component of components) {
     if (component.id === targetId) return component;
@@ -43,18 +38,24 @@ const findComponentById = (components, targetId) => {
   return null;
 };
 
-// Applique les styles d'un composant sur le DOM
-const applyComponentStyles = (component) => {
-  const wrapper = document.querySelector(`[data-id="${component.id}"]`);
-  if (!wrapper) return;
+const applyComponentStyles = (component, container) => {
+  if (!component.styles || Object.keys(component.styles).length === 0) {
+    if (component.components) component.components.forEach(c => applyComponentStyles(c, container));
+    return;
+  }
+
+  const wrapper = container?.querySelector(`[data-id="${component.id}"]`);
+  if (!wrapper) {
+    if (component.components) component.components.forEach(c => applyComponentStyles(c, container));
+    return;
+  }
 
   const elementsToStyle = [wrapper];
   if (component.type === "text") {
-    elementsToStyle.push(...wrapper.querySelectorAll("h1,h2,h3,h4,h5,h6,p,span"));
+    elementsToStyle.push(...wrapper.querySelectorAll("h1,h2,h3,h4,h5,h6,p,span,strong,em"));
   }
   elementsToStyle.push(...wrapper.querySelectorAll(".fjs-form-field-label"));
 
-  // Clés connues via STYLE_MAP
   Object.entries(STYLE_MAP).forEach(([styleKey, config]) => {
     const styleValue = component.styles?.[styleKey];
     elementsToStyle.forEach((el) => {
@@ -68,22 +69,16 @@ const applyComponentStyles = (component) => {
     });
   });
 
-  // Clés inconnues (CSS brut saisi par le client, non dans STYLE_MAP)
-  // On les applique directement sur le wrapper
   Object.entries(component.styles || {}).forEach(([key, value]) => {
-    if (STYLE_MAP[key]) return; // déjà traité
-    if (value === false || value === undefined) {
-      wrapper.style.removeProperty(key);
-    } else {
-      wrapper.style.setProperty(key, value === true ? "1" : String(value), "important");
-    }
+    if (STYLE_MAP[key]) return;
+    if (value === false || value === undefined) wrapper.style.removeProperty(key);
+    else wrapper.style.setProperty(key, value === true ? "1" : String(value), "important");
   });
 
-  if (component.components) {
-    component.components.forEach(applyComponentStyles);
-  }
+  if (component.components) component.components.forEach(c => applyComponentStyles(c, container));
 };
 
+// Composant principal
 
 const FormEditor = () => {
   const { t } = useTranslation();
@@ -91,7 +86,7 @@ const FormEditor = () => {
   const navigate = useNavigate();
   const editorContainerRef = useRef(null);
   const [formEditor, setFormEditor] = useState(null);
-  const formEditorRef = useRef(null); // ref miroir pour les callbacks
+  const formEditorRef = useRef(null);
   const [title, setTitle] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [isModified, setIsModified] = useState(false);
@@ -100,33 +95,27 @@ const FormEditor = () => {
   const groupId = params.get("group_id");
   const [notification, setNotification] = useState({ message: "", type: "" });
   const currentElementRef = useRef(null);
-  const [selectedColor, setSelectedColor] = useState("#000000");
-  const [selectedFontSize, setSelectedFontSize] = useState("16px");
   const [showStyleHelp, setShowStyleHelp] = useState(false);
+  const [stylePanel, setStylePanel] = useState({ visible: true, text: "" });
+  const [componentSelected, setComponentSelected] = useState(false);
 
-  // Style panel 
-  const [stylePanel, setStylePanel] = useState({ visible: false, text: "" });
 
   const showModal = (title, message, onConfirm = null) =>
     setModal({ isOpen: true, title, message, onConfirm });
   const closeModal = () =>
     setModal({ isOpen: false, title: "", message: "", onConfirm: null });
-
   const showNotification = (message, type = "success", duration = 3000) => {
     setNotification({ message, type });
     setTimeout(() => setNotification({ message: "", type: "" }), duration);
   };
 
-  // Applique les styles issus du panneau sur le composant sélectionné
   const handleStylePanelApply = useCallback(async () => {
     const editor = formEditorRef.current;
     if (!editor || !currentElementRef.current) return;
-
     const schema = await editor.getSchema();
     const component = findComponentById(schema.components, currentElementRef.current.id);
     if (!component) return;
-
-    component.styles = parseStyleText(stylePanel.text);
+    component.styles = parseStyleText(stylePanel.text || "");
     await editor.importSchema(schema);
     setIsModified(true);
   }, [stylePanel.text]);
@@ -138,34 +127,26 @@ const FormEditor = () => {
     setFormEditor(editor);
     formEditorRef.current = editor;
 
-    // Sélection d'un composant => ouvre/met à jour le panneau
     editorContainerRef.current.addEventListener("click", async (e) => {
       setShowStyleHelp(false);
       const wrapper = e.target.closest("[data-id]");
       if (!wrapper) {
         currentElementRef.current = null;
-        setSelectedColor("#000000");
-        setSelectedFontSize("16px");
-        setStylePanel({ visible: false, text: "" });
+        setComponentSelected(false);
+        setStylePanel({ visible: true, text: "" });
         return;
       }
       const componentId = wrapper.getAttribute("data-id");
       currentElementRef.current = { id: componentId };
-
+      setComponentSelected(true);
       const schema = await editor.getSchema();
       const component = findComponentById(schema.components, componentId);
-      const color = component?.styles?.color || "#000000";
-      const fontSize = component?.styles?.fontSize || "16px";
-      setSelectedColor(color);
-      setSelectedFontSize(fontSize);
-      // Ouvrir le panneau avec les styles existants
       setStylePanel({
         visible: true,
         text: serializeStyleToText(component?.styles || {}),
       });
     });
-
-    // Chargement du schéma
+    
     if (id) {
       fetch(`/api/forms/${id}`)
         .then((r) => r.json())
@@ -183,10 +164,12 @@ const FormEditor = () => {
     editor.on("changed", () => setIsModified(true));
     editor.on("changed", async () => {
       const schema = await editor.getSchema();
-      requestAnimationFrame(() => schema.components.forEach(applyComponentStyles));
+      requestAnimationFrame(() =>
+        schema.components.forEach(c => applyComponentStyles(c, editorContainerRef.current))
+      );
     });
 
-    // Bouton Copy dans le context-pad
+    // Bouton Copy
     const findComponentLocation = (components, targetId, parentComponent = null) => {
       for (let i = 0; i < components.length; i++) {
         if (components[i].id === targetId) return { parent: parentComponent, index: i };
@@ -216,7 +199,6 @@ const FormEditor = () => {
       await editor.importSchema(schema);
       setIsModified(true);
     };
-
     const injectCopyButton = (contextPadNode) => {
       if (contextPadNode.querySelector('.custom-copy-btn')) return;
       const removeButton = contextPadNode.querySelector('button[title^="Remove"]');
@@ -232,7 +214,6 @@ const FormEditor = () => {
       btn.onclick = () => copyComponent(fieldId);
       contextPadNode.appendChild(btn);
     };
-
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((m) =>
         m.addedNodes.forEach((node) => {
@@ -273,18 +254,6 @@ const FormEditor = () => {
     }
   };
 
-  const handleStyleChange = async (styleKey, value = null) => {
-    if (!formEditor || !currentElementRef.current) return;
-    const schema = await formEditor.getSchema();
-    const component = findComponentById(schema.components, currentElementRef.current.id);
-    if (!component) return;
-    if (!component.styles) component.styles = {};
-    component.styles[styleKey] = value !== null ? value : !component.styles[styleKey];
-    // Mettre à jour le texte du panneau pour rester en sync
-    setStylePanel((prev) => ({ ...prev, text: serializeStyleToText(component.styles) }));
-    await formEditor.importSchema(schema);
-  };
-
   const handleGoHome = () => {
     if (isModified) {
       showModal(t("Warning"), t("You have unsaved changes. Do you really want to leave this page?"), () => navigate("/accueil"));
@@ -300,8 +269,7 @@ const FormEditor = () => {
           <button className="btn" onClick={handleGoHome}>{t("Back to home")}</button>
         </div>
         <h2 className={styles.title}>{isEditing ? t("Edit form") : t("Create form")}</h2>
-        <div className={styles.right}>
-        </div>
+        <div className={styles.right} />
       </div>
 
       <div className={styles.titleContainer}>
@@ -322,48 +290,49 @@ const FormEditor = () => {
           id="form-editor"
           style={{ flex: 1, height: "500px", border: "1px solid #ccc", marginTop: "20px" }}
         />
+
         {stylePanel.visible && (
           <div className={styles.stylePanel}>
             <div className={styles.stylePanelHeader}>
               <span>{t("Custom styles")}</span>
-
               <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                 <button
                   className={styles.styleHelpBtn}
-                  onClick={() => setShowStyleHelp((prev) => !prev)}
+                  onClick={() => setShowStyleHelp(p => !p)}
                   title="Voir les styles disponibles"
-                >
-                  ?
-                </button>
-
+                >?</button>
                 <button
                   className={styles.stylePanelClose}
                   onClick={() => setStylePanel({ visible: false, text: "" })}
-                >
-                  ✕
-                </button>
+                >✕</button>
               </div>
             </div>
+
             {showStyleHelp && (
               <div className={styles.stylePanelHint}>
                 {STYLE_REFERENCE.map((style) => (
                   <div key={style.key} style={{ marginBottom: "6px" }}>
                     <code>{style.key}: {style.example}</code>
-                    <div style={{ fontSize: "11px", color: "#666" }}>
-                      {style.desc}
-                    </div>
+                    <div style={{ fontSize: "11px", color: "#666" }}>{style.desc}</div>
                   </div>
                 ))}
               </div>
             )}
+
             <textarea
               className={styles.stylePanelTextarea}
               value={stylePanel.text}
-              onChange={(e) => setStylePanel((prev) => ({ ...prev, text: e.target.value }))}
+              onChange={(e) => setStylePanel(p => ({ ...p, text: e.target.value }))}
               rows={10}
               spellCheck={false}
+              disabled={!componentSelected}
             />
-            <button className={styles.stylePanelApply} onClick={handleStylePanelApply}>
+
+            <button 
+              className={styles.stylePanelApply} 
+              onClick={handleStylePanelApply}
+              disabled={!componentSelected}
+            >
               {t("Apply")}
             </button>
           </div>
@@ -376,7 +345,6 @@ const FormEditor = () => {
           {notification.message}
         </div>
       )}
-      <div className={styles.footer}/>
     </div>
   );
 };

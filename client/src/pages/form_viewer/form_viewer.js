@@ -4,7 +4,7 @@ import { Form } from "@bpmn-io/form-js-viewer";
 import Modal from "../../components/Modal";
 import styles from './form_viewer.module.css';
 import { useTranslation } from 'react-i18next';
-import { STYLE_MAP, STYLE_REFERENCE } from "../../components/Style_Form_components";
+import { STYLE_MAP, STYLE_REFERENCE } from "../../components/Form_components_styles";
 
 const FormViewer = () => {
   const { t } = useTranslation();
