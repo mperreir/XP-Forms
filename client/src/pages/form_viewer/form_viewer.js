@@ -4,6 +4,7 @@ import { Form } from "@bpmn-io/form-js-viewer";
 import Modal from "../../components/Modal";
 import styles from './form_viewer.module.css';
 import { useTranslation } from 'react-i18next';
+import { STYLE_MAP, STYLE_REFERENCE } from "../../components/Form_components_styles";
 
 const FormViewer = () => {
   const { t } = useTranslation();
@@ -44,8 +45,87 @@ const FormViewer = () => {
     }, duration);
   };
 
+  const applyComponentStyles = (component) => {
+    if (!component.styles || Object.keys(component.styles).length === 0) return;
 
+    let targetWrapper = null;
 
+    // Stratégie 1 : input/select avec id qui se termine par component.id
+    const input = containerRef.current?.querySelector(`[id$="-${component.id}"]`);
+    if (input) targetWrapper = input.closest(".fjs-form-field");
+
+    // Stratégie 2 : aria-labelledby ou aria-describedby
+    if (!targetWrapper) {
+      const ariaEl = containerRef.current?.querySelector(
+        `[aria-labelledby*="${component.id}"], [aria-describedby*="${component.id}"]`
+      );
+      if (ariaEl) targetWrapper = ariaEl.closest(".fjs-form-field");
+    }
+
+    // Stratégie 3 : par classe CSS selon le type
+    const TYPE_CLASS_MAP = {
+      "text":     "fjs-form-field-text",
+      "radio":    "fjs-form-field-radio",
+      "checkbox": "fjs-form-field-checklist",
+      "datetime": "fjs-form-field-datetime",
+    };
+
+    if (!targetWrapper && TYPE_CLASS_MAP[component.type]) {
+      const candidates = [...(containerRef.current?.querySelectorAll(`.${TYPE_CLASS_MAP[component.type]}`) || [])];
+
+      if (component.type === "text" && component.text) {
+        const cleanText = component.text
+          .replace(/#{1,6}\s/g, "")
+          .replace(/\*\*/g, "")
+          .replace(/\*/g, "")
+          .replace(/_/g, "")
+          .trim()
+          .slice(0, 30);
+        targetWrapper = candidates.find(el =>
+          el.textContent.trim().slice(0, 30).includes(cleanText)
+        ) || candidates[0];
+      } else if (component.label) {
+        targetWrapper = candidates.find(el => {
+          const labelEl = el.querySelector("label, legend");
+          return labelEl?.textContent.trim() === component.label.trim();
+        }) || null;
+      }
+    }
+
+    // ── Ici seulement, après avoir trouvé le wrapper ──
+    if (!targetWrapper) return;
+
+    const wrapperOnlyStyles = ["backgroundColor", "borderRadius", "padding", "margin", "border", "opacity", "width"];
+    const labelEls = [...targetWrapper.querySelectorAll(".fjs-form-field-label, label, legend")];
+    const textEls = component.type === "text"
+      ? [...targetWrapper.querySelectorAll("h1,h2,h3,h4,h5,h6,p,span,strong,em")]
+      : [];
+
+    Object.entries(STYLE_MAP).forEach(([styleKey, config]) => {
+      const styleValue = component.styles?.[styleKey];
+      if (styleValue === undefined || styleValue === false) return;
+      const cssValue = config.dynamic ? styleValue : config.value;
+
+      if (wrapperOnlyStyles.includes(styleKey)) {
+        targetWrapper.style.setProperty(config.property, cssValue, "important");
+      } else {
+        [...labelEls, ...textEls].forEach(el => {
+          el.style.setProperty(config.property, cssValue, "important");
+        });
+      }
+    });
+
+    Object.entries(component.styles || {}).forEach(([key, value]) => {
+      if (STYLE_MAP[key]) return;
+      if (value === false || value === undefined) {
+        targetWrapper.style.removeProperty(key);
+      } else {
+        targetWrapper.style.setProperty(key, value === true ? "1" : String(value), "important");
+      }
+    });
+
+    if (component.components) component.components.forEach(applyComponentStyles);
+  };
   // 👉 Vérification si @ est dans l'URL
   useEffect(() => {
     const handleParticipantId = async () => {
@@ -218,18 +298,6 @@ const validateCurrentPage = useCallback(() => {
       console.log("Résultat validation page (via form.validate)", currentPage, ":", isValid, "errorKeys:", errorKeys, "currentIds:", currentIds, "currentKeys:", currentKeys);
       return isValid;
     }
-  currentFlat.forEach((comp) => {
-    // only check components that have a key (skips layout containers)
-    if (!comp.key) return;
-
-    if (comp.validate?.required) {
-      const value = formData[comp.key];
-      if (isEmptyValue(value, comp)) {
-        console.debug('Champ requis non rempli sur la page', currentPage, '- key:', comp.key, 'value:', value, 'type:', typeof value, 'comp:', comp);
-        isValid = false;
-      }
-    }
-  });
 
     console.log("Résultat validation page (manual check)", currentPage, ":", isValid, "formData keys:", Object.keys(formData));
   return isValid;
@@ -309,59 +377,17 @@ const validateCurrentPage = useCallback(() => {
       };
 
       await form.importSchema(pageSchema, loadedData);
-      const currentComponents = effectivePages[effectiveCurrentPage - 1] || [];
 
-      const flatten = (components) => {
-        const flat = [];
-        components.forEach((c) => {
-          flat.push(c);
-          if (Array.isArray(c.components) && c.components.length > 0) {
-            flat.push(...flatten(c.components));
-          }
-        });
-        return flat;
+      let stylesApplied = false;
+
+      const applyOnce = () => {
+        if (stylesApplied) return;
+        stylesApplied = true;
+        pageSchema.components.forEach(applyComponentStyles);
       };
 
-      const currentFlat = flatten(currentComponents);
-
-      console.log("STYLING COMPONENTS:", currentFlat);
-
-      currentFlat.forEach((comp) => {
-        if (!comp.styles) return;
-
-        // On cible via le key (stable et présent dans le DOM)
-        if (comp.id) {
-          console.log("id", comp.id)
-          const input = containerRef.current.querySelector(
-            `[id$="${comp.id}"]`
-          );
-          console.log("Searching:", comp.id, input, comp.styles);
-          if (input) {
-            const wrapper = input.closest(".fjs-form-field");
-
-            if (wrapper) {
-              if (comp.styles.bold) wrapper.style.fontWeight = "bold";
-              if (comp.styles.italic) wrapper.style.fontStyle = "italic";
-              if (comp.styles.color) wrapper.style.color = comp.styles.color;
-              if (comp.styles.fontSize) wrapper.style.fontSize = comp.styles.fontSize;
-            }
-          }
-        }
-
-        // Cas spécial pour type text (pas de key)
-        if (comp.type === "text") {
-          const texts = containerRef.current.querySelectorAll(".fjs-text");
-          texts.forEach((t) => {
-            if (t.innerText.includes(comp.text.replace(/#/g, "").trim())) {
-              if (comp.styles.bold) t.style.fontWeight = "bold";
-              if (comp.styles.italic) t.style.fontStyle = "italic";
-              if (comp.styles.color) t.style.color = comp.styles.color;
-              if (comp.styles.fontSize) t.style.fontSize = comp.styles.fontSize;
-            }
-          });
-        }
-      });
-
+      // Tentative après rendu initial
+      applyOnce();
 
       dataInitialized.current = true;
 
@@ -478,7 +504,7 @@ const validateCurrentPage = useCallback(() => {
         <div className={styles.formDetails}>
           <div className={styles.adminInfoWrapper}>
             <p className={styles.info}><strong>{t("Form ID:")}</strong> {formDetails.id}</p>
-            <p className={styles.info}><strong>{t("Creation date:")}</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
+            <p className={styles.info}><strong>{t("Creation date :")}</strong> {new Date(formDetails.created_at).toLocaleString()}</p>
             <div
               className={styles.toggleExtraInfo}
               onClick={() => setShowExtraInfo(prev => !prev)}
