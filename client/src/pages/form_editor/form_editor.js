@@ -231,12 +231,30 @@ const FormEditor = () => {
     const schema = await formEditor.getSchema();
     const formId = id || schema.id || `Form_${Date.now()}`;
     if (id) schema.id = id;
+    const formTitle = title.trim() || "Formulaire sans titre";
+
+    try {
+      const response = await fetch('/api/forms');
+      const allForms = await response.json();
+      const duplicate = allForms.find(f => 
+        f.title.trim().toLowerCase() === formTitle.toLowerCase() && f.id !== formId
+      );
+      if (duplicate) {
+        showNotification(t("A form with this title already exists."), "error");
+        return;
+      }
+    } catch {
+      showNotification(t("Unable to contact server."), "error");
+      return;
+    }
+
     const formData = {
       id: formId,
-      title: title.trim() || "Formulaire sans titre",
+      title: formTitle,
       json_data: schema,
       group_id: groupId,
     };
+
     try {
       const response = await fetch(id ? `/api/forms/${formId}` : "/api/save-form", {
         method: id ? "PUT" : "POST",
@@ -288,7 +306,7 @@ const FormEditor = () => {
         <div
           ref={editorContainerRef}
           id="form-editor"
-          style={{ flex: 1, height: "500px", border: "1px solid #ccc", marginTop: "20px" }}
+          style={{ flex: 1, height: "500px", paddingLeft: "1em", border: "1px solid #ccc", marginTop: "20px" }}
         />
 
         {stylePanel.visible && (
