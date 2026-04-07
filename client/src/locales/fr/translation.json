@@ -38,13 +38,11 @@
   "Edit form": "Modifier le formulaire",
   "Create form": "Créer un formulaire",
   "Title:": "Titre :",
-  "Custom styles" : "Styles personnalisés",
   "Update": "Mettre à jour",
   "Form Viewer": "Visualiseur de formulaire",
   "Page:": "Page :",
   "Participant ID:": "ID participant :",
   "Form ID:": "ID du Formulaire :",
-  "Apply": "Appliquer",
   "Form information": "Informations du formulaire",
   "To integrate in a Tobii scenario use:": "Pour intégrer dans un scénario Tobii utilisez :",
   "Add @ as participant ID to use the default user ID.": "Ajoutez @ comme ID participant pour utiliser l'ID utilisateur par défaut.",
@@ -82,7 +80,7 @@
   "Form exported!": "Formulaire exporté !",
   "Default user ID saved!": "ID utilisateur par défaut enregistré !",
   "No groups": "Aucun groupe",
-  "Import a form": "Importer un formulaire",
+  "Import": "Importer",
   "Forms": "Formulaires",
   "Groups": "Groupes",
   "This action is irreversible.": "Cette action est irréversible.",
@@ -90,5 +88,4 @@
   "Unable to delete group": "Impossible de supprimer le groupe",
   "Group renamed to": "Groupe renommé en",
   "Rename": "Renommer"
-  
 }

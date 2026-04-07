@@ -599,7 +599,7 @@ const Accueil = () => {
                                 className={styles.importButton}
                                 onClick={() => handleImportButton()}
                             >
-                                {t('Import a form')}
+                                {t('Import')}
                             </button>
                             <button
                                 className={styles.createButton}
