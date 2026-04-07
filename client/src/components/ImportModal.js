@@ -5,7 +5,7 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
 
   const [highlight, setHighlight] = useState(false);
 
-  const handleImportForm = async (result) => {
+  const handleImportForm = async (result, fileName = "") => {
 
     const response = await fetch(`/api/import-form`, {
       method: 'POST',
@@ -15,7 +15,9 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
     const json = await response.json();
 
     if (!response.ok) {
-      throw new Error("formatError");
+      const error = new Error("formatError");
+      error.fileName = fileName;
+      throw error;
     }
     if (result.responses != {}) {
       try {
@@ -83,6 +85,8 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
 
       zipReader.onload = async () => {
         const zip = await JSZip.loadAsync(zipReader.result);
+        const formatErrorFileNames = [];
+        let successCount = 0;
 
         for (const fileName of Object.keys(zip.files)) {
           const file = zip.files[fileName];
@@ -91,13 +95,18 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
           try {
             const content = await file.async("text");
             const formJson = JSON.parse(content);
-            await handleImportForm(formJson);
+            await handleImportForm(formJson, fileName);
+            successCount++;
           } catch (err) {
-            console.error("Erreur fichier:", fileName, err);
+            if (err.message === "formatError") {
+              formatErrorFileNames.push(err.fileName || fileName);
+            } else {
+              console.error("Erreur fichier:", fileName, err);
+            }
           }
         }
 
-        resolve();
+        resolve({ formatErrorFileNames, successCount });
       };
 
       zipReader.readAsArrayBuffer(zipFolder);
@@ -175,11 +184,21 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
 
       const results = await Promise.allSettled(promises);
 
-      const hasSuccess = results.some(r => r.status === "fulfilled");
+      const formatErrorFiles = results
+        .filter(r => r.status === "fulfilled" && r.value?.formatErrorFileNames?.length > 0)
+        .flatMap(r => r.value.formatErrorFileNames);
+
+      const hasSuccess = results.some(r => r.status === "fulfilled" && r.value?.successCount > 0);
+
+      if (formatErrorFiles.length > 0) {
+        formatErrorFiles.forEach(fileName => {
+          if (onFormatError) onFormatError(fileName.split("/")[1]);
+        });
+      }
 
       if (hasSuccess) {
         document.querySelector("#importSuccess").click();
-      } else {
+      } else if (formatErrorFiles.length === 0) {
         document.querySelector("#error").click();
       }
 

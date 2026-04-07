@@ -375,8 +375,17 @@ button:disabled {
     padding: 0;
 }
 
-.notification {
+.notificationsContainer {
     position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 1000;
+}
+
+.notification {
     top: 20px;
     right: 20px;
     padding: 10px 20px;
