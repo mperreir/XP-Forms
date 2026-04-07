@@ -5,7 +5,7 @@
   width: 100%;
   max-width: 100%;
   margin: 20px auto;
-  padding: 20px;
+  padding: 1em;
   padding-top: 0;
   background-color: #f9f9f9;
   border-radius: 8px;
@@ -212,10 +212,6 @@ button:disabled:hover {
     background-color: #f44336;
 }
 
-.extraInfo {
-
-}
-
 .extraInfo p {
   font-size: 16px;
 }
@@ -225,7 +221,6 @@ button:disabled:hover {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   width: 100%;
-  padding: 0 5%;
 }
 
 .title {
@@ -309,4 +304,10 @@ button:disabled:hover {
 .adminDropdown p {
   margin: 6px 0;
   font-size: 14px;
+}
+
+.fjs-form-field input,
+.fjs-form-field select,
+.fjs-form-field textarea {
+  text-decoration: none !important;
 }

@@ -129,7 +129,7 @@ const FormResponsesList = () => {
   };
 
   return (
-    <div>
+    <div className={styles.container}>
       <div className={styles.toolbar}>
         <div className={styles.left}>
           <button className={styles.btnAccueil} onClick={handleGoHome}>
