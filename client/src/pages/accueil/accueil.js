@@ -13,7 +13,7 @@ const Accueil = () => {
     const [newUserId, setNewUserId] = useState(localStorage.getItem('defaultUserId') || ""); // Utiliser la valeur du localStorage ou une valeur vide
     const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null, confirm: '', close: '', onClose: null });
     const [importModal, setImportModal] = useState({ isOpen: false, onConfirm: null, onFormatError: null, onError: null });
-    const [notification, setNotification] = useState({ message: "", type: "" });
+    const [notifications, setNotifications] = useState([]);
     const navigate = useNavigate(); // Permet de gérer la navigation
     const [groups, setgroups] = useState([]);
     const [tableSelectedGroup, setTableSelectedGroup] = useState("");
@@ -87,9 +87,10 @@ const Accueil = () => {
     };
 
     const showNotification = (message, type = "success", duration = 3000) => {
-        setNotification({ message, type });
+        const id = Date.now() + Math.random();
+        setNotifications(prev => [...prev, { id, message, type }]);
         setTimeout(() => {
-            setNotification({ message: "", type: "" });
+            setNotifications(prev => prev.filter(n => n.id !== id));
         }, duration);
     };
 
@@ -480,10 +481,8 @@ const Accueil = () => {
             fetchForms();
             showNotification("Formulaires importés !", "success");
         },
-            () => {
-                //closeImportModal();
-                fetchForms();
-                showNotification("Contenu du fichier incompatible.", "error");
+            (fileName) => {
+                showNotification(`Contenu du fichier incompatible : ${fileName}`, "error");
             },
             () => {
                 //closeImportModal();
@@ -552,11 +551,13 @@ const Accueil = () => {
                 onFormatError={importModal.onFormatError}
                 onError={importModal.onError}
             />
-            {notification.message && (
-                <div className={`${styles.notification} ${styles[notification.type]}`}>
-                    {notification.message}
-                </div>
-            )}
+            <div className={styles.notificationsContainer}>
+                {notifications.map(n => (
+                    <div key={n.id} className={`${styles.notification} ${styles[n.type]}`}>
+                        {n.message}
+                    </div>
+                ))}
+            </div>
             {moveModal.open && (
                 <div className={styles.moveModalOverlay}>
                     <div className={styles.moveModalContent}>
@@ -1053,4 +1054,3 @@ const Accueil = () => {
 };
 
 export default Accueil;
-
