@@ -192,7 +192,7 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
 
       if (formatErrorFiles.length > 0) {
         formatErrorFiles.forEach(fileName => {
-          if (onFormatError) onFormatError(fileName);
+          if (onFormatError) onFormatError(fileName.split("/")[1]);
         });
       }
 
