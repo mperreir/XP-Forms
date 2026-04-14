@@ -289,7 +289,6 @@ const Accueil = () => {
                 const formData = await form.json();
                 const formTitle = formData.title;
                 const title = formTitle.replace(/[^a-z0-9_-]/gi, "_");
-                const link = document.createElement("a");
 
 
                 zip.file(title + '.csv', blob);
@@ -307,6 +306,37 @@ const Accueil = () => {
             });
 
     }
+
+    const handleDeleteFormDatas = async (formId) => {
+
+        const ids = formId ? (Array.isArray(formId) ? formId : [formId]) : selectedForms;
+
+        if (!ids || ids.length === 0) return;
+
+        showModal(
+            t("Delete"),
+            t("DeleteResponses") + ` ${ids.length} ` + t("form") + (ids.length > 1 ? 's' : '') + `? ` + t("This action is irreversible."),
+            async () => {
+                try {
+                    closeModal();
+                    for (const id of ids) {
+                        await fetch(`/api/forms/${id}/responses`, { method: "DELETE" });
+                    }
+                    showNotification("Les réponses sont supprimées", "success");
+
+                    await reloadForms();
+                    await reloadgroups();
+                    setSelectedForms([]);
+                } catch (error) {
+                    console.error(error);
+                    showNotification("Impossible de contacter le serveur", "error");
+                }
+            },
+            "Confirm",
+            "Close"
+        );
+
+    };
 
     // Pour mettre à jour ce que tape l'utilisateur dans l'input
     // Juste avant le return (
@@ -747,6 +777,9 @@ const Accueil = () => {
                                                         case "exportDatas":
                                                             handleExportFormDatas(id);
                                                             break;
+                                                        case "deleteDatas":
+                                                            handleDeleteFormDatas(id);
+                                                            break;
                                                         default:
                                                             break;
                                                     }
@@ -777,7 +810,8 @@ const Accueil = () => {
                                                         <option value="duplicate">{t('Duplicate')}</option>
                                                         <option value="delete">{t('Delete')}</option>
                                                         <option value="export">{t('Export')}</option>
-                                                        <option value="exportDatas">{"Exporter données csv"}</option>
+                                                        <option value="exportDatas">{t("ExportDatas")}</option>
+                                                        <option value="deleteDatas">{t("DeleteDatas")}</option>
                                                     </>
                                                 )}
                                             </select>
@@ -1099,7 +1133,8 @@ const Accueil = () => {
                     <div onClick={() => handleDuplicateForm(openMenuId)}>{t('Duplicate')}</div>
                     <div onClick={() => handleDeleteForm(openMenuId)}>{t('Delete')}</div>
                     <div onClick={() => handleExportForm(openMenuId)}>{t('Export')}</div>
-                    <div onClick={() => handleExportFormDatas(openMenuId)}>{'Exporter données csv'}</div>
+                    <div onClick={() => handleExportFormDatas(openMenuId)}>{t("ExportDatas")}</div>
+                    <div onClick={() => handleDeleteFormDatas(openMenuId)}>{t("DeleteDatas")}</div>
                 </div>
             )}
             {openGroupMenuId && (
