@@ -46,11 +46,13 @@ const FormViewer = () => {
   };
 
   const applyComponentStyles = (component) => {
+    if (component.components) component.components.forEach(applyComponentStyles);
     if (!component.styles || Object.keys(component.styles).length === 0) return;
+    console.log("Applying styles for component", component.id, component.styles);
 
     let targetWrapper = null;
 
-    // Stratégie 1 : input/select avec id qui se termine par component.id
+    // Stratégie 1 : input avec id qui se termine par component.id
     const input = containerRef.current?.querySelector(`[id$="-${component.id}"]`);
     if (input) targetWrapper = input.closest(".fjs-form-field");
 
@@ -69,18 +71,12 @@ const FormViewer = () => {
       "checkbox": "fjs-form-field-checklist",
       "datetime": "fjs-form-field-datetime",
     };
-
     if (!targetWrapper && TYPE_CLASS_MAP[component.type]) {
       const candidates = [...(containerRef.current?.querySelectorAll(`.${TYPE_CLASS_MAP[component.type]}`) || [])];
-
       if (component.type === "text" && component.text) {
         const cleanText = component.text
-          .replace(/#{1,6}\s/g, "")
-          .replace(/\*\*/g, "")
-          .replace(/\*/g, "")
-          .replace(/_/g, "")
-          .trim()
-          .slice(0, 30);
+          .replace(/#{1,6}\s/g, "").replace(/\*\*/g, "").replace(/\*/g, "").replace(/_/g, "")
+          .trim().slice(0, 30);
         targetWrapper = candidates.find(el =>
           el.textContent.trim().slice(0, 30).includes(cleanText)
         ) || candidates[0];
@@ -92,39 +88,27 @@ const FormViewer = () => {
       }
     }
 
-    // ── Ici seulement, après avoir trouvé le wrapper ──
     if (!targetWrapper) return;
 
-    const wrapperOnlyStyles = ["backgroundColor", "borderRadius", "padding", "margin", "border", "opacity", "width"];
-    const labelEls = [...targetWrapper.querySelectorAll(".fjs-form-field-label, label, legend")];
-    const textEls = component.type === "text"
-      ? [...targetWrapper.querySelectorAll("h1,h2,h3,h4,h5,h6,p,span,strong,em")]
-      : [];
+    // Reset avant réapplication
+    targetWrapper.removeAttribute("style");
+    targetWrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
+      .forEach(el => el.removeAttribute("style"));
 
-    Object.entries(STYLE_MAP).forEach(([styleKey, config]) => {
-      const styleValue = component.styles?.[styleKey];
-      if (styleValue === undefined || styleValue === false) return;
-      const cssValue = config.dynamic ? styleValue : config.value;
-
-      if (wrapperOnlyStyles.includes(styleKey)) {
-        targetWrapper.style.setProperty(config.property, cssValue, "important");
-      } else {
-        [...labelEls, ...textEls].forEach(el => {
-          el.style.setProperty(config.property, cssValue, "important");
-        });
-      }
+    // Applique le CSS directement sur le wrapper
+    Object.entries(component.styles).forEach(([property, value]) => {
+      if (!value) return;
+      targetWrapper.style.setProperty(property, value, "important");
     });
 
-    Object.entries(component.styles || {}).forEach(([key, value]) => {
-      if (STYLE_MAP[key]) return;
-      if (value === false || value === undefined) {
-        targetWrapper.style.removeProperty(key);
-      } else {
-        targetWrapper.style.setProperty(key, value === true ? "1" : String(value), "important");
-      }
+    // Empêche l'héritage sur les inputs
+    targetWrapper.querySelectorAll("input, select, textarea").forEach(el => {
+      el.style.setProperty("text-decoration", "none", "important");
+      el.style.setProperty("font-weight", "normal", "important");
+      el.style.setProperty("font-style", "normal", "important");
+      el.style.setProperty("color", "initial", "important");
+      el.style.setProperty("font-size", "initial", "important");
     });
-
-    if (component.components) component.components.forEach(applyComponentStyles);
   };
   // 👉 Vérification si @ est dans l'URL
   useEffect(() => {

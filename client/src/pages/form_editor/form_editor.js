@@ -5,21 +5,20 @@ import Modal from "../../components/Modal";
 import './form-js-editor.css';
 import styles from "./form_editor.module.css";
 import { useTranslation } from 'react-i18next';
-import { STYLE_MAP, STYLE_REFERENCE } from "../../components/Form_components_styles";
 
-// Utilitaires
+// ─────────────────────────────────────────────
+// UTILITAIRES
+// ─────────────────────────────────────────────
 
 const parseStyleText = (text = "") => {
   const result = {};
   text.split("\n").forEach((line) => {
     const colonIndex = line.indexOf(":");
     if (colonIndex === -1) return;
-    const key = line.slice(0, colonIndex).trim();
-    const val = line.slice(colonIndex + 1).trim();
-    if (!key || !val) return;
-    if (val === "true")  { result[key] = true;  return; }
-    if (val === "false") { result[key] = false; return; }
-    result[key] = val;
+    const property = line.slice(0, colonIndex).trim();
+    const value = line.slice(colonIndex + 1).trim();
+    if (!property || !value) return;
+    result[property] = value;
   });
   return result;
 };
@@ -39,46 +38,37 @@ const findComponentById = (components, targetId) => {
 };
 
 const applyComponentStyles = (component, container) => {
-  if (!component.styles || Object.keys(component.styles).length === 0) {
-    if (component.components) component.components.forEach(c => applyComponentStyles(c, container));
-    return;
-  }
+  if (component.components) component.components.forEach(c => applyComponentStyles(c, container));
+  if (!component.styles || Object.keys(component.styles).length === 0) return;
+  console.log("Applying styles for component", component.id, component.styles);
 
   const wrapper = container?.querySelector(`[data-id="${component.id}"]`);
-  if (!wrapper) {
-    if (component.components) component.components.forEach(c => applyComponentStyles(c, container));
-    return;
-  }
+  if (!wrapper) return;
 
-  const elementsToStyle = [wrapper];
-  if (component.type === "text") {
-    elementsToStyle.push(...wrapper.querySelectorAll("h1,h2,h3,h4,h5,h6,p,span,strong,em"));
-  }
-  elementsToStyle.push(...wrapper.querySelectorAll(".fjs-form-field-label"));
+  // Reset tous les styles inline avant réapplication
+  wrapper.removeAttribute("style");
+  wrapper.querySelectorAll(".fjs-form-field-label, h1,h2,h3,h4,h5,h6,p,span,strong,em")
+    .forEach(el => el.removeAttribute("style"));
 
-  Object.entries(STYLE_MAP).forEach(([styleKey, config]) => {
-    const styleValue = component.styles?.[styleKey];
-    elementsToStyle.forEach((el) => {
-      if (styleValue !== undefined && styleValue !== false) {
-        const cssValue = config.dynamic ? styleValue : config.value;
-        if (config.property === "color" && typeof cssValue !== "string") return;
-        el.style.setProperty(config.property, cssValue, "important");
-      } else {
-        el.style.removeProperty(config.property);
-      }
-    });
+  // Applique le CSS directement sur le wrapper
+  Object.entries(component.styles).forEach(([property, value]) => {
+    if (!value) return;
+    wrapper.style.setProperty(property, value, "important");
   });
 
-  Object.entries(component.styles || {}).forEach(([key, value]) => {
-    if (STYLE_MAP[key]) return;
-    if (value === false || value === undefined) wrapper.style.removeProperty(key);
-    else wrapper.style.setProperty(key, value === true ? "1" : String(value), "important");
+  // Empêche l'héritage sur les inputs
+  wrapper.querySelectorAll("input, select, textarea").forEach(el => {
+    el.style.setProperty("text-decoration", "none", "important");
+    el.style.setProperty("font-weight", "normal", "important");
+    el.style.setProperty("font-style", "normal", "important");
+    el.style.setProperty("color", "initial", "important");
+    el.style.setProperty("font-size", "initial", "important");
   });
-
-  if (component.components) component.components.forEach(c => applyComponentStyles(c, container));
 };
 
-// Composant principal
+// ─────────────────────────────────────────────
+// COMPOSANT PRINCIPAL
+// ─────────────────────────────────────────────
 
 const FormEditor = () => {
   const { t } = useTranslation();
@@ -95,10 +85,8 @@ const FormEditor = () => {
   const groupId = params.get("group_id");
   const [notification, setNotification] = useState({ message: "", type: "" });
   const currentElementRef = useRef(null);
-  const [showStyleHelp, setShowStyleHelp] = useState(false);
   const [stylePanel, setStylePanel] = useState({ visible: true, text: "" });
   const [componentSelected, setComponentSelected] = useState(false);
-
 
   const showModal = (title, message, onConfirm = null) =>
     setModal({ isOpen: true, title, message, onConfirm });
@@ -128,7 +116,6 @@ const FormEditor = () => {
     formEditorRef.current = editor;
 
     editorContainerRef.current.addEventListener("click", async (e) => {
-      setShowStyleHelp(false);
       const wrapper = e.target.closest("[data-id]");
       if (!wrapper) {
         currentElementRef.current = null;
@@ -146,7 +133,7 @@ const FormEditor = () => {
         text: serializeStyleToText(component?.styles || {}),
       });
     });
-    
+
     if (id) {
       fetch(`/api/forms/${id}`)
         .then((r) => r.json())
@@ -169,7 +156,7 @@ const FormEditor = () => {
       );
     });
 
-    // Bouton Copy
+    // ── Bouton Copy ──
     const findComponentLocation = (components, targetId, parentComponent = null) => {
       for (let i = 0; i < components.length; i++) {
         if (components[i].id === targetId) return { parent: parentComponent, index: i };
@@ -236,7 +223,7 @@ const FormEditor = () => {
     try {
       const response = await fetch('/api/forms');
       const allForms = await response.json();
-      const duplicate = allForms.find(f => 
+      const duplicate = allForms.find(f =>
         f.title.trim().toLowerCase() === formTitle.toLowerCase() && f.id !== formId
       );
       if (duplicate) {
@@ -248,13 +235,7 @@ const FormEditor = () => {
       return;
     }
 
-    const formData = {
-      id: formId,
-      title: formTitle,
-      json_data: schema,
-      group_id: groupId,
-    };
-
+    const formData = { id: formId, title: formTitle, json_data: schema, group_id: groupId };
     try {
       const response = await fetch(id ? `/api/forms/${formId}` : "/api/save-form", {
         method: id ? "PUT" : "POST",
@@ -306,36 +287,18 @@ const FormEditor = () => {
         <div
           ref={editorContainerRef}
           id="form-editor"
-          style={{ flex: 1, height: "500px", paddingLeft: "1em", border: "1px solid #ccc", marginTop: "20px" }}
+          style={{ flex: 1, height: "500px", paddingLeft: "1em", border: "1px solid #ccc", marginTop: "20px", overflow: "hidden" }}
         />
 
         {stylePanel.visible && (
           <div className={styles.stylePanel}>
             <div className={styles.stylePanelHeader}>
               <span>{t("Custom styles")}</span>
-              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                <button
-                  className={styles.styleHelpBtn}
-                  onClick={() => setShowStyleHelp(p => !p)}
-                  title="Voir les styles disponibles"
-                >?</button>
-                <button
-                  className={styles.stylePanelClose}
-                  onClick={() => setStylePanel({ visible: false, text: "" })}
-                >✕</button>
-              </div>
+              <button
+                className={styles.stylePanelClose}
+                onClick={() => setStylePanel({ visible: false, text: "" })}
+              >✕</button>
             </div>
-
-            {showStyleHelp && (
-              <div className={styles.stylePanelHint}>
-                {STYLE_REFERENCE.map((style) => (
-                  <div key={style.key} style={{ marginBottom: "6px" }}>
-                    <code>{style.key}: {style.example}</code>
-                    <div style={{ fontSize: "11px", color: "#666" }}>{style.desc}</div>
-                  </div>
-                ))}
-              </div>
-            )}
 
             <textarea
               className={styles.stylePanelTextarea}
@@ -344,10 +307,11 @@ const FormEditor = () => {
               rows={10}
               spellCheck={false}
               disabled={!componentSelected}
+              placeholder={"font-weight: bold\ncolor: #e74c3c\nfont-size: 18px\nbackground-color: #fdf6e3\nborder-radius: 8px"}
             />
 
-            <button 
-              className={styles.stylePanelApply} 
+            <button
+              className={styles.stylePanelApply}
               onClick={handleStylePanelApply}
               disabled={!componentSelected}
             >
