@@ -285,7 +285,6 @@ const Accueil = () => {
                     .join("\n");
 
                 const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-                const url = URL.createObjectURL(blob);
                 const form = await fetch(`/api/forms/${id}`);
                 const formData = await form.json();
                 const formTitle = formData.title;
