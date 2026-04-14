@@ -213,7 +213,7 @@ const Accueil = () => {
             let jsonExport = {};
 
             for (let i = 0; i < ids.length; i++) {
-                let id = ids[i]
+                let id = ids[i];
                 try {
                     const response = await fetch(`/api/forms/${id}/export/${resp}`);
 
@@ -238,6 +238,76 @@ const Accueil = () => {
 
         showModal(t('Export'), t('Do you also want to export the responses?'), () => { exportForm(ids, true) }, 'Yes', 'No', () => { exportForm(ids) });
     };
+
+    const handleExportFormDatas = async (formId) => {
+        let JSZip = require("jszip");
+        const ids = formId ? (Array.isArray(formId) ? formId : [formId]) : selectedForms;
+
+        if (!ids || ids.length === 0) return;
+
+        let zip = new JSZip();
+
+        for (let i = 0; i < ids.length; i++) {
+
+            let id = ids[i];
+
+            try {
+
+                const response = await fetch(`/api/forms/${id}/responses`);
+                if (!response.ok) throw new Error(t("Error loading responses"));
+
+                const data = await response.json();
+                const extractedQuestions = [];
+
+                data.forEach((userResponse) => {
+                    userResponse.responses.forEach((resp) => {
+                        if (!extractedQuestions.includes(resp.question)) {
+                            extractedQuestions.push(resp.question);
+                        }
+                    });
+                });
+
+                const questions = extractedQuestions;
+                const responses = data;
+
+                const headers = [t("User ID"), ...questions];
+                const rows = responses.map((userResponse) => {
+                    const row = [userResponse.user_id];
+                    questions.forEach((question) => {
+                        const answerObj = userResponse.responses.find((resp) => resp.question === question);
+                        row.push(answerObj ? answerObj.answer || t("N/A") : t("N/A"));
+                    });
+                    return row;
+                });
+
+                const csvContent = [headers, ...rows]
+                    .map((row) => row.map((cell) => `"${cell}"`).join(","))
+                    .join("\n");
+
+                const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const form = await fetch(`/api/forms/${id}`);
+                const formData = await form.json();
+                const formTitle = formData.title;
+                const title = formTitle.replace(/[^a-z0-9_-]/gi, "_");
+                const link = document.createElement("a");
+
+
+                zip.file(title + '.csv', blob);
+
+            }
+            catch {
+                showNotification('Impossible de contacter le serveur', 'error');
+            }
+
+        }
+
+        zip.generateAsync({ type: "blob" })
+            .then(function (content) {
+                saveAs(content, "Reponses_formulaires.zip");
+            });
+
+    }
 
     // Pour mettre à jour ce que tape l'utilisateur dans l'input
     // Juste avant le return (
@@ -519,12 +589,12 @@ const Accueil = () => {
                         className={styles.langSelect}
                         value={i18n.language}
                         onChange={e => { i18n.changeLanguage(e.target.value); localStorage.setItem('lang', e.target.value); }}
-                        >
+                    >
                         <option value="fr">Français</option>
                         <option value="en">English</option>
                     </select>
                 </div>
-                </div>
+            </div>
             <Modal
                 isOpen={modal.isOpen}
                 title={modal.title}
@@ -675,6 +745,9 @@ const Accueil = () => {
                                                         case "export":
                                                             handleExportForm(id);
                                                             break;
+                                                        case "exportDatas":
+                                                            handleExportFormDatas(id);
+                                                            break;
                                                         default:
                                                             break;
                                                     }
@@ -705,6 +778,7 @@ const Accueil = () => {
                                                         <option value="duplicate">{t('Duplicate')}</option>
                                                         <option value="delete">{t('Delete')}</option>
                                                         <option value="export">{t('Export')}</option>
+                                                        <option value="exportDatas">{"Exporter données csv"}</option>
                                                     </>
                                                 )}
                                             </select>
@@ -726,7 +800,7 @@ const Accueil = () => {
                                         <th className={styles.th}>{t('Group')}</th>
                                         <th className={styles.th}>{t('Creation date')}</th>
                                         <th className={styles.th}>{t('Last update')}</th>
-                                        <th className={styles.th}>{t('Number of forms')}</th>
+                                        <th className={styles.th}>{t('Number of responses')}</th>
                                         <th className={styles.th}>{t('Actions')}</th>
                                     </tr>
                                 </thead>
@@ -1026,6 +1100,7 @@ const Accueil = () => {
                     <div onClick={() => handleDuplicateForm(openMenuId)}>{t('Duplicate')}</div>
                     <div onClick={() => handleDeleteForm(openMenuId)}>{t('Delete')}</div>
                     <div onClick={() => handleExportForm(openMenuId)}>{t('Export')}</div>
+                    <div onClick={() => handleExportFormDatas(openMenuId)}>{'Exporter données csv'}</div>
                 </div>
             )}
             {openGroupMenuId && (
