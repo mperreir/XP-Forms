@@ -130,7 +130,6 @@ const exportForm = async (req, res) => {
 const importForm = async (req, res) => {
   const { title, json_data } = req.body;
 
-  // Générer un ID de formulaire unique
   const generateUniqueFormId = () => {
     return new Promise((resolve, reject) => {
       const tryGenerate = () => {
@@ -148,10 +147,24 @@ const importForm = async (req, res) => {
     });
   };
 
+  const generateUniqueTitle = async (baseTitle) => {
+    const allForms = await formService.getAllForms();
+    const existingTitles = allForms.map(f => f.title);
+
+    if (!existingTitles.includes(baseTitle)) return baseTitle;
+
+    let counter = 1;
+    while (existingTitles.includes(`${baseTitle} (${counter})`)) {
+      counter++;
+    }
+    return `${baseTitle} (${counter})`;
+  };
+
   try {
+    const uniqueTitle = await generateUniqueTitle(title);
     const newFormID = await generateUniqueFormId();
     json_data.id = newFormID;
-    const message = await formService.saveForm(newFormID, title, json_data);
+    const message = await formService.saveForm(newFormID, uniqueTitle, json_data);
     res.status(201).json({ message, newFormID });
   } catch (error) {
     res.status(500).json({ error: error.message });
