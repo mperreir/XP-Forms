@@ -218,18 +218,18 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
           onDragLeave={onDragLeave}
           onDrop={onDrop}
         >
-          Glissez un fichier/dossier ici.
+          Glissez un fichier zip ici.
         </div>
         <div>
           <label className={styles.fileLabel} id="fileLabel"
             onClick={onClickLabel}
-          >Choisissez un dossier à importer</label>
+          >Choisissez un fichier zip à importer</label>
           <input className={styles.fileSelector} type='file' accept=".zip" id="fileSelector"
             onChange={updateInput}
           ></input>
         </div>
         <div className={styles.preview} id="filePreview">
-          <p>Pas de dossier selectionné</p>
+          <p>Pas de fichier selectionné</p>
         </div>
         {onConfirm && (
           <div className={styles.closeImportModal}
