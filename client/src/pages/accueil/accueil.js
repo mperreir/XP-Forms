@@ -1133,8 +1133,36 @@ const Accueil = () => {
                     <div onClick={() => handleDuplicateForm(openMenuId)}>{t('Duplicate')}</div>
                     <div onClick={() => handleDeleteForm(openMenuId)}>{t('Delete')}</div>
                     <div onClick={() => handleExportForm(openMenuId)}>{t('Export')}</div>
-                    <div onClick={() => handleExportFormDatas(openMenuId)}>{t("ExportDatas")}</div>
-                    <div onClick={() => handleDeleteFormDatas(openMenuId)}>{t("DeleteDatas")}</div>
+                    {(() => {
+                        const form = forms.find(f => f.id === openMenuId);
+                        const disabled = form?.responseCount === 0;
+
+                        return (
+                            <div
+                                className={disabled ? styles.disabledAction : ""}
+                                onClick={() => {
+                                    if (!disabled) handleExportFormDatas(openMenuId);
+                                }}
+                            >
+                                {t('ExportDatas')}
+                            </div>
+                        );
+                    })()}
+                    {(() => {
+                        const form = forms.find(f => f.id === openMenuId);
+                        const disabled = form?.responseCount === 0;
+
+                        return (
+                            <div
+                                className={disabled ? styles.disabledAction : ""}
+                                onClick={() => {
+                                    if (!disabled) handleDeleteFormDatas(openMenuId);
+                                }}
+                            >
+                                {t('DeleteDatas')}
+                            </div>
+                        );
+                    })()}
                 </div>
             )}
             {openGroupMenuId && (
