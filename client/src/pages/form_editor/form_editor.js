@@ -40,20 +40,24 @@ const findComponentById = (components, targetId) => {
 const applyComponentStyles = (component, container) => {
   if (component.components) component.components.forEach(c => applyComponentStyles(c, container));
   if (!component.styles || Object.keys(component.styles).length === 0) return;
-  console.log("Applying styles for component", component.id, component.styles);
 
   const wrapper = container?.querySelector(`[data-id="${component.id}"]`);
   if (!wrapper) return;
 
-  // Reset tous les styles inline avant réapplication
+  // Reset
   wrapper.removeAttribute("style");
-  wrapper.querySelectorAll(".fjs-form-field-label, h1,h2,h3,h4,h5,h6,p,span,strong,em")
+  wrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
     .forEach(el => el.removeAttribute("style"));
 
-  // Applique le CSS directement sur le wrapper
+  const typographyProps = ["color", "font-size", "font-weight", "font-style", "text-decoration", "text-align", "font-family", "line-height", "letter-spacing"];
+
   Object.entries(component.styles).forEach(([property, value]) => {
     if (!value) return;
     wrapper.style.setProperty(property, value, "important");
+    if (typographyProps.includes(property)) {
+      wrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
+        .forEach(el => el.style.setProperty(property, value, "important"));
+    }
   });
 
   // Empêche l'héritage sur les inputs

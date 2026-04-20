@@ -48,15 +48,14 @@ const FormViewer = () => {
   const applyComponentStyles = (component) => {
     if (component.components) component.components.forEach(applyComponentStyles);
     if (!component.styles || Object.keys(component.styles).length === 0) return;
-    console.log("Applying styles for component", component.id, component.styles);
 
     let targetWrapper = null;
 
-    // Stratégie 1 : input avec id qui se termine par component.id
+    // Stratégie 1 : fonctionne pour textfield, number, select, textarea...
     const input = containerRef.current?.querySelector(`[id$="-${component.id}"]`);
     if (input) targetWrapper = input.closest(".fjs-form-field");
 
-    // Stratégie 2 : aria-labelledby ou aria-describedby
+    // Stratégie 2 : fonctionne pour datetime, radio, checkbox
     if (!targetWrapper) {
       const ariaEl = containerRef.current?.querySelector(
         `[aria-labelledby*="${component.id}"], [aria-describedby*="${component.id}"]`
@@ -64,41 +63,35 @@ const FormViewer = () => {
       if (ariaEl) targetWrapper = ariaEl.closest(".fjs-form-field");
     }
 
-    // Stratégie 3 : par classe CSS selon le type
-    const TYPE_CLASS_MAP = {
-      "text":     "fjs-form-field-text",
-      "radio":    "fjs-form-field-radio",
-      "checkbox": "fjs-form-field-checklist",
-      "datetime": "fjs-form-field-datetime",
-    };
-    if (!targetWrapper && TYPE_CLASS_MAP[component.type]) {
-      const candidates = [...(containerRef.current?.querySelectorAll(`.${TYPE_CLASS_MAP[component.type]}`) || [])];
-      if (component.type === "text" && component.text) {
-        const cleanText = component.text
-          .replace(/#{1,6}\s/g, "").replace(/\*\*/g, "").replace(/\*/g, "").replace(/_/g, "")
-          .trim().slice(0, 30);
-        targetWrapper = candidates.find(el =>
-          el.textContent.trim().slice(0, 30).includes(cleanText)
-        ) || candidates[0];
-      } else if (component.label) {
-        targetWrapper = candidates.find(el => {
-          const labelEl = el.querySelector("label, legend");
-          return labelEl?.textContent.trim() === component.label.trim();
-        }) || null;
-      }
+    // Stratégie 3 : fonctionne pour text (markdown)
+    if (!targetWrapper && component.type === "text" && component.text) {
+      const cleanText = component.text
+        .replace(/#{1,6}\s/g, "").replace(/\*\*/g, "").replace(/\*/g, "").replace(/_/g, "")
+        .trim().slice(0, 30);
+      const candidates = [...(containerRef.current?.querySelectorAll(".fjs-form-field-text") || [])];
+      targetWrapper = candidates.find(el =>
+        el.textContent.trim().slice(0, 30).includes(cleanText)
+      ) || candidates[0];
     }
 
     if (!targetWrapper) return;
 
-    // Reset avant réapplication
+    // Reset
     targetWrapper.removeAttribute("style");
     targetWrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
       .forEach(el => el.removeAttribute("style"));
 
-    // Applique le CSS directement sur le wrapper
+    const typographyProps = ["color", "font-size", "font-weight", "font-style", "text-decoration", "text-align", "font-family", "line-height", "letter-spacing"];
+
     Object.entries(component.styles).forEach(([property, value]) => {
       if (!value) return;
+      // Toujours sur le wrapper
       targetWrapper.style.setProperty(property, value, "important");
+      // En plus sur les labels/textes pour les props typo (spécificité CSS trop haute sinon)
+      if (typographyProps.includes(property)) {
+        targetWrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
+          .forEach(el => el.style.setProperty(property, value, "important"));
+      }
     });
 
     // Empêche l'héritage sur les inputs
