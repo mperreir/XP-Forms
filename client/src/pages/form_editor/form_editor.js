@@ -44,30 +44,62 @@ const applyComponentStyles = (component, container) => {
   const wrapper = container?.querySelector(`[data-id="${component.id}"]`);
   if (!wrapper) return;
 
-  // Reset
-  wrapper.removeAttribute("style");
-  wrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
-    .forEach(el => el.removeAttribute("style"));
+  const isMultiTarget = ["radio", "checklist"].includes(component.type);
 
-  const typographyProps = ["color", "font-size", "font-weight", "font-style", "text-decoration", "text-align", "font-family", "line-height", "letter-spacing"];
+  if (isMultiTarget && (component.styles.label || component.styles.options)) {
+    // ── Titre : le label direct du wrapper, PAS dans fjs-inline-label ──
+    const titleLabel = wrapper.querySelector(".fjs-form-field-label:not(.fjs-inline-label .fjs-form-field-label)");
+    // ── Options : les labels à l'intérieur de fjs-inline-label ──
+    const optionLabels = [...wrapper.querySelectorAll(".fjs-inline-label .fjs-form-field-label")];
 
-  Object.entries(component.styles).forEach(([property, value]) => {
-    if (!value) return;
-    wrapper.style.setProperty(property, value, "important");
-    if (typographyProps.includes(property)) {
-      wrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
-        .forEach(el => el.style.setProperty(property, value, "important"));
+    const typographyProps = ["color", "font-size", "font-weight", "font-style", "text-decoration", "text-align", "font-family", "line-height", "letter-spacing"];
+
+    // Reset
+    if (titleLabel) titleLabel.removeAttribute("style");
+    optionLabels.forEach(el => el.removeAttribute("style"));
+    wrapper.removeAttribute("style");
+
+    // Styles du titre
+    if (component.styles.label && titleLabel) {
+      Object.entries(component.styles.label).forEach(([property, value]) => {
+        if (!value) return;
+        titleLabel.style.setProperty(property, value, "important");
+      });
     }
-  });
 
-  // Empêche l'héritage sur les inputs
-  wrapper.querySelectorAll("input, select, textarea").forEach(el => {
-    el.style.setProperty("text-decoration", "none", "important");
-    el.style.setProperty("font-weight", "normal", "important");
-    el.style.setProperty("font-style", "normal", "important");
-    el.style.setProperty("color", "initial", "important");
-    el.style.setProperty("font-size", "initial", "important");
-  });
+    // Styles des options
+    if (component.styles.options) {
+      Object.entries(component.styles.options).forEach(([property, value]) => {
+        if (!value) return;
+        optionLabels.forEach(el => el.style.setProperty(property, value, "important"));
+      });
+    }
+
+  } else {
+    // ── Comportement normal ──
+    wrapper.removeAttribute("style");
+    wrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
+      .forEach(el => el.removeAttribute("style"));
+
+    const typographyProps = ["color", "font-size", "font-weight", "font-style", "text-decoration", "text-align", "font-family", "line-height", "letter-spacing"];
+
+    Object.entries(component.styles).forEach(([property, value]) => {
+      if (!value) return;
+      wrapper.style.setProperty(property, value, "important");
+      if (typographyProps.includes(property)) {
+        wrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
+          .forEach(el => el.style.setProperty(property, value, "important"));
+      }
+    });
+
+    wrapper.querySelectorAll("input, select, textarea").forEach(el => {
+      el.style.setProperty("text-decoration", "none", "important");
+      el.style.setProperty("font-weight", "normal", "important");
+      el.style.setProperty("font-style", "normal", "important");
+      el.style.setProperty("color", "initial", "important");
+      el.style.setProperty("font-size", "initial", "important");
+    });
+  }
 };
 
 // ─────────────────────────────────────────────
@@ -89,8 +121,9 @@ const FormEditor = () => {
   const groupId = params.get("group_id");
   const [notification, setNotification] = useState({ message: "", type: "" });
   const currentElementRef = useRef(null);
-  const [stylePanel, setStylePanel] = useState({ visible: true, text: "" });
+  const [stylePanel, setStylePanel] = useState({ visible: true, text: "", labelText: "", optionsText: "", componentType: null });
   const [componentSelected, setComponentSelected] = useState(false);
+  
 
   const showModal = (title, message, onConfirm = null) =>
     setModal({ isOpen: true, title, message, onConfirm });
@@ -107,10 +140,15 @@ const FormEditor = () => {
     const schema = await editor.getSchema();
     const component = findComponentById(schema.components, currentElementRef.current.id);
     if (!component) return;
-    component.styles = parseStyleText(stylePanel.text || "");
+
+    const isMultiTarget = ["radio", "checklist"].includes(component.type);
+    component.styles = isMultiTarget
+      ? { label: parseStyleText(stylePanel.labelText || ""), options: parseStyleText(stylePanel.optionsText || "") }
+      : parseStyleText(stylePanel.text || "");
+
     await editor.importSchema(schema);
     setIsModified(true);
-  }, [stylePanel.text]);
+  }, [stylePanel]);
 
   useEffect(() => {
     if (!editorContainerRef.current) return;
@@ -132,9 +170,13 @@ const FormEditor = () => {
       setComponentSelected(true);
       const schema = await editor.getSchema();
       const component = findComponentById(schema.components, componentId);
+      const isMultiTarget = ["radio", "checklist"].includes(component?.type);
       setStylePanel({
         visible: true,
-        text: serializeStyleToText(component?.styles || {}),
+        componentType: component?.type || null,
+        text: isMultiTarget ? "" : serializeStyleToText(component?.styles || {}),
+        labelText: isMultiTarget ? serializeStyleToText(component?.styles?.label || {}) : "",
+        optionsText: isMultiTarget ? serializeStyleToText(component?.styles?.options || {}) : "",
       });
     });
 
@@ -298,27 +340,42 @@ const FormEditor = () => {
           <div className={styles.stylePanel}>
             <div className={styles.stylePanelHeader}>
               <span>{t("Custom styles")}</span>
-              <button
-                className={styles.stylePanelClose}
-                onClick={() => setStylePanel({ visible: false, text: "" })}
-              >✕</button>
             </div>
 
-            <textarea
-              className={styles.stylePanelTextarea}
-              value={stylePanel.text}
-              onChange={(e) => setStylePanel(p => ({ ...p, text: e.target.value }))}
-              rows={10}
-              spellCheck={false}
-              disabled={!componentSelected}
-              placeholder={"font-weight: bold\ncolor: #e74c3c\nfont-size: 18px\nbackground-color: #fdf6e3\nborder-radius: 8px"}
-            />
+            {["radio", "checklist"].includes(stylePanel.componentType) ? (
+              <>
+                <div className={styles.stylePanelSection}>
+                  <span className={styles.stylePanelSectionLabel}>🏷️ {t("Title")}</span>
+                  <textarea
+                    className={styles.stylePanelTextarea}
+                    value={stylePanel.labelText}
+                    onChange={(e) => setStylePanel(p => ({ ...p, labelText: e.target.value }))}
+                    rows={5} spellCheck={false} disabled={!componentSelected}
+                    placeholder={"color: red\nfont-size: 18px"}
+                  />
+                </div>
+                <div className={styles.stylePanelSection}>
+                  <span className={styles.stylePanelSectionLabel}>☑️ {t("Options")}</span>
+                  <textarea
+                    className={styles.stylePanelTextarea}
+                    value={stylePanel.optionsText}
+                    onChange={(e) => setStylePanel(p => ({ ...p, optionsText: e.target.value }))}
+                    rows={5} spellCheck={false} disabled={!componentSelected}
+                    placeholder={"color: blue\nfont-size: 14px"}
+                  />
+                </div>
+              </>
+            ) : (
+              <textarea
+                className={styles.stylePanelTextarea}
+                value={stylePanel.text}
+                onChange={(e) => setStylePanel(p => ({ ...p, text: e.target.value }))}
+                rows={10} spellCheck={false} disabled={!componentSelected}
+                placeholder={"font-weight: bold\ncolor: #e74c3c\nfont-size: 18px"}
+              />
+            )}
 
-            <button
-              className={styles.stylePanelApply}
-              onClick={handleStylePanelApply}
-              disabled={!componentSelected}
-            >
+            <button className={styles.stylePanelApply} onClick={handleStylePanelApply} disabled={!componentSelected}>
               {t("Apply")}
             </button>
           </div>

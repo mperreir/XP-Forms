@@ -132,7 +132,6 @@
 /* Style Panel */
 .stylePanel {
   width: 240px;
-  margin-top: 20px;
   border: 1px solid #ddd;
   border-radius: 6px;
   background: #fafafa;
@@ -142,6 +141,7 @@
   gap: 8px;
   flex-shrink: 0;
   margin: 0 1em 0 0;
+  margin-top: 20px;
 }
 
 .stylePanelHeader {
