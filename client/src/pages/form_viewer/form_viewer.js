@@ -51,11 +51,9 @@ const FormViewer = () => {
 
     let targetWrapper = null;
 
-    // Stratégie 1 : textfield, number, select, textarea...
     const input = containerRef.current?.querySelector(`[id$="-${component.id}"]`);
     if (input) targetWrapper = input.closest(".fjs-form-field");
 
-    // Stratégie 2 : datetime, radio, checkbox
     if (!targetWrapper) {
       const ariaEl = containerRef.current?.querySelector(
         `[aria-labelledby*="${component.id}"], [aria-describedby*="${component.id}"]`
@@ -63,7 +61,6 @@ const FormViewer = () => {
       if (ariaEl) targetWrapper = ariaEl.closest(".fjs-form-field");
     }
 
-    // Stratégie 3 : text (markdown)
     if (!targetWrapper && component.type === "text" && component.text) {
       const cleanText = component.text
         .replace(/#{1,6}\s/g, "").replace(/\*\*/g, "").replace(/\*/g, "").replace(/_/g, "")
@@ -76,57 +73,52 @@ const FormViewer = () => {
 
     if (!targetWrapper) return;
 
-    const isMultiTarget = ["radio", "checklist"].includes(component.type);
+    // Reset
+    targetWrapper.removeAttribute("style");
+    targetWrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
+      .forEach(el => el.removeAttribute("style"));
 
-    if (isMultiTarget && component.styles.label !== undefined || isMultiTarget && component.styles.options !== undefined) {
-      // Reset
-      targetWrapper.removeAttribute("style");
-      targetWrapper.querySelectorAll(".fjs-form-field-label, label").forEach(el => el.removeAttribute("style"));
+    const typographyProps = ["color", "font-size", "font-weight", "font-style", "text-decoration", "text-align", "font-family", "line-height", "letter-spacing"];
 
-      // Titre : label qui n'est PAS dans fjs-inline-label
+    // Styles du wrapper
+    Object.entries(component.styles).forEach(([property, value]) => {
+      if (property === "label" || property === "option") return;
+      if (!value) return;
+      targetWrapper.style.setProperty(property, value, "important");
+      if (typographyProps.includes(property)) {
+        targetWrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
+          .forEach(el => el.style.setProperty(property, value, "important"));
+      }
+    });
+
+    // Styles label.
+    if (component.styles.label) {
       const titleLabel = targetWrapper.querySelector(".fjs-form-field-label:not(.fjs-inline-label .fjs-form-field-label)");
-      // Options : labels dans fjs-inline-label
-      const optionLabels = [...targetWrapper.querySelectorAll(".fjs-inline-label .fjs-form-field-label")];
-
-      if (component.styles.label && titleLabel) {
+      if (titleLabel) {
         Object.entries(component.styles.label).forEach(([property, value]) => {
           if (!value) return;
           titleLabel.style.setProperty(property, value, "important");
         });
       }
+    }
 
-      if (component.styles.options) {
-        Object.entries(component.styles.options).forEach(([property, value]) => {
-          if (!value) return;
-          optionLabels.forEach(el => el.style.setProperty(property, value, "important"));
-        });
-      }
-
-    } else {
-      // Comportement normal pour tous les autres composants
-      targetWrapper.removeAttribute("style");
-      targetWrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
-        .forEach(el => el.removeAttribute("style"));
-
-      const typographyProps = ["color", "font-size", "font-weight", "font-style", "text-decoration", "text-align", "font-family", "line-height", "letter-spacing"];
-
-      Object.entries(component.styles).forEach(([property, value]) => {
+    // Styles option.
+    if (component.styles.option) {
+      const optionLabels = [...targetWrapper.querySelectorAll(".fjs-inline-label .fjs-form-field-label")];
+      Object.entries(component.styles.option).forEach(([property, value]) => {
         if (!value) return;
-        targetWrapper.style.setProperty(property, value, "important");
-        if (typographyProps.includes(property)) {
-          targetWrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
-            .forEach(el => el.style.setProperty(property, value, "important"));
-        }
-      });
-
-      targetWrapper.querySelectorAll("input, select, textarea").forEach(el => {
-        el.style.setProperty("text-decoration", "none", "important");
-        el.style.setProperty("font-weight", "normal", "important");
-        el.style.setProperty("font-style", "normal", "important");
-        el.style.setProperty("color", "initial", "important");
-        el.style.setProperty("font-size", "initial", "important");
+        optionLabels.forEach(el => el.style.setProperty(property, value, "important"));
       });
     }
+
+    // Empêche l'héritage sur les inputs
+    targetWrapper.querySelectorAll("input, select, textarea").forEach(el => {
+      el.style.setProperty("text-decoration", "none", "important");
+      el.style.setProperty("font-weight", "normal", "important");
+      el.style.setProperty("font-style", "normal", "important");
+      el.style.setProperty("color", "initial", "important");
+      el.style.setProperty("font-size", "initial", "important");
+    });
   };
   // 👉 Vérification si @ est dans l'URL
   useEffect(() => {

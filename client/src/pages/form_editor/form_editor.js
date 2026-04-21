@@ -18,13 +18,35 @@ const parseStyleText = (text = "") => {
     const property = line.slice(0, colonIndex).trim();
     const value = line.slice(colonIndex + 1).trim();
     if (!property || !value) return;
-    result[property] = value;
+
+    if (property.startsWith("label.")) {
+      const cssProp = property.slice("label.".length);
+      if (!result.label) result.label = {};
+      result.label[cssProp] = value;
+    } else if (property.startsWith("option.")) {
+      const cssProp = property.slice("option.".length);
+      if (!result.option) result.option = {};
+      result.option[cssProp] = value;
+    } else {
+      result[property] = value;
+    }
   });
   return result;
 };
 
-const serializeStyleToText = (stylesObj = {}) =>
-  Object.entries(stylesObj).map(([k, v]) => `${k}: ${v}`).join("\n");
+const serializeStyleToText = (stylesObj = {}) => {
+  const lines = [];
+  Object.entries(stylesObj).forEach(([k, v]) => {
+    if (k === "label" && typeof v === "object") {
+      Object.entries(v).forEach(([prop, val]) => lines.push(`label.${prop}: ${val}`));
+    } else if (k === "option" && typeof v === "object") {
+      Object.entries(v).forEach(([prop, val]) => lines.push(`option.${prop}: ${val}`));
+    } else {
+      lines.push(`${k}: ${v}`);
+    }
+  });
+  return lines.join("\n");
+};
 
 const findComponentById = (components, targetId) => {
   for (const component of components) {
@@ -44,62 +66,52 @@ const applyComponentStyles = (component, container) => {
   const wrapper = container?.querySelector(`[data-id="${component.id}"]`);
   if (!wrapper) return;
 
-  const isMultiTarget = ["radio", "checklist"].includes(component.type);
+  // Reset
+  wrapper.removeAttribute("style");
+  wrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
+    .forEach(el => el.removeAttribute("style"));
 
-  if (isMultiTarget && (component.styles.label || component.styles.options)) {
-    // ── Titre : le label direct du wrapper, PAS dans fjs-inline-label ──
+  const typographyProps = ["color", "font-size", "font-weight", "font-style", "text-decoration", "text-align", "font-family", "line-height", "letter-spacing"];
+
+  // Styles du wrapper (tout ce qui n'est pas label. ou option.)
+  Object.entries(component.styles).forEach(([property, value]) => {
+    if (property === "label" || property === "option") return;
+    if (!value) return;
+    wrapper.style.setProperty(property, value, "important");
+    if (typographyProps.includes(property)) {
+      wrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
+        .forEach(el => el.style.setProperty(property, value, "important"));
+    }
+  });
+
+  // Styles label.
+  if (component.styles.label) {
     const titleLabel = wrapper.querySelector(".fjs-form-field-label:not(.fjs-inline-label .fjs-form-field-label)");
-    // ── Options : les labels à l'intérieur de fjs-inline-label ──
-    const optionLabels = [...wrapper.querySelectorAll(".fjs-inline-label .fjs-form-field-label")];
-
-    const typographyProps = ["color", "font-size", "font-weight", "font-style", "text-decoration", "text-align", "font-family", "line-height", "letter-spacing"];
-
-    // Reset
-    if (titleLabel) titleLabel.removeAttribute("style");
-    optionLabels.forEach(el => el.removeAttribute("style"));
-    wrapper.removeAttribute("style");
-
-    // Styles du titre
-    if (component.styles.label && titleLabel) {
+    if (titleLabel) {
       Object.entries(component.styles.label).forEach(([property, value]) => {
         if (!value) return;
         titleLabel.style.setProperty(property, value, "important");
       });
     }
+  }
 
-    // Styles des options
-    if (component.styles.options) {
-      Object.entries(component.styles.options).forEach(([property, value]) => {
-        if (!value) return;
-        optionLabels.forEach(el => el.style.setProperty(property, value, "important"));
-      });
-    }
-
-  } else {
-    // ── Comportement normal ──
-    wrapper.removeAttribute("style");
-    wrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
-      .forEach(el => el.removeAttribute("style"));
-
-    const typographyProps = ["color", "font-size", "font-weight", "font-style", "text-decoration", "text-align", "font-family", "line-height", "letter-spacing"];
-
-    Object.entries(component.styles).forEach(([property, value]) => {
+  // Styles option.
+  if (component.styles.option) {
+    const optionLabels = [...wrapper.querySelectorAll(".fjs-inline-label .fjs-form-field-label")];
+    Object.entries(component.styles.option).forEach(([property, value]) => {
       if (!value) return;
-      wrapper.style.setProperty(property, value, "important");
-      if (typographyProps.includes(property)) {
-        wrapper.querySelectorAll(".fjs-form-field-label, label, legend, h1,h2,h3,h4,h5,h6,p,span,strong,em")
-          .forEach(el => el.style.setProperty(property, value, "important"));
-      }
-    });
-
-    wrapper.querySelectorAll("input, select, textarea").forEach(el => {
-      el.style.setProperty("text-decoration", "none", "important");
-      el.style.setProperty("font-weight", "normal", "important");
-      el.style.setProperty("font-style", "normal", "important");
-      el.style.setProperty("color", "initial", "important");
-      el.style.setProperty("font-size", "initial", "important");
+      optionLabels.forEach(el => el.style.setProperty(property, value, "important"));
     });
   }
+
+  // Empêche l'héritage sur les inputs
+  wrapper.querySelectorAll("input, select, textarea").forEach(el => {
+    el.style.setProperty("text-decoration", "none", "important");
+    el.style.setProperty("font-weight", "normal", "important");
+    el.style.setProperty("font-style", "normal", "important");
+    el.style.setProperty("color", "initial", "important");
+    el.style.setProperty("font-size", "initial", "important");
+  });
 };
 
 // ─────────────────────────────────────────────
@@ -121,7 +133,7 @@ const FormEditor = () => {
   const groupId = params.get("group_id");
   const [notification, setNotification] = useState({ message: "", type: "" });
   const currentElementRef = useRef(null);
-  const [stylePanel, setStylePanel] = useState({ visible: true, text: "", labelText: "", optionsText: "", componentType: null });
+  const [stylePanel, setStylePanel] = useState({ visible: true, text: "" });
   const [componentSelected, setComponentSelected] = useState(false);
   
 
@@ -140,15 +152,10 @@ const FormEditor = () => {
     const schema = await editor.getSchema();
     const component = findComponentById(schema.components, currentElementRef.current.id);
     if (!component) return;
-
-    const isMultiTarget = ["radio", "checklist"].includes(component.type);
-    component.styles = isMultiTarget
-      ? { label: parseStyleText(stylePanel.labelText || ""), options: parseStyleText(stylePanel.optionsText || "") }
-      : parseStyleText(stylePanel.text || "");
-
+    component.styles = parseStyleText(stylePanel.text || "");
     await editor.importSchema(schema);
     setIsModified(true);
-  }, [stylePanel]);
+  }, [stylePanel.text]);
 
   useEffect(() => {
     if (!editorContainerRef.current) return;
@@ -170,13 +177,9 @@ const FormEditor = () => {
       setComponentSelected(true);
       const schema = await editor.getSchema();
       const component = findComponentById(schema.components, componentId);
-      const isMultiTarget = ["radio", "checklist"].includes(component?.type);
       setStylePanel({
         visible: true,
-        componentType: component?.type || null,
-        text: isMultiTarget ? "" : serializeStyleToText(component?.styles || {}),
-        labelText: isMultiTarget ? serializeStyleToText(component?.styles?.label || {}) : "",
-        optionsText: isMultiTarget ? serializeStyleToText(component?.styles?.options || {}) : "",
+        text: serializeStyleToText(component?.styles || {}),
       });
     });
 
@@ -341,40 +344,15 @@ const FormEditor = () => {
             <div className={styles.stylePanelHeader}>
               <span>{t("Custom styles")}</span>
             </div>
-
-            {["radio", "checklist"].includes(stylePanel.componentType) ? (
-              <>
-                <div className={styles.stylePanelSection}>
-                  <span className={styles.stylePanelSectionLabel}>🏷️ {t("Title")}</span>
-                  <textarea
-                    className={styles.stylePanelTextarea}
-                    value={stylePanel.labelText}
-                    onChange={(e) => setStylePanel(p => ({ ...p, labelText: e.target.value }))}
-                    rows={5} spellCheck={false} disabled={!componentSelected}
-                    placeholder={"color: red\nfont-size: 18px"}
-                  />
-                </div>
-                <div className={styles.stylePanelSection}>
-                  <span className={styles.stylePanelSectionLabel}>☑️ {t("Options")}</span>
-                  <textarea
-                    className={styles.stylePanelTextarea}
-                    value={stylePanel.optionsText}
-                    onChange={(e) => setStylePanel(p => ({ ...p, optionsText: e.target.value }))}
-                    rows={5} spellCheck={false} disabled={!componentSelected}
-                    placeholder={"color: blue\nfont-size: 14px"}
-                  />
-                </div>
-              </>
-            ) : (
-              <textarea
-                className={styles.stylePanelTextarea}
-                value={stylePanel.text}
-                onChange={(e) => setStylePanel(p => ({ ...p, text: e.target.value }))}
-                rows={10} spellCheck={false} disabled={!componentSelected}
-                placeholder={"font-weight: bold\ncolor: #e74c3c\nfont-size: 18px"}
-              />
-            )}
-
+            <textarea
+              className={styles.stylePanelTextarea}
+              value={stylePanel.text}
+              onChange={(e) => setStylePanel(p => ({ ...p, text: e.target.value }))}
+              rows={10}
+              spellCheck={false}
+              disabled={!componentSelected}
+              placeholder={"background-color: #fdf6e3\nlabel.color: red\nlabel.font-size: 18px\noption.color: blue\noption.font-size: 14px"}
+            />
             <button className={styles.stylePanelApply} onClick={handleStylePanelApply} disabled={!componentSelected}>
               {t("Apply")}
             </button>
