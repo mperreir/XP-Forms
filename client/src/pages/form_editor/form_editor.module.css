@@ -132,7 +132,6 @@
 /* Style Panel */
 .stylePanel {
   width: 240px;
-  margin-top: 20px;
   border: 1px solid #ddd;
   border-radius: 6px;
   background: #fafafa;
@@ -142,6 +141,11 @@
   gap: 8px;
   flex-shrink: 0;
   margin: 0 1em 0 0;
+  margin-top: 20px;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
 }
 
 .stylePanelHeader {
@@ -225,4 +229,41 @@
 
 .footer {
   height: 40px;
+}
+
+.custom-copy-btn {
+  background: var(--color-context-pad-item-background, transparent);
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.custom-copy-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: var(--color-context-pad-item-fill, currentColor);
+}
+
+.custom-copy-btn:hover svg {
+  fill: var(--color-context-pad-item-hover-fill, var(--color-blue-219-100-53));
+}
+
+.custom-copy-btn:focus {
+  outline: 2px solid var(--cds-focus, var(--color-blue-205-100-50));
+  outline-offset: 2px;
+}
+.fjs-editor-container {
+  padding-left: 1em;
+  border-left: none !important;
+  border-top: none !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+.fjs-editor-container.fjs-container {
+  border-top: none !important;
 }
