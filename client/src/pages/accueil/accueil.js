@@ -16,7 +16,9 @@ const Accueil = () => {
     const [notifications, setNotifications] = useState([]);
     const navigate = useNavigate(); // Permet de gérer la navigation
     const [groups, setgroups] = useState([]);
-    const [tableSelectedGroup, setTableSelectedGroup] = useState("");
+    const [tableSelectedGroup, setTableSelectedGroup] = useState(
+        () => localStorage.getItem('selectedGroup') || ""
+    );
     const [moveModal, setMoveModal] = useState({ open: false, type: null, item: null, selectedGroup: "" });
     const [searchQuery, setSearchQuery] = useState("");
     const [openMenuId, setOpenMenuId] = useState(null);
@@ -727,7 +729,10 @@ const Accueil = () => {
                                         <th className={styles.thFilter}>
                                             <select
                                                 value={tableSelectedGroup}
-                                                onChange={(e) => setTableSelectedGroup(e.target.value)}
+                                                onChange={(e) => {
+                                                    setTableSelectedGroup(e.target.value);
+                                                    localStorage.setItem('selectedGroup', e.target.value);
+                                                }}
                                             >
                                                 <option value="">{t('All groups') || 'Tous les groupes'}</option>
                                                 {groups.map((g) => (
