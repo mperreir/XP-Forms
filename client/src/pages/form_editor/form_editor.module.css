@@ -187,6 +187,8 @@
   padding: 6px;
   resize: vertical;
   box-sizing: border-box;
+  white-space: nowrap;
+  overflow-x: auto;
 }
 
 .stylePanelApply {
