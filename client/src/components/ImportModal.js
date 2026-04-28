@@ -4,9 +4,11 @@ import styles from "./ImportModal.module.css"
 const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => {
 
   const [highlight, setHighlight] = useState(false);
+  const [showErrorDetails, setShowErrorDetails] = useState(false);
+  const [importErrors, setImportErrors] = useState([]);
+  const [lastImportStats, setLastImportStats] = useState(null);
 
   const handleImportForm = async (result, fileName = "") => {
-
     const response = await fetch(`/api/import-form`, {
       method: 'POST',
       headers: { "Content-Type": "application/json" },
@@ -60,13 +62,10 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
               console.error("Erreur fichier :", file.name, err);
             }
             resolve();
-
           };
           reader.readAsText(file);
         });
-      }
-
-      else if (item.isDirectory) {
+      } else if (item.isDirectory) {
         const dirReader = item.createReader();
         dirReader.readEntries(async (entries) => {
           for (const entry of entries) {
@@ -85,7 +84,8 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
 
       zipReader.onload = async () => {
         const zip = await JSZip.loadAsync(zipReader.result);
-        const formatErrorFileNames = [];
+        const formatErrorFiles = [];
+        const genericErrorFiles = [];
         let successCount = 0;
 
         for (const fileName of Object.keys(zip.files)) {
@@ -99,14 +99,25 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
             successCount++;
           } catch (err) {
             if (err.message === "formatError") {
-              formatErrorFileNames.push(err.fileName || fileName);
+              formatErrorFiles.push({
+                fileName: err.fileName || fileName,
+                reason: "Format de fichier invalide (structure JSON non reconnue par l'API)"
+              });
+            } else if (err instanceof SyntaxError) {
+              genericErrorFiles.push({
+                fileName,
+                reason: "Fichier JSON malformé (syntaxe invalide)"
+              });
             } else {
-              console.error("Erreur fichier:", fileName, err);
+              genericErrorFiles.push({
+                fileName,
+                reason: err.message || "Erreur inconnue"
+              });
             }
           }
         }
 
-        resolve({ formatErrorFileNames, successCount });
+        resolve({ formatErrorFiles, genericErrorFiles, successCount });
       };
 
       zipReader.readAsArrayBuffer(zipFolder);
@@ -116,42 +127,9 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
   const onDrop = useCallback((e) => {
     e.preventDefault();
     setHighlight(true);
-
     const input = document.querySelector("#fileSelector");
     input.files = e.dataTransfer.files;
-
     updateInput();
-
-    // try {
-    //   let promises = [];
-    //   let items = e.dataTransfer.files[0];
-    //   if (items && items.name.endsWith(".zip")) {
-    //     promises.push(handleZipFolder(items));
-    //   }
-    //   else {
-    //     items = e.dataTransfer.items;
-
-    //     for (let i = 0; i < items.length; i++) {
-    //       const item = items[i].webkitGetAsEntry();
-    //       if (item) {
-    //         promises.push(traverseFileTree(item));
-    //       }
-    //     }
-    //   }
-
-    //   const results = await Promise.allSettled(promises);
-
-    //   const hasSuccess = results.some(r => r.status === "fulfilled");
-
-    //   if (hasSuccess) {
-    //     document.querySelector("#importSuccess").click();
-    //   } else {
-    //     document.querySelector("#error").click();
-    //   }
-
-    // } catch (err) {
-    //   document.querySelector("#error").click();
-    // }
   }, []);
 
   const onClickLabel = () => {
@@ -166,14 +144,12 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
     const curFile = input.files[0];
     if (curFile.length === 0) {
       para.textContent = "Pas de dossier selectionné";
-    }
-    else {
+    } else {
       para.textContent = curFile.name;
     }
   }
 
   const submit = useCallback(async () => {
-
     try {
       const input = document.querySelector("#fileSelector");
       let promises = [];
@@ -184,28 +160,44 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
 
       const results = await Promise.allSettled(promises);
 
-      const formatErrorFiles = results
-        .filter(r => r.status === "fulfilled" && r.value?.formatErrorFileNames?.length > 0)
-        .flatMap(r => r.value.formatErrorFileNames);
+      const allFormatErrors = results
+        .filter(r => r.status === "fulfilled")
+        .flatMap(r => r.value?.formatErrorFiles ?? []);
 
-      const hasSuccess = results.some(r => r.status === "fulfilled" && r.value?.successCount > 0);
+      const allGenericErrors = results
+        .filter(r => r.status === "fulfilled")
+        .flatMap(r => r.value?.genericErrorFiles ?? []);
 
-      if (formatErrorFiles.length > 0) {
-        formatErrorFiles.forEach(fileName => {
-          if (onFormatError) onFormatError(fileName.split("/")[1].split(".")[0]);
+      const allErrors = [
+        ...allFormatErrors.map(e => ({ ...e, type: "Format invalide" })),
+        ...allGenericErrors.map(e => ({ ...e, type: "Erreur d'importation" })),
+      ];
+
+      const successCount = results
+        .filter(r => r.status === "fulfilled")
+        .reduce((acc, r) => acc + (r.value?.successCount ?? 0), 0);
+
+      const totalAttempted = successCount + allErrors.length;
+
+      setImportErrors(allErrors);
+      setLastImportStats({ successCount, totalAttempted });
+
+      if (allFormatErrors.length > 0) {
+        allFormatErrors.forEach(({ fileName }) => {
+          if (onFormatError) onFormatError(fileName.split("/")[1]?.split(".")[0] ?? fileName);
         });
       }
 
-      if (hasSuccess) {
+      if (successCount > 0) {
         document.querySelector("#importSuccess").click();
-      } else if (formatErrorFiles.length === 0) {
+      } else if (allErrors.length === 0) {
         document.querySelector("#error").click();
       }
 
     } catch (err) {
       document.querySelector("#error").click();
     }
-  })
+  });
 
   if (!isOpen) return null;
 
@@ -213,60 +205,110 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
     <div className={styles.ImportModalOverlay}>
       <div className={styles.ImportModalContent}>
         <h2>Importer</h2>
-        <div className={`${styles.dropZone} ${highlight ? styles.highlight : ""}`}
+
+        <div
+          className={`${styles.dropZone} ${highlight ? styles.highlight : ""}`}
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
         >
           Glissez un fichier zip ici.
         </div>
+
         <div>
-          <label className={styles.fileLabel} id="fileLabel"
-            onClick={onClickLabel}
-          >Choisissez un fichier zip à importer</label>
-          <input className={styles.fileSelector} type='file' accept=".zip" id="fileSelector"
+          <label className={styles.fileLabel} id="fileLabel" onClick={onClickLabel}>
+            Choisissez un fichier zip à importer
+          </label>
+          <input
+            className={styles.fileSelector}
+            type='file'
+            accept=".zip"
+            id="fileSelector"
             onChange={updateInput}
-          ></input>
+          />
         </div>
+
         <div className={styles.preview} id="filePreview">
           <p>Pas de fichier selectionné</p>
         </div>
+
+        {importErrors.length > 0 && (
+          <button
+            className={styles.errorDetailsButton}
+            onClick={() => setShowErrorDetails(true)}
+          >
+            Voir les détails des erreurs ({importErrors.length} fichier{importErrors.length > 1 ? "s" : ""})
+          </button>
+        )}
+
         {onConfirm && (
-          <div className={styles.closeImportModal}
-            id="importSuccess"
-            onClick={() => {
-              if (onConfirm) onConfirm();
-            }}></div>
+          <div className={styles.closeImportModal} id="importSuccess"
+            onClick={() => { if (onConfirm) onConfirm(); }} />
         )}
         {onFormatError && (
-          <div className={styles.closeImportModal}
-            id="formatError"
-            onClick={() => {
-              if (onFormatError) onFormatError();
-            }}></div>
+          <div className={styles.closeImportModal} id="formatError"
+            onClick={() => { if (onFormatError) onFormatError(); }} />
         )}
         {onError && (
-          <div className={styles.closeImportModal}
-            id="error"
-            onClick={() => {
-              if (onError) onError();
-            }}></div>
+          <div className={styles.closeImportModal} id="error"
+            onClick={() => { if (onError) onError(); }} />
         )}
+
         <div className={styles.buttonsLine}>
           {onClose && (
-            <button
-              onClick={onClose}
-              className={styles.closeButton}
-            >
+            <button onClick={onClose} className={styles.closeButton}>
               Fermer
             </button>
           )}
-          <button className={styles.fileSubmitButton}
-            onClick={submit}>
+          <button className={styles.fileSubmitButton} onClick={submit}>
             Importer
           </button>
         </div>
       </div>
+
+      {showErrorDetails && (
+        <div className={styles.errorDetailsOverlay}>
+          <div className={styles.errorDetailsModal}>
+            <h3>Détails des erreurs d'importation</h3>
+
+            {lastImportStats && (
+              <p className={styles.importSummary}>
+                {lastImportStats.successCount} / {lastImportStats.totalAttempted} formulaire{lastImportStats.totalAttempted > 1 ? "s" : ""} importé{lastImportStats.successCount > 1 ? "s" : ""} avec succès.
+              </p>
+            )}
+
+            <div className={styles.errorTableWrapper}>
+              <table className={styles.errorTable}>
+                <thead>
+                  <tr>
+                    <th>Fichier</th>
+                    <th>Type d'erreur</th>
+                    <th>Détail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {importErrors.map((err, i) => (
+                    <tr key={i}>
+                      <td className={styles.errorFileName}>
+                        {err.fileName.split("/").pop()}
+                      </td>
+                      <td className={styles.errorType}>{err.type}</td>
+                      <td className={styles.errorReason}>{err.reason}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <button
+              className={styles.closeButton}
+              onClick={() => setShowErrorDetails(false)}
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

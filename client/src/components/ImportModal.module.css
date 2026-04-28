@@ -89,3 +89,102 @@
   flex-direction: row;
   justify-content: space-evenly;
 }
+
+.errorDetailsButton {
+  margin-top: 8px;
+  background: none;
+  border: 1px solid #e57373;
+  color: #e57373;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 0.15s;
+}
+
+.errorDetailsButton:hover {
+  background: #fff5f5;
+}
+
+.errorDetailsOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.errorDetailsModal {
+  background: white;
+  border-radius: 10px;
+  padding: 28px;
+  width: 620px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.errorDetailsModal h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #c62828;
+}
+
+.importSummary {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0;
+}
+
+.errorTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.errorTableWrapper {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.errorTable th {
+  text-align: left;
+  padding: 8px 10px;
+  background: #f5f5f5;
+  border-bottom: 2px solid #ddd;
+  font-weight: 600;
+  color: #333;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.errorTable td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #eee;
+  vertical-align: top;
+}
+
+.errorFileName {
+  font-family: monospace;
+  color: #333;
+  word-break: break-all;
+}
+
+.errorType {
+  color: #e57373;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.errorReason {
+  color: #666;
+}
