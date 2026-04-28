@@ -32,15 +32,24 @@ Ptrans/
 
 ## Base de Données
 
-La base de données de la plateforme contient `quatre tables` :
-* Une table `forms`, dans laquelle sont enregistrés les différents formulaires créés, chacun possède un identifiant unique, un titre, une date et une heure de création, une date et une heure de dernière modification, ainsi qu’un schéma JSON contenant sa structure et permettant de le générer.
-* Une table `components`, contenant les différents composants (ou widgets) formant chaque formulaire. Un composant possède un identifiant unique, est associé à un formulaire spécifique grâce à une clé étrangère form_id, dispose d’un label, d’un type, d’une action (par exemple submit dans le cas d’un bouton), d’un key_name et d’un layout (indiquant sa mise en page et sa position dans le formulaire).
-* Une table `responses`, dans laquelle sont enregistrées les réponses des participants aux différentes questions des formulaires. Une réponse est associée à un identifiant unique, à un formulaire spécifique grâce à une clé étrangère form_id, à un composant spécifique grâce à une clé étrangère component_id, à un participant spécifique grâce à une clé étrangère user_id. Elle possède également une valeur (la réponse saisie ou sélectionnée) et une date et une heure d’enregistrement.
-* Une table `settings`, dans laquelle est enregistré l’id du participant par défaut.
+
+La base de données de la plateforme contient **cinq tables** :
+* **`forms`** : enregistre les différents formulaires créés. Chaque formulaire possède un identifiant unique, un titre, un schéma JSON (stockant sa structure), une date et heure de création, une date et heure de dernière modification, et peut être rattaché à un groupe via `group_id`.
+* **`components`** : contient les composants (widgets) de chaque formulaire. Chaque composant a un identifiant, est associé à un formulaire (`form_id`), possède un label, un type, une action (ex : submit pour un bouton), un `key_name` et un `layout` (décrivant sa position dans le formulaire).
+* **`responses`** : enregistre les réponses des participants aux questions des formulaires. Chaque réponse a un identifiant unique, est liée à un formulaire (`form_id`), à un composant (`component_id`), à un participant (`user_id`), contient la valeur saisie et la date/heure d’enregistrement.
+* **`settings`** : stocke des paramètres globaux de la plateforme sous forme de paires clé/valeur (par exemple, l’id du participant par défaut).
+* **`groups`** : permet de regrouper des formulaires par projet ou catégorie. Chaque groupe possède un identifiant unique, un nom, une date de création et de dernière modification.
+
+Les principales relations sont :
+- Chaque **component** appartient à un **form** (clé étrangère `form_id`).
+- Chaque **response** est liée à un **form** et à un **component**.
+- Chaque **form** peut appartenir à un **group** (`group_id`).
 
 Ci-après est le diagramme entité-relation de la base de données de la plateforme.
 
-<img src="Guide Images/Capturebdd.JPG" width="250"/>
+<img src="Guide Images/BD.png" width="250"/>
+
+*Diagramme entité-relation généré avec PlantUML, reflétant la structure actuelle de la base de données.*
 
 
 Une notion fondamentale introduite par la librairie form.js, utilisée pour l’implémentation de la plateforme, et sur laquelle nous nous basons pour sauvegarder les formulaires créés et les générer après leur création, est celle du schéma JSON du formulaire.
@@ -78,23 +87,42 @@ L’implémentation back-end est organisée en plusieurs couches pour assurer la
 
 | Méthode | URL                         | Description                                 |
 |:--------|:----------------------------|:--------------------------------------------|
+
 | `POST`  | `/api/save-form`             | Enregistrer un nouveau formulaire |
 | `GET`   | `/api/forms`                 | Récupérer la liste de tous les formulaires |
 | `GET`   | `/api/forms/:id`             | Récupérer un formulaire spécifique par ID |
 | `GET`   | `/api/forms/:id/has-responses`| Vérifier si un formulaire a déjà des réponses |
 | `PUT`   | `/api/forms/:id`             | Mettre à jour un formulaire existant |
+| `PUT`   | `/api/forms/:id/move`        | Déplacer un formulaire (usage interne ou pour migration) |
+| `PUT`   | `/api/forms/:id/move-to-group/:groupId` | Déplacer un formulaire dans un groupe spécifique |
 | `DELETE`| `/api/forms/:id`             | Supprimer un formulaire (et ses réponses associées) |
 | `POST`  | `/api/forms/:id/duplicate`   | Dupliquer un formulaire existant |
+| `GET`   | `/api/forms/:id/export/:responses` | Exporter un formulaire avec ou sans ses réponses |
+| `POST`  | `/api/import-form`           | Importer un formulaire à partir d'un fichier |
+
+### Routes Groupes
+
+| Méthode | URL                                         | Description |
+|:--------|:--------------------------------------------|:------------|
+| `POST`  | `/api/groups`                               | Créer un nouveau groupe |
+| `GET`   | `/api/groups`                               | Récupérer la liste de tous les groupes |
+| `GET`   | `/api/groups/:id`                           | Récupérer les informations d'un groupe spécifique |
+| `PUT`   | `/api/groups/:id`                           | Renommer un groupe |
+| `DELETE`| `/api/groups/:id`                           | Supprimer un groupe |
+| `PUT`   | `/api/forms/:id/move-to-group/:groupId`     | Déplacer un formulaire dans un groupe |
+| `GET`   | `/api/groups/:id/count`                     | Obtenir le nombre de formulaires dans un groupe |
 
 ### Routes Utilsateur (responses)
 
 | Méthode | URL                                         | Description |
 |:--------|:--------------------------------------------|:------------|
+
 | `POST`  | `/api/submit-form`                          | Soumettre toutes les réponses d'un formulaire en une seule fois |
 | `POST`  | `/api/save-response`                        | Sauvegarder une réponse individuelle (auto-save champ par champ) |
 | `GET`   | `/api/forms/:id/responses`                  | Récupérer toutes les réponses pour un formulaire |
 | `GET`   | `/api/form-responses-participant/:form_id/:user_id` | Récupérer toutes les réponses d'un participant spécifique pour un formulaire |
 | `DELETE`| `/api/forms/:id/responses`                  | Supprimer toutes les réponses d'un formulaire (sans supprimer le formulaire lui-même) |
+| `POST`  | `/api/shutdown`                             | Arrêter le serveur (usage technique/maintenance) |
 
 
 ### Routes Settings

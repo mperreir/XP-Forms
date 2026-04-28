@@ -1,38 +1,70 @@
+
 # Guide d'utilisation
 
 ## Le Frontend
 
 La plateforme que nous avons implémentée est composée de différentes pages, chacune permettant d’effectuer des tâches spécifiques et destinée à un acteur particulier.
 
+
 ### Page d'accueil
-Il s’agit de la première page qui s’affiche lorsque l’expérimentateur accède à notre plateforme.
+Il s’agit de la première page qui s’affiche lorsque l’expérimentateur accède à la plateforme.
 
-Cette page comporte un bouton permettant d’accéder à la page de création de formulaires, afin de créer un nouveau formulaire.
+#### Gestion des groupes
+La page d’accueil affiche désormais la liste des groupes de formulaires existants. Chaque groupe permet de regrouper des formulaires par projet ou par catégorie. Il est possible de :
+- Créer un nouveau groupe
+- Renommer ou supprimer un groupe
+- Voir le nombre de formulaires dans chaque groupe
+- Filtrer l’affichage des formulaires par groupe
 
-Elle présente aussi un champ de texte dans lequel l’expérimentateur peut saisir l’id du participant par défaut. Cet ID sera ajouté dynamiquement à l’URL d’accès d’un formulaire si celui-ci contient le symbole-clé @ à la place de l’ID du participant.
- Ainsi, une URL de la forme :
- http://localhost:3000/form-viewer/ID_du_formulaire/numéro_de_la_page/@
- sera dynamiquement remplacée par :
-http://localhost:3000/form-viewer/ID_du_formulaire/numéro_de_la_page/ID_participant_par_défaut
+#### Liste des formulaires
+Pour chaque formulaire, on peut voir : son identifiant, son titre, sa date et heure de création, la date et heure de la dernière modification, le groupe auquel il appartient, ainsi que plusieurs boutons :
+- Voir : accéder à la page de consultation du formulaire
+- Modifier : accéder à la page de modification (si le formulaire n’a pas encore de réponses)
+- Voir réponses : accéder à la liste des réponses des participants
+- Dupliquer : créer une copie du formulaire
+- Supprimer : supprimer le formulaire
+- Déplacer : déplacer le formulaire dans un autre groupe
 
-Cela s’avère utile dans les cas où l’expérimentateur fait passer les participants un par un lors de chaque test. Avant de lancer un test sur une machine, il lui suffit alors de saisir l’ID du participant dans ce champ de texte pour que les formulaires remplis soient automatiquement associés à cet utilisateur. Lorsqu’un nouveau participant se présente, l’expérimentateur n’aura qu’à modifier l’ID par défaut dans ce même champ.
+#### Paramètres globaux
+Un champ de texte permet de saisir l’id du participant par défaut. Cet ID sera ajouté dynamiquement à l’URL d’accès d’un formulaire si celui-ci contient le symbole-clé @ à la place de l’ID du participant. Cela facilite l’association automatique des réponses à un participant lors de tests en série.
 
-Cette page contient également la liste des formulaires créés précédemment. Pour chaque formulaire on peut voir : son identifiant, son titre, sa date et heure de création, la date et heure de la dernière modification, ainsi que cinq boutons : 
-* Voir : permet d’accéder à une page de consultation du formulaire.
-* Modifier : permet d’accéder à une page pour modifier le formulaire, si cela est possible.
-* Voir réponses : permet d’accéder à une page affichant la liste des réponses des participants aux différentes questions du formulaire.
-* Dupliquer : Permettant de dupliquer le formulaire.
-* Supprimer : Permettant de supprimer le formulaire.
+#### Import/export de formulaires
+Des boutons permettent d’importer un formulaire à partir d’un fichier (format JSON) ou d’exporter un formulaire (avec ou sans ses réponses) pour sauvegarde ou partage.
 
-![alt text](<Guide Images/UI17.JPG>)
+![Accueil de la plateforme](<Guide Images/Accueil.png>)
+#### Exemple de création d’un groupe
+![Création d’un groupe](<Guide Images/Nouveau_groupe.png>)
+#### Déplacement d’un formulaire dans un groupe
+![Déplacement d’un formulaire](<Guide Images/Deplacer_dans_un_groupe.png>)
+#### Import d’un formulaire
+![Import d’un formulaire](<Guide Images/Import.png>)
+#### Export d’un formulaire
+![Export d’un formulaire](<Guide Images/Export.png>)
+#### Filtrage par groupe
+![Sélection d’un groupe](<Guide Images/Selection_groupe.png>)
+### Gestion des groupes de formulaires
+
+La gestion des groupes se fait principalement depuis la page d’accueil. Pour créer un groupe, cliquez sur le bouton “Nouveau groupe”. Pour renommer ou supprimer un groupe, utilisez les options du menu associé à chaque groupe. Pour déplacer un formulaire dans un groupe, utilisez le bouton “Déplacer” ou faites un glisser-déposer si l’interface le permet.
+
+### Import/export de formulaires
+
+Pour importer un formulaire, cliquez sur le bouton “Importer” et sélectionnez un fichier au format JSON compatible. Pour exporter un formulaire, utilisez le bouton “Exporter” associé à chaque formulaire : vous pouvez choisir d’exporter uniquement la structure ou d’inclure les réponses.
 
 
-### La page de création de formulaires
+
+
+### La page de création et de modification de formulaires
 
 La page de création de formulaires permet de construire un formulaire en ajoutant les composants (ou widgets) nécessaires. Elle est composée de trois parties :
 * À gauche, on trouve les différents composants pouvant être ajoutés au formulaire, en les faisant glisser vers la zone centrale.
 * Au centre, se trouve le formulaire en cours de création.
-* À droite, sont affichés des paramètres spécifiques permettant de modifier le comportement et les propriétés du composant sélectionné (ou du formulaire en général si aucun composant n’est sélectionné), tels que l’affichage conditionnel, les règles de validation ou encore le caractère obligatoire d’une réponse.
+* À droite, sont affichés des paramètres spécifiques permettant de modifier le comportement et les propriétés du composant sélectionné (ou du formulaire en général si aucun composant n’est sélectionné), tels que l’affichage conditionnel, les règles de validation, le caractère obligatoire d’une réponse, ou encore le style du formulaire.
+
+#### Personnalisation du style (CSS) des formulaires
+Il est possible d’ajouter du code CSS personnalisé pour modifier l’apparence du formulaire (couleurs, marges, polices, etc.) et l’adapter à vos besoins ou à la charte graphique de votre projet. Un champ dédié à la saisie du CSS est disponible dans la colonne de droite (paramètres du formulaire).
+
+Exemple d’interface pour la personnalisation du style :
+![Personnalisation du style](<Guide Images/création.png>)
 
 Nous avons utilisé la librairie Form.js pour implémenter cette fonctionnalité. Grâce à son système de Drag and Drop, elle rend la création de formulaires plus simple et intuitive pour les expérimentateurs. Elle permet également de modifier la position des widgets sur la page du formulaire ainsi que l’espace qu’ils occupent, offrant ainsi une grande liberté en matière de mise en page.
 
@@ -58,6 +90,27 @@ La figure ci-après est une capture d’écran de la page de modification de for
 ![alt text](<Guide Images/UI19.JPG>)
 
 ### La page de consultation de formulaires (vue de l’expérimentateur)
+
+Une bande d’information est affichée en haut de la page de consultation du formulaire. Elle indique le contexte d’utilisation (expérimentateur ou participant), l’URL à utiliser pour accéder à la page, et peut afficher des instructions spécifiques ou des informations sur la navigation.
+
+L’URL de consultation du formulaire inclut le numéro de la page courante et le nombre total de pages, par exemple :
+```
+http://localhost:3000/form-viewer/ID_du_formulaire/numéro_de_la_page/ID_participant
+```
+
+La bande d’information affiche également des instructions détaillées pour l’intégration avec Tobii :
+
+Pour intégrer dans un scénario Tobii, utilisez :
+```
+http://localhost:3000/form-viewer/Form_11x9t4d/1/id_participant
+```
+Ajoutez `@` comme ID participant pour utiliser l’ID utilisateur par défaut.
+
+Ajoutez `/début-fin` entre le numéro de page et l’ID participant pour parcourir un intervalle de pages. Exemple : `/2-4/id`
+
+Ajoutez `?navigation=True` à la fin si vous voulez permettre la navigation entre pages.
+
+La bande affiche aussi : “Page X sur Y”, où X est la page actuelle et Y le nombre total de pages du formulaire, pour faciliter la navigation et le suivi du remplissage.
 
 Dans cette page, l’expérimentateur peut consulter un formulaire. En haut de la page, des instructions lui indiquent quelle URL saisir dans Tobii Pro Lab pour que le participant soit dirigé vers la page correspondante du formulaire, dans le cadre d’un scénario d’expérimentation (voir l’explication de l’utilisation des URLs pour la navigation entre notre plateforme et Tobii Pro Lab ici). 
 
@@ -136,29 +189,45 @@ Dans la capture d’écran suivante, on trouve la page de Tobii Pro Lab contenan
 
 ![alt text](<Guide Images/UI14.JPG>)
 
-## Scénarios d'utilisation
-Vous trouverez ci-après des descriptions textuelles de l’ensemble des scénarios d’utilisation de notre plateforme : 
 
-#### 1/ Créer un formulaire : 
+## Scénarios d'utilisation
+Vous trouverez ci-après des descriptions textuelles de l’ensemble des scénarios d’utilisation de la plateforme :
+
+#### 1/ Créer un formulaire
 <img src="Guide Images/sce.JPG" width="450"/>
 
-#### 2/ Modifier un formulaire : 
+#### 2/ Modifier un formulaire
 <img src="Guide Images/sce2.JPG" width="450"/>
 
-#### 3/ Supprimer un formulaire : 
+#### 3/ Supprimer un formulaire
 <img src="Guide Images/sce3.JPG" width="450"/>
 
-#### 4/ Dupliquer un formulaire : 
+#### 4/ Dupliquer un formulaire
 <img src="Guide Images/sce4.JPG" width="450"/>
 
-#### 5/ Consulter un formulaire : 
+#### 5/ Consulter un formulaire
 <img src="Guide Images/sce5.JPG" width="450"/>
 
-#### 6/ Consulter les réponses des participants à un formulaire : 
+#### 6/ Consulter les réponses des participants à un formulaire
 <img src="Guide Images/sce6.JPG" width="450"/>
 
-#### 7/ Remplir un formulaire : 
+#### 7/ Remplir un formulaire
 <img src="Guide Images/sce7.JPG" width="450"/>
 
-#### 8/ Définir un id participant par défaut : 
+#### 8/ Définir un id participant par défaut
 <img src="Guide Images/sce8.JPG" width="450"/>
+
+#### 9/ Créer un groupe de formulaires
+*Depuis la page d’accueil, cliquez sur “Nouveau groupe”, donnez un nom, validez. Le groupe apparaît dans la liste.*
+
+#### 10/ Déplacer un formulaire dans un groupe
+*Utilisez le bouton “Déplacer” ou faites glisser le formulaire vers le groupe souhaité.*
+
+#### 11/ Supprimer ou renommer un groupe
+*Utilisez le menu d’options du groupe pour le renommer ou le supprimer. Les formulaires du groupe supprimé sont déplacés dans “Sans groupe” (si cette option existe).*
+
+#### 12/ Importer un formulaire
+*Cliquez sur “Importer”, sélectionnez le fichier JSON du formulaire à ajouter. Le formulaire apparaît dans la liste.*
+
+#### 13/ Exporter un formulaire
+*Cliquez sur “Exporter” à côté du formulaire, choisissez d’exporter la structure seule ou avec les réponses. Un fichier est téléchargé.*
