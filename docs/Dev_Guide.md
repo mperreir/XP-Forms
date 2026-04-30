@@ -10,12 +10,18 @@ Ptrans/
   |   |   | components/ → Composants React réutilisables pour l'interface utilisateur
   |   |   │   │ Modal.js/ → Composant de modale générique avec options de confirmation et fermeture
   |   |   │   │ DeleteResponsesSuccessModal.js/ → Modale spécifique de confirmation après suppression, avec bouton "Fermer"
+  |   |   │   │ ImportModal.js/ → Modal spécifique à l'import d'un formulaire
   |   |   | pages/ → Les differentes pages de la plateforme (chacune composée d'un fichier .js et un fichier .css)
   |   |   |   | accueil/ → La page d'accueil
   |   |   |   | form_editor/ → La page d'édition de formulaires (s'adapte dynamiquement en fonction de l'URL utilisé pour y accéder, s'il ne contient pas un id de formulaire -> elle permet de créer un nouveau form, si elle contient un id d'un form -> elle permet la modification du form correspondant)
   |   |   |   | form_viewer/ → La page de consultation de formulaires (s'adapte dynamiquement en fonction de l'URL utilisé pour y accéder, s'il contient un id de participant on se retrouve avec la vue participant avec l'auto-sauvegarde activé, sinon on se retrouve avec la vue experimentateur)
   |   |   |   | FormResponsesList/ → La page de la liste des réponses des participants à un formulaire
   |   |   |   | merci/ → La page qui s'affiche lorsque le participant clique sur le bouton "submit" après avoir rempli une page du formulaire
+  |   |   | locales/
+  |   |   |   | en/
+  |   |   |   |   | tranlation.json/ → Contient tous les textes du front en anglais associés à leur clé dans le code
+  |   |   |   | fr/
+  |   |   |   |   | tranlation.json/ → Contient tous les textes du front en français associés à leur clé dans le code
   | serveur/ → Application Express.js (API backend + base de données SQLite)
   |   | base_de_donnee/
   |   |   | bd.db/ → Contient les enregistrements de chaque table de la BDD
