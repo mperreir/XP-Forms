@@ -82,7 +82,7 @@ Nous avons également ajouté la possibilité pour l’expérimentateur de saisi
 
 Enfin, pour créer un formulaire composé de plusieurs pages (formulaire multipage), il suffit d’ajouter le composant appelé "separator". Comme son nom l’indique, ce composant permet de séparer les différentes pages d’un même formulaire. Dans l’image ci-après de la page de création de formulaires, le séparateur est représenté par une ligne horizontale grise qui divise visuellement deux pages du formulaire. Lors de la consultation du formulaire, chaque page sera alors affichée séparément.
 
-![alt text](<Guide Images/multipages.JPG>)
+![alt text](<Guide Images/multipages.png>)
 
 Dans l’image suivante, on peut voir que lorsqu’un composant du formulaire est sélectionné, il est possible de le supprimer ou de le dupliquer via les boutons situés sur le bord droit du composant. À droite de ce dernier, apparaissent les paramètres spécifiques à ce composant, que l’on peut modifier.
 
