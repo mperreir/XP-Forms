@@ -1115,6 +1115,7 @@ const Accueil = () => {
                     style={{
                         top: menuPosition.y,
                         left: menuPosition.x,
+                        transform: "translateX(-40%)",
                     }}
                 >
                     <div onClick={() => navigate(`/form-viewer/${openMenuId}/1?navigation=True`)}>{t('View')}</div>
@@ -1174,7 +1175,7 @@ const Accueil = () => {
                 <div
                     ref={groupMenuRef}
                     className={styles.actionMenu}
-                    style={{ top: groupMenuPosition.y, left: groupMenuPosition.x }}
+                    style={{ top: groupMenuPosition.y, left: groupMenuPosition.x, transform: "translateX(-40%)", }}
                 >
                     <div onClick={() => handleRenameGroup(openGroupMenuId, groups.find(g => g.id === openGroupMenuId)?.name)}>{t('Rename')}</div>
                     <div onClick={() => handleDeletegroup(openGroupMenuId)}>{t('Delete')}</div>
