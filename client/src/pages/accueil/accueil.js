@@ -477,13 +477,13 @@ const Accueil = () => {
         const itemsToMove = Array.isArray(moveModal.item.id) ? moveModal.item.id : [moveModal.item.id];
 
         for (const id of itemsToMove) {
-            await fetch(`/api/forms/${id}/move-to-group/${moveModal.selectedGroup}`, {
+            const groupId = moveModal.selectedGroup === "none" ? null : moveModal.selectedGroup;
+            await fetch(`/api/forms/${id}/move-to-group/${groupId}`, {
                 method: "PUT",
             });
         }
         showNotification(`Formulaire(s) déplacé(s)`, "success");
 
-        setMoveModal({ open: false, item: null, selectedGroup: "" });
         setMoveModal({ open: false, item: null, selectedGroup: "" });
         setSelectedForms([]);
 
@@ -659,6 +659,7 @@ const Accueil = () => {
                             onChange={(e) => setMoveModal(prev => ({ ...prev, selectedGroup: e.target.value }))}
                         >
                             <option value="">{t("Select a group")}</option>
+                            <option value="none">📁 {t("no group")}</option>
                             {groups.map(group => (
                                 <option key={group.id} value={group.id}>
                                     📁 {group.name}
