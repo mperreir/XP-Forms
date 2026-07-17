@@ -16,6 +16,6 @@
     "client": "cd client && npm start",
     "start": "cd serveur && npm start",
     "prod": "npm run build && npm start",
-    "install-all": "npm install && cd client && npm install && cd ../serveur && npm install"
+    "install-all": "npm install && cd client && npm install --legacy-peer-deps && cd ../serveur && npm install"
   }
 }
