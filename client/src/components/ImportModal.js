@@ -257,7 +257,7 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
         <div className={styles.buttonsLine}>
           {onClose && (
             <button onClick={onClose} className={styles.closeButton}>
-              Fermer
+              Annuler
             </button>
           )}
           <button className={styles.fileSubmitButton} onClick={submit}>
@@ -304,7 +304,7 @@ const ImportModal = ({ isOpen, onConfirm, onClose, onFormatError, onError }) => 
               className={styles.closeButton}
               onClick={() => setShowErrorDetails(false)}
             >
-              Fermer
+              Annuler
             </button>
           </div>
         </div>
