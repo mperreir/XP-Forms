@@ -11,7 +11,7 @@ const DeleteResponsesSuccessModal = ({ isOpen, title, message, onClose }) => {
         <p>{message}</p>
         <div className={styles.modalActions}>
           <button onClick={onClose} className={styles.closeButton}>
-            Fermer
+            Annuler
           </button>
         </div>
       </div>
