@@ -14,9 +14,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "pg": "^8.14.1",
     "sqlite3": "^5.1.7",
-    "typeorm": "^0.3.21",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
