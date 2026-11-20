@@ -4,7 +4,9 @@
   "proxy": "http://localhost:3001",
   "private": true,
   "dependencies": {
-    "@bpmn-io/form-js-playground": "^1.14.0",
+    "@bpmn-io/form-js-editor": "^1.26.1",
+    "@bpmn-io/form-js-playground": "^1.26.1",
+    "@bpmn-io/form-js-viewer": "^1.26.1",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
