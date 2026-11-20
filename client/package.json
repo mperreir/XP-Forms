@@ -11,10 +11,10 @@
     "@testing-library/jest-dom": "^8.0.0",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.6.13",
-    "i18next": "^26.0.3",
+    "i18next": "^27.2.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-i18next": "^17.0.2",
+    "react-i18next": "^18.0.3",
     "react-router-dom": "^7.2.0",
     "react-scripts": "5.0.1",
     "web-vitals": "^6.2.3"
