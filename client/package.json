@@ -4,18 +4,22 @@
   "proxy": "http://localhost:3001",
   "private": true,
   "dependencies": {
-    "@bpmn-io/form-js-playground": "^1.14.0",
+    "@bpmn-io/form-js-editor": "^1.26.1",
+    "@bpmn-io/form-js-playground": "^1.26.1",
+    "@bpmn-io/form-js-viewer": "^1.26.1",
     "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/jest-dom": "^8.0.0",
     "@testing-library/react": "^16.2.0",
-    "@testing-library/user-event": "^13.5.0",
-    "i18next": "^26.0.3",
+    "@testing-library/user-event": "^14.6.13",
+    "file-saver": "^2.0.5",
+    "i18next": "^27.2.2",
+    "jszip": "^3.10.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-i18next": "^17.0.2",
+    "react-i18next": "^18.0.3",
     "react-router-dom": "^7.2.0",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^6.2.3"
   },
   "scripts": {
     "start": "react-scripts start",
