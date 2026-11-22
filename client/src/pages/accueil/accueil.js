@@ -49,7 +49,7 @@ const Accueil = () => {
     const filteredGroups = groups
         .filter(g => g.name.toLowerCase().includes(groupSearchQuery.toLowerCase()));
 
-    const showModal = (title, message, onConfirm = null, confirm = 'Confirmer', close = 'Fermer', onClose = closeModal) => {
+    const showModal = (title, message, onConfirm = null, confirm = 'Confirmer', close = 'Annuler', onClose = closeModal) => {
         setModal({ isOpen: true, title, message, onConfirm, confirm, close, onClose });
     };
 
