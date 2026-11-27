@@ -6,31 +6,46 @@ import ImportModal from '../../components/ImportModal';
 import { saveAs } from 'file-saver';
 import { useTranslation } from 'react-i18next'; // Ajout i18n
 
+// Page d'accueil : liste des formulaires et des groupes, avec toutes les actions
+// (voir, modifier, déplacer, dupliquer, supprimer, exporter, importer...)
 const Accueil = () => {
     const { t, i18n } = useTranslation(); // Ajout i18n
+
+    // --- Données principales ---
     const [forms, setForms] = useState([]);
-    const [selectedForms, setSelectedForms] = useState([]);
+    const [selectedForms, setSelectedForms] = useState([]); // ids des formulaires cochés
     const [newUserId, setNewUserId] = useState(localStorage.getItem('defaultUserId') || ""); // Utiliser la valeur du localStorage ou une valeur vide
+
+    // --- Modales et notifications ---
+    // Modale générique (confirmation de suppression, export...)
     const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null, confirm: '', close: '', onClose: null });
+    // Modale d'import (zip de formulaires)
     const [importModal, setImportModal] = useState({ isOpen: false, onConfirm: null, onFormatError: null, onError: null });
     const [notifications, setNotifications] = useState([]);
     const navigate = useNavigate(); // Permet de gérer la navigation
+
+    // --- Groupes ---
     const [groups, setgroups] = useState([]);
+    // Groupe sélectionné dans le filtre du tableau (mémorisé entre deux visites)
     const [tableSelectedGroup, setTableSelectedGroup] = useState(
         () => localStorage.getItem('selectedGroup') || ""
     );
+    // Modale "Déplacer vers un groupe"
     const [moveModal, setMoveModal] = useState({ open: false, type: null, item: null, selectedGroup: "" });
+
+    // --- Recherche, menus contextuels et affichage ---
     const [searchQuery, setSearchQuery] = useState("");
-    const [openMenuId, setOpenMenuId] = useState(null);
+    const [openMenuId, setOpenMenuId] = useState(null); // formulaire dont le menu "..." est ouvert
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
-    const [viewMode, setViewMode] = useState("forms");
+    const [viewMode, setViewMode] = useState("forms"); // "forms" ou "groups"
     const menuRef = useRef(null);
     const [selectedGroups, setSelectedGroups] = useState([]);
-    const [openGroupMenuId, setOpenGroupMenuId] = useState(null);
+    const [openGroupMenuId, setOpenGroupMenuId] = useState(null); // groupe dont le menu est ouvert
     const [groupMenuPosition, setGroupMenuPosition] = useState({ x: 0, y: 0 });
     const groupMenuRef = useRef(null);
     const [groupSearchQuery, setGroupSearchQuery] = useState("");
 
+    // Touche Échap : ferme la modale ouverte (import ou générique)
     document.onkeydown = function (evt) {
         if (evt.keyCode === 27) {
             if (importModal.isOpen === true) {
@@ -42,21 +57,26 @@ const Accueil = () => {
         }
     };
 
+    // Formulaires affichés : filtrés par groupe puis par texte de recherche
     const filteredForms = forms
         .filter(f => tableSelectedGroup ? f.group_id === Number(tableSelectedGroup) : true)
         .filter(f => f.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
+    // Groupes affichés : filtrés par texte de recherche
     const filteredGroups = groups
         .filter(g => g.name.toLowerCase().includes(groupSearchQuery.toLowerCase()));
 
+    // Ouvre la modale générique (par défaut : boutons Confirmer / Annuler)
     const showModal = (title, message, onConfirm = null, confirm = 'Confirmer', close = 'Annuler', onClose = closeModal) => {
         setModal({ isOpen: true, title, message, onConfirm, confirm, close, onClose });
     };
 
+    // Ferme la modale générique et remet tout à zéro
     const closeModal = () => {
         setModal({ isOpen: false, title: "", message: "", onConfirm: null, confirm: '', close: '', onClose: null });
     };
 
+    // Ouvre la modale d'import avec les callbacks à appeler (succès, mauvais format, erreur)
     const showImportModal = (onConfirm = null, onFormatError = null, onError = null) => {
         setImportModal({ isOpen: true, onConfirm, onFormatError, onError });
     };
@@ -65,11 +85,13 @@ const Accueil = () => {
         setImportModal({ isOpen: false, onConfirm: null, onFormatError: null, onError: null });
     };
 
+    // Récupère les formulaires, puis le nombre de réponses de chacun
     const fetchForms = async () => {
         try {
             const response = await fetch('/api/forms');
             if (!response.ok) throw new Error('Erreur lors du chargement des formulaires');
             const data = await response.json();
+            // Une requête par formulaire pour compter ses réponses
             const formsWithCounts = await Promise.all(
                 data.map(async (form) => {
                     try {
@@ -88,14 +110,16 @@ const Accueil = () => {
         }
     };
 
+    // Affiche une petite notification qui disparaît toute seule après "duration" ms
     const showNotification = (message, type = "success", duration = 3000) => {
-        const id = Date.now() + Math.random();
+        const id = Date.now() + Math.random(); // id unique pour pouvoir la retirer ensuite
         setNotifications(prev => [...prev, { id, message, type }]);
         setTimeout(() => {
             setNotifications(prev => prev.filter(n => n.id !== id));
         }, duration);
     };
 
+    // Recharge la liste des formulaires (même logique que fetchForms)
     const reloadForms = async () => {
         try {
             const response = await fetch('/api/forms');
@@ -120,6 +144,7 @@ const Accueil = () => {
         }
     };
 
+    // Recharge les groupes avec le nombre de formulaires de chacun
     const reloadgroups = async () => {
         try {
             const response = await fetch('/api/groups');
@@ -143,11 +168,13 @@ const Accueil = () => {
         }
     };
 
+    // Au premier affichage : on charge les formulaires et les groupes
     useEffect(() => {
         reloadForms();
         reloadgroups();
     }, []);
 
+    // Ferme les menus "..." quand on clique en dehors
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (openMenuId && menuRef.current && !menuRef.current.contains(e.target)) {
@@ -160,11 +187,13 @@ const Accueil = () => {
 
         document.addEventListener("mousedown", handleClickOutside);
 
+        // Nettoyage : on retire l'écouteur quand le composant change ou disparaît
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [openMenuId, openGroupMenuId]);
 
+    // Modifier un formulaire : interdit s'il contient déjà des réponses
     const handleEditForm = async (formId) => {
         try {
             const response = await fetch(`/api/forms/${formId}/has-responses`);
@@ -181,13 +210,16 @@ const Accueil = () => {
         }
     };
 
+    // Exporte un ou plusieurs formulaires dans un zip (un fichier JSON par formulaire)
     const handleExportForm = async (formId) => {
         let JSZip = require("jszip");
 
+        // On accepte un id, une liste d'ids, ou à défaut les formulaires cochés
         const ids = formId ? (Array.isArray(formId) ? formId : [formId]) : selectedForms;
 
         if (!ids || ids.length === 0) return;
 
+        // Fabrique le zip et lance le téléchargement
         const DownloadExport = async (jsonExport) => {
 
             let zip = new JSZip();
@@ -197,6 +229,7 @@ const Accueil = () => {
             }
             zip.generateAsync({ type: "blob" })
                 .then(function (content) {
+                    // Nom du zip : date + nombre de formulaires (singulier ou pluriel)
                     if (Object.keys(jsonExport).length === 1) {
                         saveAs(content, ladate.toISOString().substring(0, 10) + "_export_de_" + Object.keys(jsonExport).length + "_formulaire.zip");
                     }
@@ -210,6 +243,7 @@ const Accueil = () => {
 
         };
 
+        // Récupère chaque formulaire depuis l'API (avec ou sans ses réponses selon "resp")
         const exportForm = async (ids, resp = false) => {
 
             let jsonExport = {};
@@ -238,9 +272,12 @@ const Accueil = () => {
             DownloadExport(jsonExport);
         }
 
+        // On demande d'abord si les réponses doivent être exportées aussi
+        // Oui -> exportForm(ids, true) ; Non -> exportForm(ids)
         showModal(t('Export'), t('Do you also want to export the responses?'), () => { exportForm(ids, true) }, 'Yes', 'No', () => { exportForm(ids) });
     };
 
+    // Exporte les réponses des formulaires en CSV (un fichier par formulaire, le tout dans un zip)
     const handleExportFormDatas = async (formId) => {
         let JSZip = require("jszip");
         const ids = formId ? (Array.isArray(formId) ? formId : [formId]) : selectedForms;
@@ -259,6 +296,8 @@ const Accueil = () => {
                 if (!response.ok) throw new Error(t("Error loading responses"));
 
                 const data = await response.json();
+
+                // On liste toutes les questions rencontrées (sans doublons) pour faire les colonnes
                 const extractedQuestions = [];
 
                 data.forEach((userResponse) => {
@@ -272,7 +311,9 @@ const Accueil = () => {
                 const questions = extractedQuestions;
                 const responses = data;
 
+                // Ligne d'en-tête : ID utilisateur puis une colonne par question
                 const headers = [t("User ID"), ...questions];
+                // Une ligne par participant, "N/A" quand il n'a pas répondu à une question
                 const rows = responses.map((userResponse) => {
                     const row = [userResponse.user_id];
                     questions.forEach((question) => {
@@ -282,14 +323,17 @@ const Accueil = () => {
                     return row;
                 });
 
+                // Construction du CSV : chaque cellule entre guillemets, séparées par des virgules
                 const csvContent = [headers, ...rows]
                     .map((row) => row.map((cell) => `"${cell}"`).join(","))
                     .join("\n");
 
                 const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                // On récupère le titre du formulaire pour nommer le fichier
                 const form = await fetch(`/api/forms/${id}`);
                 const formData = await form.json();
                 const formTitle = formData.title;
+                // On remplace les caractères spéciaux par "_" pour avoir un nom de fichier propre
                 const title = formTitle.replace(/[^a-z0-9_-]/gi, "_");
 
 
@@ -302,6 +346,7 @@ const Accueil = () => {
 
         }
 
+        // Téléchargement du zip contenant tous les CSV
         zip.generateAsync({ type: "blob" })
             .then(function (content) {
                 saveAs(content, "Reponses_formulaires.zip");
@@ -309,6 +354,7 @@ const Accueil = () => {
 
     }
 
+    // Supprime uniquement les réponses (pas les formulaires), après confirmation
     const handleDeleteFormDatas = async (formId) => {
 
         const ids = formId ? (Array.isArray(formId) ? formId : [formId]) : selectedForms;
@@ -326,6 +372,7 @@ const Accueil = () => {
                     }
                     showNotification("Les réponses sont supprimées", "success");
 
+                    // On rafraîchit les compteurs et on vide la sélection
                     await reloadForms();
                     await reloadgroups();
                     setSelectedForms([]);
@@ -368,6 +415,7 @@ const Accueil = () => {
     };
 
     // Affiche ou non les boutons pour tout dupliquer/supprimer
+    // Coche ou décoche un formulaire dans la sélection
     const handleCheckboxChange = (formId, checked) => {
         if (checked) {
             setSelectedForms(prev => [...prev, formId]);
@@ -376,7 +424,7 @@ const Accueil = () => {
         }
     };
 
-    // Tout cocher
+    // Tout cocher (uniquement les formulaires visibles après filtrage)
     const handleCheckAll = () => {
         const allIds = filteredForms.map(form => form.id);
         setSelectedForms(allIds);
@@ -387,6 +435,7 @@ const Accueil = () => {
         setSelectedForms([]);
     };
 
+    // Pareil pour les groupes
     const handleCheckAllGroups = () => {
         const allIds = filteredGroups.map(group => group.id);
         setSelectedGroups(allIds);
@@ -426,6 +475,7 @@ const Accueil = () => {
 
         if (!ids || ids.length === 0) return;
 
+        // On demande confirmation avant de supprimer quoi que ce soit
         showModal(
             t("Delete"),
             t("Delete") + ` ${ids.length} ` + t("form") + (ids.length > 1 ? 's' : '') + `? ` + t("This action is irreversible."),
@@ -450,9 +500,11 @@ const Accueil = () => {
         );
     };
 
+    // Crée un nouveau groupe (le nom est demandé avec un prompt du navigateur)
     const creategroup = () => {
         let groupName = prompt("Nom du nouveau groupe :");
 
+        // Nom vide ou annulation : on ne fait rien
         if (!groupName || groupName.trim() === "") return;
 
         fetch("/api/groups", {
@@ -471,12 +523,14 @@ const Accueil = () => {
             })
     };
 
+    // Déplace les formulaires choisis vers le groupe sélectionné dans la modale
     const handleMove = async () => {
         if (!moveModal.selectedGroup) return;
 
         const itemsToMove = Array.isArray(moveModal.item.id) ? moveModal.item.id : [moveModal.item.id];
 
         for (const id of itemsToMove) {
+            // "none" = retirer le formulaire de son groupe
             const groupId = moveModal.selectedGroup === "none" ? null : moveModal.selectedGroup;
             await fetch(`/api/forms/${id}/move-to-group/${groupId}`, {
                 method: "PUT",
@@ -491,6 +545,7 @@ const Accueil = () => {
         await reloadgroups();
     };
 
+    // Renomme un groupe (nouveau nom demandé avec un prompt)
     const handleRenameGroup = async (groupId, currentName) => {
         const newName = prompt("Nouveau nom du groupe :", currentName);
         if (!newName || newName.trim() === "") return;
@@ -515,6 +570,7 @@ const Accueil = () => {
     };
 
 
+    // Supprime un groupe après confirmation
     const handleDeletegroup = (groupId) => {
         showModal(
             t("Delete"),
@@ -538,14 +594,16 @@ const Accueil = () => {
         );
     };
 
+    // Clic droit sur une ligne de formulaire : ouvre le menu d'actions à l'endroit du clic
     const handleRightClick = (e, id) => {
-        e.preventDefault();
+        e.preventDefault(); // on bloque le menu du navigateur
         e.stopPropagation();
 
         const MENU_HEIGHT = 220;
 
         let y = e.clientY;
 
+        // Si le menu dépasse en bas de l'écran, on le remonte
         if (y + MENU_HEIGHT > window.innerHeight) {
             y = y - MENU_HEIGHT + 38;
         }
@@ -558,11 +616,13 @@ const Accueil = () => {
         setOpenMenuId(id);
     };
 
+    // Coche ou décoche un groupe dans la sélection
     const handleGroupCheckboxChange = (groupId, checked) => {
         if (checked) setSelectedGroups(prev => [...prev, groupId]);
         else setSelectedGroups(prev => prev.filter(id => id !== groupId));
     };
 
+    // Clic droit sur une ligne de groupe : même principe que pour les formulaires
     const handleRightClickGroup = (e, id) => {
         e.preventDefault();
         e.stopPropagation();
@@ -576,16 +636,20 @@ const Accueil = () => {
     };
 
 
+    // Ouvre la modale d'import et définit quoi faire selon le résultat
     const handleImportButton = () => {
         showImportModal(() => {
+            // Succès : on ferme la modale, on recharge la liste et on prévient
             closeImportModal();
             fetchForms();
             showNotification("Formulaires importés !", "success");
         },
             (fileName) => {
+                // Un fichier du zip n'a pas le bon format
                 showNotification(`Contenu du fichier incompatible : ${fileName}`, "error");
             },
             () => {
+                // Erreur générale (serveur injoignable...)
                 //closeImportModal();
                 fetchForms();
                 showNotification("Impossible de contacter le serveur.", "error");
@@ -597,6 +661,7 @@ const Accueil = () => {
     return (
         <>
             {/* Langue en haut à droite dans le flux */}
+            {/* Barre du haut : titre, bascule Formulaires/Groupes, choix de la langue */}
             <div className={styles.topBar}>
                 <h1 className={styles.topBarLeft}>{t('welcome')}</h1>
                 <div className={styles.topBarCenter}>
@@ -616,6 +681,7 @@ const Accueil = () => {
                     </div>
                 </div>
                 <div className={styles.topBarRight}>
+                    {/* Changement de langue, mémorisé dans le localStorage */}
                     <select
                         className={styles.langSelect}
                         value={i18n.language}
@@ -626,6 +692,7 @@ const Accueil = () => {
                     </select>
                 </div>
             </div>
+            {/* Modale générique (confirmations) */}
             <Modal
                 isOpen={modal.isOpen}
                 title={modal.title}
@@ -635,6 +702,7 @@ const Accueil = () => {
                 confirm={modal.confirm}
                 close={modal.close}
             />
+            {/* Modale d'import de formulaires */}
             <ImportModal
                 isOpen={importModal.isOpen}
                 onConfirm={importModal.onConfirm}
@@ -642,6 +710,7 @@ const Accueil = () => {
                 onFormatError={importModal.onFormatError}
                 onError={importModal.onError}
             />
+            {/* Notifications empilées (succès / erreur) */}
             <div className={styles.notificationsContainer}>
                 {notifications.map(n => (
                     <div key={n.id} className={`${styles.notification} ${styles[n.type]}`}>
@@ -649,6 +718,7 @@ const Accueil = () => {
                     </div>
                 ))}
             </div>
+            {/* Modale "Déplacer vers..." : choix du groupe de destination */}
             {moveModal.open && (
                 <div className={styles.moveModalOverlay}>
                     <div className={styles.moveModalContent}>
@@ -668,6 +738,7 @@ const Accueil = () => {
                         </select>
 
                         <div className={styles.buttonsRow}>
+                            {/* Désactivé tant qu'aucun groupe n'est choisi */}
                             <button onClick={handleMove} disabled={!moveModal.selectedGroup}>
                                 {t("Confirm")}
                             </button>
@@ -678,9 +749,12 @@ const Accueil = () => {
                     </div>
                 </div>
             )}
+            {/* Contenu principal : vue Formulaires ou vue Groupes */}
             {viewMode === "forms" ? (
+                // ===== VUE FORMULAIRES =====
                 <div className={styles.container}>
                     <div className={styles.tableHeader}>
+                        {/* ID participant par défaut, sauvegardé côté serveur */}
                         <div className={styles.defaultUserIdContainer}>
                             <label htmlFor="defaultUserId" className={styles.defaultUserIdLabel}>
                                 {t('Default participant ID:')}
@@ -716,6 +790,7 @@ const Accueil = () => {
                         <div>
                             <table className={styles.table}>
                                 <thead className='thead'>
+                                    {/* Ligne des filtres : recherche, groupe, actions multiples */}
                                     <tr className={styles.filtrers}>
                                         <th className={styles.thFilter}></th>
                                         <th className={styles.thFilter}>
@@ -728,6 +803,7 @@ const Accueil = () => {
                                             />
                                         </th>
                                         <th className={styles.thFilter}>
+                                            {/* Filtre par groupe, mémorisé dans le localStorage */}
                                             <select
                                                 value={tableSelectedGroup}
                                                 onChange={(e) => {
@@ -747,17 +823,19 @@ const Accueil = () => {
                                         <th className={styles.thFilter}></th>
                                         <th className={styles.thFilter}></th>
                                         <th className={styles.thFilter}>
+                                            {/* Menu d'actions sur les formulaires cochés */}
                                             <select
                                                 value=""
                                                 disabled={selectedForms.length === 0}
                                                 onChange={(e) => {
                                                     const action = e.target.value;
-                                                    e.target.value = "";
+                                                    e.target.value = ""; // on remet le menu sur "— Actions —"
                                                     if (!action) return;
 
                                                     const isMultiple = selectedForms.length > 1;
                                                     const id = selectedForms;
 
+                                                    // Voir / modifier / réponses : uniquement si un seul formulaire est coché
                                                     switch (action) {
                                                         case "view":
                                                             if (!isMultiple) navigate(`/form-viewer/${id}/1?navigation=True`);
@@ -795,9 +873,11 @@ const Accueil = () => {
                                             >
                                                 <option value="">{t('— Actions —')}</option>
 
+                                                {/* Actions disponibles seulement avec une sélection unique */}
                                                 {selectedForms.length === 1 && (
                                                     <>
                                                         <option value="view">{t('View')}</option>
+                                                        {/* Modifier est grisé si le formulaire a déjà des réponses */}
                                                         <option
                                                             value="edit"
                                                             disabled={
@@ -810,6 +890,7 @@ const Accueil = () => {
                                                     </>
                                                 )}
 
+                                                {/* Actions disponibles dès qu'au moins un formulaire est coché */}
                                                 {selectedForms.length > 0 && (
                                                     <>
                                                         <option value="move">{t('Move')}</option>
@@ -823,8 +904,10 @@ const Accueil = () => {
                                             </select>
                                         </th>
                                     </tr>
+                                    {/* Ligne des en-têtes de colonnes */}
                                     <tr>
                                         <th className={styles.th}>
+                                            {/* Case "tout cocher" */}
                                             <input
                                                 type="checkbox"
                                                 className={styles.checkbox}
@@ -851,6 +934,7 @@ const Accueil = () => {
                                         </tr>
                                     ) : (
                                         filteredForms.map(form => (
+                                            // Clic droit sur la ligne : menu d'actions
                                             <tr
                                                 key={form.id}
                                                 onContextMenu={(e) => {
@@ -872,6 +956,8 @@ const Accueil = () => {
                                                 <td className={styles.td}>{form.responseCount}</td>
                                                 <td className={styles.td}>
                                                     <div className={styles.actionWrapper}>
+                                                        {/* Bouton "..." : ouvre le même menu que le clic droit,
+                                                            placé juste sous le bouton (ou au-dessus s'il manque de la place) */}
                                                         <button
                                                             className={styles.actionButton}
                                                             onClick={(e) => {
@@ -891,6 +977,7 @@ const Accueil = () => {
                                                                     y,
                                                                 });
 
+                                                                // Un deuxième clic sur le même bouton referme le menu
                                                                 setOpenMenuId(openMenuId === form.id ? null : form.id);
                                                             }}
                                                         >
@@ -908,6 +995,7 @@ const Accueil = () => {
                     </div >
                 </div>
             ) : (
+                // ===== VUE GROUPES =====
                 <div className={styles.container}>
                     <div className={styles.tableHeader}>
                         <div className={styles.defaultUserIdContainer}>
@@ -939,6 +1027,7 @@ const Accueil = () => {
                     <div className={styles.tableContainer}>
                         <table className={styles.table}>
                             <thead>
+                                {/* Ligne des filtres : recherche de groupe et actions multiples */}
                                 <tr className={styles.filtrers}>
                                     <th className={styles.thFilter}></th>
 
@@ -987,6 +1076,7 @@ const Accueil = () => {
                                         >
                                             <option value="">— Actions —</option>
 
+                                            {/* Renommer : seulement si un seul groupe est coché */}
                                             {selectedGroups.length === 1 && (
                                                 <option value="rename">{t("Rename")}</option>
                                             )}
@@ -1001,6 +1091,7 @@ const Accueil = () => {
                                 {/* EN-TÊTES */}
                                 <tr>
                                     <th className={styles.th}>
+                                        {/* Case "tout cocher" pour les groupes */}
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
@@ -1031,6 +1122,7 @@ const Accueil = () => {
                                     </tr>
                                 ) : (
                                     filteredGroups.map(group => (
+                                        // Clic droit sur la ligne : menu d'actions du groupe
                                         <tr
                                             key={group.id}
                                             onContextMenu={(e) =>
@@ -1064,6 +1156,7 @@ const Accueil = () => {
 
                                             <td className={styles.td}>
                                                 <div className={styles.actionWrapper}>
+                                                    {/* Bouton "..." : ouvre le menu du groupe sous le bouton */}
                                                     <button
                                                         className={styles.actionButton}
                                                         onClick={(e) => {
@@ -1109,6 +1202,7 @@ const Accueil = () => {
                 </div>
 
             )}
+            {/* Menu contextuel d'un formulaire (clic droit ou bouton "...") */}
             {openMenuId && (
                 <div
                     ref={menuRef}
@@ -1120,6 +1214,7 @@ const Accueil = () => {
                     }}
                 >
                     <div onClick={() => navigate(`/form-viewer/${openMenuId}/1?navigation=True`)}>{t('View')}</div>
+                    {/* Modifier : grisé si le formulaire a déjà des réponses */}
                     {(() => {
                         const form = forms.find(f => f.id === openMenuId);
                         const disabled = form?.responseCount > 0;
@@ -1140,6 +1235,7 @@ const Accueil = () => {
                     <div onClick={() => handleDuplicateForm(openMenuId)}>{t('Duplicate')}</div>
                     <div onClick={() => handleDeleteForm(openMenuId)}>{t('Delete')}</div>
                     <div onClick={() => handleExportForm(openMenuId)}>{t('Export')}</div>
+                    {/* Export des réponses : grisé s'il n'y en a aucune */}
                     {(() => {
                         const form = forms.find(f => f.id === openMenuId);
                         const disabled = form?.responseCount === 0;
@@ -1155,6 +1251,7 @@ const Accueil = () => {
                             </div>
                         );
                     })()}
+                    {/* Suppression des réponses : grisée s'il n'y en a aucune */}
                     {(() => {
                         const form = forms.find(f => f.id === openMenuId);
                         const disabled = form?.responseCount === 0;
@@ -1172,6 +1269,7 @@ const Accueil = () => {
                     })()}
                 </div>
             )}
+            {/* Menu contextuel d'un groupe : renommer ou supprimer */}
             {openGroupMenuId && (
                 <div
                     ref={groupMenuRef}

@@ -1,6 +1,9 @@
 // controllers/formController.js
+// Contrôleur des formulaires : reçoit les requêtes HTTP, appelle le service (formService)
+// et renvoie la réponse. La logique métier et l'accès à la base sont dans le service.
 const formService = require("../services/formService");
 
+// Enregistre un nouveau formulaire
 const saveForm = async (req, res) => {
   const { id, title, json_data, group_id } = req.body;
   try {
@@ -11,6 +14,7 @@ const saveForm = async (req, res) => {
   }
 };
 
+// Renvoie la liste de tous les formulaires
 const getAllForms = async (req, res) => {
   try {
     const forms = await formService.getAllForms();
@@ -20,17 +24,20 @@ const getAllForms = async (req, res) => {
   }
 };
 
+// Renvoie un formulaire à partir de son id
 const getFormById = async (req, res) => {
   const { id } = req.params;
   try {
     const form = await formService.getFormById(id);
     res.json(form);
   } catch (error) {
+    // 404 si le message d'erreur indique "non trouvé", 500 pour tout autre problème
     const status = error.message.includes("non trouvé") ? 404 : 500;
     res.status(status).json({ error: error.message });
   }
 };
 
+// Indique si un formulaire a déjà reçu des réponses (utilisé avant de le modifier)
 const hasResponses = async (req, res) => {
   const { id } = req.params;
   try {
@@ -41,6 +48,7 @@ const hasResponses = async (req, res) => {
   }
 };
 
+// Met à jour un formulaire (refusé s'il contient déjà des réponses)
 const updateForm = async (req, res) => {
   const { id } = req.params;
   const { title, json_data } = req.body;
@@ -50,6 +58,7 @@ const updateForm = async (req, res) => {
       return res.status(400).json({ error: "Impossible de modifier un formulaire avec des réponses existantes." });
     }
 
+    // Nettoyage du schéma : chaque composant doit avoir un type (par défaut "text")
     const cleanSchema = {
       ...json_data,
       components: (json_data.components || []).map(component => ({
@@ -58,6 +67,7 @@ const updateForm = async (req, res) => {
       }))
     };
     const result = await formService.updateForm(id, title, cleanSchema);
+    // 0 ligne modifiée : le formulaire n'existe pas
     if (result === 0) {
       return res.status(404).json({ error: "Formulaire non trouvé" });
     }
@@ -68,6 +78,7 @@ const updateForm = async (req, res) => {
   }
 };
 
+// Supprime un formulaire
 const deleteForm = async (req, res) => {
   const { id } = req.params;
   try {
@@ -79,6 +90,7 @@ const deleteForm = async (req, res) => {
 };
 
 // Controller to duplicate a form
+// Duplique un formulaire et renvoie l'id de la copie
 const duplicateForm = async (req, res) => {
   const { id } = req.params; // Get the form ID from request parameters
 
@@ -101,6 +113,7 @@ const duplicateForm = async (req, res) => {
   }
 };
 
+// Déplace un formulaire dans un groupe
 const moveForm = async (req, res) => {
   const { id } = req.params;
   const { group_id } = req.body;
@@ -112,6 +125,8 @@ const moveForm = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Exporte un formulaire (avec ou sans ses réponses selon le paramètre "responses" de l'URL)
 const exportForm = async (req, res) => {
   const { id } = req.params; // Get the form ID from request parameters
   const { responses } = req.params;
@@ -127,13 +142,16 @@ const exportForm = async (req, res) => {
   }
 };
 
+// Importe un formulaire depuis un JSON : on lui donne un nouvel id et un titre unique
 const importForm = async (req, res) => {
   const { title, json_data } = req.body;
 
+  // Génère un id de formulaire aléatoire (du type "Form_a1b2c3d4")
   const generateUniqueFormId = () => {
     return new Promise((resolve, reject) => {
       const tryGenerate = () => {
         const newId = `Form_${Math.random().toString(36).slice(2, 10)}`;
+        // Vérifie si l'id existe déjà en interrogeant l'API
         fetch(`/api/forms/${newId}`)
           .then((row) => {
             return tryGenerate();
@@ -147,6 +165,7 @@ const importForm = async (req, res) => {
     });
   };
 
+  // Si le titre existe déjà, on ajoute un numéro : "Titre (1)", "Titre (2)"...
   const generateUniqueTitle = async (baseTitle) => {
     const allForms = await formService.getAllForms();
     const existingTitles = allForms.map(f => f.title);
@@ -163,6 +182,7 @@ const importForm = async (req, res) => {
   try {
     const uniqueTitle = await generateUniqueTitle(title);
     const newFormID = await generateUniqueFormId();
+    // L'id à l'intérieur du schéma doit correspondre au nouvel id
     json_data.id = newFormID;
     const message = await formService.saveForm(newFormID, uniqueTitle, json_data);
     res.status(201).json({ message, newFormID });
@@ -171,6 +191,7 @@ const importForm = async (req, res) => {
   }
 };
 
+// Enregistre l'id participant par défaut
 exports.setDefaultUserId = async (req, res) => {
   try {
     const { default_user_id } = req.body;
@@ -183,6 +204,7 @@ exports.setDefaultUserId = async (req, res) => {
   }
 };
 
+// Renvoie l'id participant par défaut
 exports.getDefaultUserId = async (req, res) => {
   try {
     const { id } = req.params;
@@ -195,6 +217,7 @@ exports.getDefaultUserId = async (req, res) => {
 };
 
 
+// Fonctions exposées au fichier de routes
 module.exports = {
   saveForm,
   getAllForms,

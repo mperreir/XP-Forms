@@ -1,10 +1,14 @@
+// Contrôleur des réponses : reçoit les requêtes HTTP, appelle le service (responseService)
+// et renvoie la réponse. La logique métier et l'accès à la base sont dans le service.
 const responseService = require("../services/responseService");
 
 
+// Enregistre en une fois toutes les réponses d'un participant à un formulaire
 const submitForm = async (req, res) => {
   const { form_id, user_id, responses } = req.body;
 
   try {
+    // Rien à enregistrer : on refuse la requête
     if (!responses || responses.length === 0) {
       return res.status(400).json({ error: "Aucune réponse à enregistrer." });
     }
@@ -16,6 +20,7 @@ const submitForm = async (req, res) => {
   }
 };
 
+// Enregistre une seule réponse (appelée à chaque modification d'un champ dans le viewer)
 const saveResponse = async (req, res) => {
   const { form_id, user_id, component_id, value } = req.body;
 
@@ -27,6 +32,7 @@ const saveResponse = async (req, res) => {
   }
 };
 
+// Renvoie toutes les réponses d'un formulaire, regroupées par participant
 const getResponses = async (req, res) => {
   const { id } = req.params;
   try {
@@ -37,6 +43,8 @@ const getResponses = async (req, res) => {
   }
 };
 
+// Renvoie les réponses d'un participant précis pour un formulaire
+// (utilisé pour pré-remplir le formulaire quand le participant revient)
 const getParticipantResponses = async (req, res) => {
   const { form_id, user_id } = req.params;
 
@@ -49,6 +57,7 @@ const getParticipantResponses = async (req, res) => {
   }
 };
 
+// Arrête le serveur
 const shutdown = async (req, res) => {
   try {
     const message = await responseService.shutdownServer();
@@ -58,6 +67,7 @@ const shutdown = async (req, res) => {
   }
 };
 
+// Supprime toutes les réponses d'un formulaire (le formulaire lui-même est conservé)
 const deleteFormResponses = async (req, res) => {
   const { id } = req.params;
 
@@ -71,6 +81,7 @@ const deleteFormResponses = async (req, res) => {
 };
 
 
+// Fonctions exposées au fichier de routes
 module.exports = {
   submitForm,
   saveResponse,

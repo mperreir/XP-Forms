@@ -1,8 +1,13 @@
+// Service des réponses : accès à la base de données (SQLite) pour les réponses des participants.
+// Appelé par responseController.
 const db = require("../base_de_donnee/db");
 const { exec } = require('child_process');
 
+// Enregistre en une fois toutes les réponses d'un participant
+// (si une réponse existe déjà pour ce champ, elle est mise à jour)
 const submitForm = (form_id, user_id, responses) => {
   return new Promise((resolve, reject) => {
+    // Une insertion par réponse, lancées en parallèle
     const ops = responses.map(({ component_id, value }) =>
       new Promise((res, rej) => {
         db.run(
@@ -18,6 +23,7 @@ const submitForm = (form_id, user_id, responses) => {
       })
     );
 
+    // On attend que toutes les insertions soient terminées
     Promise.all(ops)
       .then(() => resolve("Réponses enregistrées ou mises à jour avec succès."))
       .catch((err) => reject(new Error("Erreur lors de la sauvegarde des réponses : " + err.message)));
@@ -25,20 +31,24 @@ const submitForm = (form_id, user_id, responses) => {
 };
 
 
+// Enregistre une seule réponse (appelée à chaque modification d'un champ dans le viewer)
 const saveResponse = (form_id, user_id, component_id, value) => {
   return new Promise((resolve, reject) => {
     // Check if the component is a checklist and handle accordingly
+    // On regarde d'abord le type du composant, car les cases à cocher ont un format particulier
     db.get("SELECT type FROM components WHERE id = ?", [component_id], (err, row) => {
       if (err) {
         return reject(new Error("Erreur lors de la vérification du type de composant : " + err.message));
       }
       
       // Properly format checklist values as comma-separated strings
+      // Une checklist renvoie un tableau : on le stocke sous forme de texte séparé par des virgules
       let formattedValue = value;
       if (row && row.type === "checklist" && Array.isArray(value)) {
         formattedValue = value.join(",");
       }
       
+      // Insertion, ou mise à jour si le participant a déjà répondu à ce champ
       db.run(
         `
         INSERT INTO responses (form_id, component_id, user_id, value)
@@ -60,8 +70,11 @@ const saveResponse = (form_id, user_id, component_id, value) => {
 
 
 
+// Renvoie les réponses d'un formulaire, regroupées par participant :
+// [{ user_id, responses: [{ question, answer }] }]
 const getResponses = (form_id) => {
   return new Promise((resolve, reject) => {
+    // La question est le libellé du composant, récupéré grâce à une jointure
     db.all(
       `SELECT r.user_id, c.label AS question, r.value AS answer
        FROM responses r
@@ -72,6 +85,7 @@ const getResponses = (form_id) => {
       (err, rows) => {
         if (err) return reject(new Error("Erreur récupération réponses : " + err.message));
         
+        // Regroupement des lignes par participant
         const grouped = {};
         rows.forEach(row => {
           if (!grouped[row.user_id]) grouped[row.user_id] = { user_id: row.user_id, responses: [] };
@@ -85,6 +99,8 @@ const getResponses = (form_id) => {
 };
 
 
+// Renvoie les réponses d'un participant : [{ component_key, value }]
+// (sert à pré-remplir le formulaire dans le viewer)
 const getParticipantResponses = (form_id, user_id) => {
   return new Promise((resolve, reject) => {
     db.all(
@@ -101,6 +117,7 @@ const getParticipantResponses = (form_id, user_id) => {
   });
 };
 
+// Arrête l'application : ferme la fenêtre dont le titre commence par "React App" (commande Windows)
 const shutdownServer = (req, res) => {
   // Using exec to run the shutdown command
   exec('taskkill /FI "WINDOWTITLE eq React App*" /F', (err, stdout, stderr) => {
@@ -113,6 +130,7 @@ const shutdownServer = (req, res) => {
   });
 };
 
+// Supprime toutes les réponses d'un formulaire (le formulaire est conservé)
 const deleteResponsesByFormId = (formId) => {
   return new Promise((resolve, reject) => {
     db.run("DELETE FROM responses WHERE form_id = ?", [formId], function (err) {
@@ -126,6 +144,7 @@ const deleteResponsesByFormId = (formId) => {
   });
 };
 
+// Fonctions exposées au contrôleur
 module.exports = {
   submitForm,
   saveResponse,

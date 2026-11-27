@@ -1,3 +1,5 @@
+// Script de fusion : copie les données d'une ancienne base (bd_old.db) dans la nouvelle (bd.db).
+// À lancer une seule fois à la main (node nom_du_fichier.js), il ne fait pas partie du serveur.
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
@@ -29,11 +31,14 @@ function all(db, sql, params = []) {
   });
 }
 
+// Copie les formulaires, puis leurs composants, puis les réponses de l'ancienne base vers la nouvelle
 async function mergeDatabases() {
   try {
     // Forms
+    // Les formulaires importés ne sont dans aucun groupe (group_id à null), car l'ancienne base n'avait pas de groupes
     const oldForms = await all(oldDb, 'SELECT * FROM forms');
     for (const form of oldForms) {
+      // INSERT OR IGNORE : si l'id existe déjà dans la nouvelle base, la ligne est ignorée (pas de doublon)
       await run(newDb,
         `INSERT OR IGNORE INTO forms (id, title, json_data, created_at, updated_at, group_id)
          VALUES (?, ?, ?, ?, ?, ?)`,
@@ -65,6 +70,7 @@ async function mergeDatabases() {
   } catch (err) {
     console.error('Erreur lors du merge :', err);
   } finally {
+    // Dans tous les cas, on referme les deux connexions
     newDb.close();
     oldDb.close();
   }
