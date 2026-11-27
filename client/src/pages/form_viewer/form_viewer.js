@@ -282,7 +282,6 @@ const validateCurrentPage = useCallback(() => {
     return flat;
   };
 
-  // (Fonction non utilisée par la suite : la validation passe en réalité par `form.validate()`, plus bas)
   const isEmptyValue = (value, comp) => {
     // undefined or null -> empty
     if (value === undefined || value === null) return true;
