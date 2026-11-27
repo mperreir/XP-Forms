@@ -253,26 +253,6 @@ const validateCurrentPage = useCallback(() => {
     return flat;
   };
 
-  const isEmptyValue = (value, comp) => {
-    // undefined or null -> empty
-    if (value === undefined || value === null) return true;
-
-    // strings -> trim and check
-    if (typeof value === 'string' && value.trim() === '') return true;
-
-    // arrays -> empty if zero length
-    if (Array.isArray(value) && value.length === 0) return true;
-
-    // plain objects -> empty if no keys
-    if (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0) return true;
-
-    // booleans -> for required fields, boolean 'true' is expected / false is considered empty/incomplete
-    if (typeof value === 'boolean') return value !== true;
-
-    // numbers -> 0 is allowed
-    return false;
-  };
-
   const currentFlat = flatten(currentComponents);
   let isValid = true;
     const currentKeys = currentFlat.map(c => c.key).filter(Boolean);

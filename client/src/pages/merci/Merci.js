@@ -1,5 +1,4 @@
 import React from "react";
-import styles from "./Merci.css";
 import { useTranslation } from "react-i18next";
 
 const Merci = () => {
